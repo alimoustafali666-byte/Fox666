@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.font-display {
+  font-family: "Amiri", serif;
+}
+.font-body {
+  font-family: "Cairo", sans-serif;
+}
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+.dotted-leader {
+  flex: 1;
+  border-bottom: 1.5px dotted #f0d3e1;
+  margin: 0 8px;
+  transform: translateY(-3px);
+}
+::selection {
+  background: #f3a6c9;
+}
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+}
+body {
+  margin: 0;
+  font-family: "Cairo", sans-serif;
+}
+
+.print-header {
+  display: none;
+}
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  .print-header {
+    display: block !important;
+  }
+  body,
+  .print-area {
+    background: #fff !important;
+  }
+}
