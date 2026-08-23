@@ -1,0 +1,98 @@
+.stepper {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.stepWrap {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.stepWrap:last-child {
+  flex: 0 0 auto;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--color-border-strong);
+  color: transparent;
+  background: var(--color-surface);
+  flex-shrink: 0;
+}
+
+.dot.done {
+  background: var(--color-success);
+  border-color: var(--color-success);
+  color: #ffffff;
+}
+
+.dot.active {
+  border-color: var(--color-primary);
+  background: var(--color-primary-subtle);
+  box-shadow: 0 0 0 3px var(--color-primary-subtle);
+  animation: pulse 1.6s ease-in-out infinite;
+}
+
+.dot.error {
+  background: var(--color-danger);
+  border-color: var(--color-danger);
+  color: #ffffff;
+}
+
+.dot.pending {
+  background: var(--color-surface);
+}
+
+.label {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--color-text-muted);
+}
+
+.label-done,
+.label-active {
+  color: var(--color-text-primary);
+}
+
+.label-error {
+  color: var(--color-danger);
+}
+
+.connector {
+  height: 2px;
+  flex: 1;
+  margin: 0 6px;
+  margin-bottom: 22px;
+  background: var(--color-border);
+}
+
+.connector-done {
+  background: var(--color-success);
+}
+
+.connector-error {
+  background: var(--color-danger-border);
+}
+
+@media (max-width: 640px) {
+  .label {
+    display: none;
+  }
+}
+

@@ -1,0 +1,107 @@
+.section {
+  margin-bottom: var(--space-5);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-1);
+}
+
+.sectionDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--color-neutral-text);
+}
+
+.section[data-tone="info"] .sectionDot {
+  background: var(--color-info);
+}
+
+.section[data-tone="warning"] .sectionDot {
+  background: var(--color-warning);
+}
+
+.section[data-tone="primary"] .sectionDot {
+  background: var(--color-primary);
+}
+
+.section[data-tone="danger"] .sectionDot {
+  background: var(--color-danger);
+}
+
+.sectionTitle {
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.sectionCount {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.sectionDescription {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-3);
+}
+
+.itemList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-inline-start: 3px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  transition: border-color var(--transition-fast);
+}
+
+.section[data-tone="info"] .item {
+  border-inline-start-color: var(--color-info-border);
+}
+
+.section[data-tone="warning"] .item {
+  border-inline-start-color: var(--color-warning-border);
+}
+
+.section[data-tone="primary"] .item {
+  border-inline-start-color: var(--color-primary-border);
+}
+
+.section[data-tone="danger"] .item {
+  border-inline-start-color: var(--color-danger-border);
+}
+
+.itemText {
+  flex: 1;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  line-height: var(--line-height-base);
+}
+
+.itemMeta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.sourceLink {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+

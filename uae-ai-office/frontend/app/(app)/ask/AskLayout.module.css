@@ -1,0 +1,113 @@
+.wrap {
+  display: flex;
+  height: calc(100vh - var(--header-height));
+  margin: calc(var(--space-8) * -1);
+}
+
+.sidebar {
+  width: 300px;
+  flex-shrink: 0;
+  border-inline-end: 1px solid var(--color-border);
+  background: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebarHeader {
+  padding: var(--space-5) var(--space-5) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.sidebarTitle {
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  margin-bottom: var(--space-3);
+}
+
+.list {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-2);
+}
+
+.item {
+  position: relative;
+  display: block;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  margin-bottom: 2px;
+  color: var(--color-text-primary);
+  transition: background-color var(--transition-fast);
+}
+
+.item:hover {
+  background: var(--color-surface-subtle);
+  text-decoration: none;
+}
+
+.itemActive {
+  background: var(--color-primary-subtle);
+}
+
+.itemActive::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: -8px;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+}
+
+.itemActive:hover {
+  background: var(--color-primary-subtle);
+}
+
+.itemTitle {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.itemMeta {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+@media (max-width: 900px) {
+  .wrap {
+    flex-direction: column;
+    height: auto;
+    min-height: calc(100vh - var(--header-height));
+  }
+
+  .sidebar {
+    width: 100%;
+    max-height: 220px;
+    border-inline-end: none;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .main {
+    min-height: 420px;
+  }
+}
+
+@media (max-width: 640px) {
+  .wrap {
+    margin: calc(var(--space-4) * -1);
+  }
+}
+

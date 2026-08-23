@@ -1,0 +1,202 @@
+.wrap {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  background: var(--gradient-navy);
+  display: flex;
+  align-items: center;
+  padding: var(--space-12);
+}
+
+.heroTexture {
+  position: absolute;
+  inset: 0;
+  opacity: 0.5;
+  mask-image: radial-gradient(circle at 30% 20%, black, transparent 72%);
+  pointer-events: none;
+}
+
+.heroGlow {
+  position: absolute;
+  inset-inline-end: -18%;
+  top: -22%;
+  width: 62%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(14, 174, 196, 0.32) 0%, rgba(14, 174, 196, 0) 70%);
+  pointer-events: none;
+}
+
+.heroGlowViolet {
+  position: absolute;
+  inset-inline-start: -12%;
+  bottom: -16%;
+  width: 46%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(109, 63, 214, 0.28) 0%, rgba(109, 63, 214, 0) 70%);
+  pointer-events: none;
+}
+
+.heroContent {
+  position: relative;
+  max-width: 460px;
+  color: #ffffff;
+}
+
+.heroEyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  margin-bottom: var(--space-4);
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: var(--space-10);
+}
+
+.brandCompact {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: var(--space-6);
+}
+
+.brandName {
+  font-weight: 700;
+  font-size: var(--font-size-lg);
+  color: var(--color-text-primary);
+}
+
+.hero .brandName {
+  color: #ffffff;
+}
+
+.heroTitle {
+  font-size: var(--font-size-3xl);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  margin-bottom: var(--space-4);
+}
+
+.heroSubtitle {
+  font-size: var(--font-size-md);
+  color: var(--color-navy-text-muted);
+  line-height: var(--line-height-base);
+  margin-bottom: var(--space-8);
+}
+
+.heroList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.heroList li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: var(--font-size-sm);
+  color: rgba(255, 255, 255, 0.88);
+  line-height: var(--line-height-base);
+}
+
+.heroList li svg {
+  flex-shrink: 0;
+  margin-top: 3px;
+  width: 18px;
+  height: 18px;
+  padding: 3px;
+  border-radius: var(--radius-sm);
+  background: var(--gradient-ai);
+  box-sizing: border-box;
+}
+
+.formSide {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+  background: var(--color-bg);
+}
+
+.panel {
+  width: 100%;
+  max-width: 400px;
+  filter: drop-shadow(0 20px 40px rgba(15, 26, 46, 0.06));
+}
+
+@media (max-width: 980px) {
+  .wrap {
+    grid-template-columns: 1fr;
+  }
+
+  /* Mobile keeps a compact version of the hero band -- brand + eyebrow on
+     the navy gradient -- rather than dropping straight to a bare white
+     screen, so the auth flow still reads as a designed product moment,
+     not a stripped-down desktop layout. */
+  .hero {
+    padding: var(--space-6) var(--space-6) var(--space-12);
+    align-items: flex-start;
+  }
+
+  .heroContent {
+    max-width: none;
+  }
+
+  .heroTitle {
+    font-size: var(--font-size-xl);
+  }
+
+  .heroSubtitle,
+  .heroList {
+    display: none;
+  }
+
+  .brand {
+    margin-bottom: var(--space-3);
+  }
+
+  .brandCompact {
+    display: none;
+  }
+
+  .formSide {
+    padding: 0 var(--space-6) var(--space-8);
+    margin-top: -28px;
+  }
+}
+
+@media (max-width: 560px) {
+  .heroTitle {
+    display: none;
+  }
+
+  .hero {
+    padding-bottom: var(--space-10);
+  }
+
+  .formSide {
+    margin-top: -20px;
+  }
+}
+

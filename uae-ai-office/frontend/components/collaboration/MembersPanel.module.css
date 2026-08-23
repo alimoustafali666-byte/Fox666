@@ -1,0 +1,76 @@
+.panel {
+  width: 300px;
+  flex-shrink: 0;
+  border-inline-start: 1px solid var(--color-border);
+  background: var(--color-surface);
+  padding: var(--space-4);
+  overflow-y: auto;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-4);
+}
+
+.title {
+  font-size: var(--font-size-md);
+  font-weight: 700;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-md);
+}
+
+.section {
+  margin-bottom: var(--space-5);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.section:last-child {
+  border-bottom: none;
+}
+
+.memberList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: var(--space-3);
+}
+
+.memberRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.memberName {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.memberRole {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.removeButton {
+  font-size: var(--font-size-xs);
+  color: var(--color-danger);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.addRow {
+  display: flex;
+  gap: 6px;
+}
+

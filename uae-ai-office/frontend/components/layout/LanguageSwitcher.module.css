@@ -1,0 +1,35 @@
+.switcher {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px;
+  border-radius: var(--radius-full);
+  background: var(--color-neutral-subtle);
+  border: 1px solid var(--color-border);
+}
+
+.option {
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  cursor: pointer;
+  line-height: 1.4;
+}
+
+.option:hover {
+  color: var(--color-text-primary);
+}
+
+.optionActive {
+  background: var(--color-surface);
+  color: var(--color-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.optionActive:hover {
+  color: var(--color-primary);
+}
+

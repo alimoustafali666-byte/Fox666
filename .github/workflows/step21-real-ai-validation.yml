@@ -1,0 +1,50 @@
+name: Step 21 - Real AI Validation (manual only)
+
+# Manual-only, deliberately: this job spends real Anthropic/Voyage API
+# credit. It must never run on push, pull_request, or a schedule -- only
+# a human clicking "Run workflow" in the Actions tab.
+on:
+  workflow_dispatch: {}
+
+jobs:
+  real-ai-validation:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: uae-ai-office/backend
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -e ".[dev]"
+      - name: Create app role
+        # Only the role is needed here -- the validation script creates
+        # and drops its own scratch database via evaluation/runner.py's
+        # scratch_database(), exactly like the existing evaluation
+        # harness does. No fixed uae_ai_office database is created by
+        # this workflow.
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -U postgres -c "CREATE ROLE uae_app WITH LOGIN PASSWORD 'uae_app' CREATEDB"
+      - name: Run Step 21 minimal live-AI validation
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          EMBEDDING_API_KEY: ${{ secrets.EMBEDDING_API_KEY }}
+          LLM_PROVIDER: anthropic
+          EMBEDDING_PROVIDER: voyage
+        run: python -m evaluation.step21_live_validation
+

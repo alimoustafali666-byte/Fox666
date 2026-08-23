@@ -1,0 +1,142 @@
+.header {
+  position: sticky;
+  top: 0;
+  height: var(--header-height);
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--space-4);
+  padding: 0 var(--space-8);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: 0 1px 0 rgba(15, 26, 46, 0.02), 0 4px 16px rgba(15, 26, 46, 0.04);
+  z-index: 10;
+}
+
+/* Reports (Step 20): a printed page never shows the app header. */
+@media print {
+  .header {
+    display: none !important;
+  }
+}
+
+.menuButton {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-inline-end: var(--space-1);
+}
+
+.menuButton:hover {
+  background: var(--color-surface-subtle);
+  color: var(--color-text-primary);
+}
+
+.spacer {
+  flex: 1;
+}
+
+.companyRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.company {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.3;
+  min-width: 0;
+}
+
+.companyName {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.companyMeta {
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+.divider {
+  width: 1px;
+  height: 28px;
+  background: var(--color-border);
+}
+
+.user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--gradient-ai);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(33, 72, 214, 0.28);
+}
+
+.userInfo {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
+}
+
+.userName {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.userEmail {
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+@media (max-width: 900px) {
+  .menuButton {
+    display: flex;
+  }
+
+  .header {
+    padding: 0 var(--space-5);
+  }
+}
+
+@media (max-width: 760px) {
+  .company {
+    display: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .userInfo {
+    display: none;
+  }
+
+  .header {
+    gap: var(--space-2);
+  }
+}
+

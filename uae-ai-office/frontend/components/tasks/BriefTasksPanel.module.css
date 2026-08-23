@@ -1,0 +1,32 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-2);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  transition: background-color var(--transition-fast);
+}
+
+.row:hover {
+  background: var(--color-surface-subtle);
+  text-decoration: none;
+}
+
+.count {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  min-width: 24px;
+}
+
+.label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
