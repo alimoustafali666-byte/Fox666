@@ -67,11 +67,20 @@ def upgrade() -> None:
         ["id"],
     )
 
-    op.execute("REVOKE UPDATE, DELETE, TRUNCATE ON audit_logs FROM uae_app")
+    # CURRENT_USER, not a hardcoded role name: the app role is `uae_app`
+    # only in the local/dev setup this project's README describes. On a
+    # managed provider it is whatever role the connection string uses
+    # (`neondb_owner` on Neon, etc.). Naming a role that doesn't exist
+    # makes the migration fail outright; skipping the REVOKE when it
+    # doesn't exist silently drops the append-only guarantee this
+    # migration exists to create. Revoking from CURRENT_USER -- which is
+    # both the migration role and the runtime role by design, see the
+    # module docstring -- is correct in every environment.
+    op.execute("REVOKE UPDATE, DELETE, TRUNCATE ON audit_logs FROM CURRENT_USER")
 
 
 def downgrade() -> None:
-    op.execute("GRANT UPDATE, DELETE, TRUNCATE ON audit_logs TO uae_app")
+    op.execute("GRANT UPDATE, DELETE, TRUNCATE ON audit_logs TO CURRENT_USER")
 
     op.drop_constraint("fk_audit_logs_company_id_companies", "audit_logs", type_="foreignkey")
     op.create_foreign_key(

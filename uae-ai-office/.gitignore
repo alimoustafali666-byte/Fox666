@@ -1,0 +1,24 @@
+# The repository had no .gitignore at all, which meant backend/.env --
+# holding the real database password and the JWT signing secret -- was
+# one `git add -A` away from being committed. Secrets first:
+.env
+.env.*
+!.env.example
+.run/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Node / Next.js
+node_modules/
+.next/
+*.tsbuildinfo
+
+# Editor / OS
+.DS_Store

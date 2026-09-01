@@ -9,12 +9,18 @@ from app.modules.auth import repository as auth_repository
 from app.modules.auth.dependencies import get_tenant_context, require_roles
 from app.modules.auth.service import TenantContext
 from app.modules.tenancy import repository, service
+from app.modules.tenancy.models import Company
 from app.modules.tenancy.schemas import (
     CompanyMemberPublic,
     CompanyPublic,
     CompanyUpdateRequest,
     CurrentCompanyResponse,
     MemberRoleUpdateRequest,
+    DailyBriefSchedulePublic,
+    DailyBriefScheduleUpdateRequest,
+    InvitationCreateRequest,
+    InvitationCreateResponse,
+    InvitationPublic,
 )
 
 router = APIRouter(prefix="/companies", tags=["tenancy"])
@@ -27,6 +33,15 @@ def _company_public(company) -> CompanyPublic:
         timezone=company.timezone,
         country=company.country,
         has_logo=bool(company.logo_storage_key),
+    )
+
+
+def _schedule_public(company: Company) -> DailyBriefSchedulePublic:
+    return DailyBriefSchedulePublic(
+        enabled=company.daily_brief_schedule_enabled,
+        time=company.daily_brief_schedule_time,
+        timezone=company.timezone,
+        last_scheduled_date=company.daily_brief_last_scheduled_date,
     )
 
 
@@ -61,6 +76,27 @@ def update_current_company(
         ip_address=get_client_ip(request),
     )
     return CurrentCompanyResponse(company=_company_public(company), role=context.role)
+
+
+@router.get("/current/daily-brief-schedule", response_model=DailyBriefSchedulePublic)
+def get_daily_brief_schedule(
+    context: TenantContext = Depends(require_roles("owner", "admin")),
+    db: Session = Depends(get_db),
+) -> DailyBriefSchedulePublic:
+    return _schedule_public(repository.get_company_by_id(db, context.company_id))
+
+
+@router.patch("/current/daily-brief-schedule", response_model=DailyBriefSchedulePublic)
+def update_daily_brief_schedule(
+    body: DailyBriefScheduleUpdateRequest,
+    context: TenantContext = Depends(require_roles("owner", "admin")),
+    db: Session = Depends(get_db),
+) -> DailyBriefSchedulePublic:
+    company = repository.update_daily_brief_schedule(
+        db, company_id=context.company_id, enabled=body.enabled, schedule_time=body.time
+    )
+    db.commit()
+    return _schedule_public(company)
 
 
 @router.post("/current/logo", response_model=CompanyPublic)
@@ -163,4 +199,60 @@ def remove_current_company_member(
         target_user_id=user_id,
         ip_address=get_client_ip(request),
     )
+
+
+def _invitation_public(invitation) -> InvitationPublic:
+    return InvitationPublic(
+        id=invitation.id,
+        email=invitation.email,
+        role=invitation.role,
+        status=service.invitation_status(invitation),
+        expires_at=invitation.expires_at,
+        created_at=invitation.created_at,
+    )
+
+
+@router.get("/current/invitations", response_model=list[InvitationPublic])
+def list_current_company_invitations(
+    context: TenantContext = Depends(require_roles("owner", "admin")),
+    db: Session = Depends(get_db),
+) -> list[InvitationPublic]:
+    return [_invitation_public(item) for item in service.list_company_invitations(db, context.company_id)]
+
+
+@router.post("/current/invitations", response_model=InvitationCreateResponse, status_code=201)
+def invite_company_user(
+    body: InvitationCreateRequest,
+    context: TenantContext = Depends(require_roles("owner", "admin")),
+    db: Session = Depends(get_db),
+) -> InvitationCreateResponse:
+    invitation, token = service.create_invitation(
+        db,
+        company_id=context.company_id,
+        actor_user_id=context.user.id,
+        email=str(body.email),
+        role=body.role,
+    )
+    return InvitationCreateResponse(**_invitation_public(invitation).model_dump(), token=token)
+
+
+@router.post("/current/invitations/{invitation_id}/resend", response_model=InvitationCreateResponse)
+def resend_company_invitation(
+    invitation_id: uuid.UUID,
+    context: TenantContext = Depends(require_roles("owner", "admin")),
+    db: Session = Depends(get_db),
+) -> InvitationCreateResponse:
+    invitation, token = service.resend_invitation(
+        db, company_id=context.company_id, invitation_id=invitation_id
+    )
+    return InvitationCreateResponse(**_invitation_public(invitation).model_dump(), token=token)
+
+
+@router.delete("/current/invitations/{invitation_id}", status_code=204)
+def cancel_company_invitation(
+    invitation_id: uuid.UUID,
+    context: TenantContext = Depends(require_roles("owner", "admin")),
+    db: Session = Depends(get_db),
+) -> None:
+    service.revoke_invitation(db, company_id=context.company_id, invitation_id=invitation_id)
 

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { FieldWrapper, Input } from "@/components/ui/Field";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import formStyles from "../AuthForm.module.css";
+import styles from "./Login.module.css";
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -32,10 +33,12 @@ export default function LoginPage() {
   }
 
   return (
-    <Card>
+    <Card className={styles.loginCard}>
       <CardBody>
-        <h1 className={formStyles.title}>{t("auth.signIn.title")}</h1>
-        <p className={formStyles.subtitle}>{t("auth.signIn.subtitle")}</p>
+        <div className={styles.secureStatus}><span /> {t("auth.signIn.secure")}</div>
+        <div className={styles.cardOrb} aria-hidden="true"><span /></div>
+        <h1 className={styles.welcomeTitle}>{t("auth.signIn.welcome")}</h1>
+        <p className={styles.welcomeSubtitle}>{t("auth.signIn.continue")}</p>
 
         {error ? <ErrorBanner message={error} /> : null}
 

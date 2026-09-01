@@ -1,21 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { ApiError, tenancyApi } from "@/lib/api-client";
 import { errorMessage } from "@/lib/auth-context";
 import { useTranslation, formatDate } from "@/lib/i18n";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { Card } from "@/components/ui/Card";
+import { Card, CardBody } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { Select } from "@/components/ui/Field";
+import { FieldWrapper, Input, Select } from "@/components/ui/Field";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoadingBlock } from "@/components/ui/Spinner";
 import { ROLE_LABEL_KEYS, ROLE_TONE, ROLES } from "@/components/layout/roles";
-import type { CompanyMemberPublic, Role } from "@/lib/types";
+import type { CompanyMemberPublic, InvitationPublic, Role } from "@/lib/types";
 import tableStyles from "@/components/ui/Table.module.css";
 import styles from "../Settings.module.css";
 
@@ -26,6 +26,9 @@ export default function TeamPage() {
   const canManage = actorRole === "owner" || actorRole === "admin";
 
   const [members, setMembers] = useState<CompanyMemberPublic[]>([]);
+  const [invitations, setInvitations] = useState<InvitationPublic[]>([]);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState<Role>("member");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [forbidden, setForbidden] = useState(false);
@@ -33,10 +36,10 @@ export default function TeamPage() {
 
   function load() {
     setLoading(true);
-    tenancyApi
-      .listMembers()
-      .then((data) => {
-        setMembers(data);
+    Promise.all([tenancyApi.listMembers(), tenancyApi.listInvitations()])
+      .then(([memberData, invitationData]) => {
+        setMembers(memberData);
+        setInvitations(invitationData);
         setForbidden(false);
       })
       .catch((err) => {
@@ -96,6 +99,48 @@ export default function TeamPage() {
     }
   }
 
+  async function handleInvite(event: FormEvent) {
+    event.preventDefault();
+    setError(null);
+    setBusyUserId("invite");
+    try {
+      await tenancyApi.createInvitation({ email: inviteEmail, role: inviteRole });
+      setInviteEmail("");
+      setInvitations(await tenancyApi.listInvitations());
+    } catch (err) {
+      setError(errorMessage(err, t("settings.team.genericInviteError")));
+    } finally {
+      setBusyUserId(null);
+    }
+  }
+
+  async function handleResend(invitation: InvitationPublic) {
+    setError(null);
+    setBusyUserId(invitation.id);
+    try {
+      await tenancyApi.resendInvitation(invitation.id);
+      setInvitations(await tenancyApi.listInvitations());
+    } catch (err) {
+      setError(errorMessage(err, t("settings.team.genericInvitationActionError")));
+    } finally {
+      setBusyUserId(null);
+    }
+  }
+
+  async function handleCancel(invitation: InvitationPublic) {
+    if (!window.confirm(t("settings.team.confirmCancel"))) return;
+    setError(null);
+    setBusyUserId(invitation.id);
+    try {
+      await tenancyApi.cancelInvitation(invitation.id);
+      setInvitations(await tenancyApi.listInvitations());
+    } catch (err) {
+      setError(errorMessage(err, t("settings.team.genericInvitationActionError")));
+    } finally {
+      setBusyUserId(null);
+    }
+  }
+
   return (
     <div>
       <Link href="/settings" className={styles.backLink}>
@@ -119,6 +164,8 @@ export default function TeamPage() {
           <Card>
             {loading ? (
               <LoadingBlock label={t("settings.team.loadingLabel")} />
+            ) : members.length === 0 ? (
+              <EmptyState title={t("settings.team.noMembersTitle")} description={t("settings.team.noMembersDescription")} />
             ) : (
               <div className={tableStyles.wrap}>
                 <table className={tableStyles.table}>
@@ -175,6 +222,34 @@ export default function TeamPage() {
                 </table>
               </div>
             )}
+          </Card>
+          <Card>
+            <CardBody>
+              <h2>{t("settings.team.inviteTitle")}</h2>
+              <form onSubmit={handleInvite} style={{ display: "flex", gap: 12, alignItems: "end", flexWrap: "wrap" }}>
+                <FieldWrapper label={t("settings.team.inviteEmail")} htmlFor="invite-email">
+                  <Input id="invite-email" type="email" required value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} />
+                </FieldWrapper>
+                <FieldWrapper label={t("settings.team.inviteRole")} htmlFor="invite-role">
+                  <Select id="invite-role" value={inviteRole} onChange={(e) => setInviteRole(e.target.value as Role)}>
+                    {ROLES.filter((r) => r !== "owner").map((r) => <option key={r} value={r}>{t(ROLE_LABEL_KEYS[r])}</option>)}
+                  </Select>
+                </FieldWrapper>
+                <Button type="submit" disabled={busyUserId === "invite"}>{t("settings.team.inviteButton")}</Button>
+              </form>
+            </CardBody>
+          </Card>
+          <Card>
+            <CardBody>
+              <h2>{t("settings.team.invitationsTitle")}</h2>
+              {invitations.length === 0 ? <EmptyState title={t("settings.team.noInvitations")} /> : (
+                <div className={tableStyles.wrap}>
+                  <table className={tableStyles.table}><thead><tr><th>{t("settings.team.inviteEmail")}</th><th>{t("settings.team.inviteRole")}</th><th>{t("settings.team.invitationStatus")}</th><th>{t("settings.team.invitationExpires")}</th><th /></tr></thead>
+                    <tbody>{invitations.map((invitation) => <tr key={invitation.id}><td>{invitation.email}</td><td><Badge tone={ROLE_TONE[invitation.role]}>{t(ROLE_LABEL_KEYS[invitation.role])}</Badge></td><td>{t(`settings.team.${invitation.status}` as never)}</td><td className={tableStyles.muted}>{formatDate(locale, invitation.expires_at)}</td><td>{invitation.status === "pending" ? <><Button size="sm" disabled={busyUserId === invitation.id} onClick={() => handleResend(invitation)}>{t("settings.team.resendButton")}</Button> <Button size="sm" variant="danger" disabled={busyUserId === invitation.id} onClick={() => handleCancel(invitation)}>{t("settings.team.cancelButton")}</Button></> : null}</td></tr>)}</tbody>
+                  </table>
+                </div>
+              )}
+            </CardBody>
           </Card>
         </>
       )}

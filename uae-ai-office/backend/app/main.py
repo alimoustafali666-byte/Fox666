@@ -1,3 +1,6 @@
+import asyncio
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,11 +12,22 @@ from app.core.exceptions import AppError
 
 
 def create_app() -> FastAPI:
-    app = FastAPI(title=settings.app_name)
+    stop_event = asyncio.Event()
+
+    @asynccontextmanager
+    async def lifespan(_app: FastAPI):
+        from app.modules.briefs.scheduler import scheduler_loop
+
+        task = asyncio.create_task(scheduler_loop(stop_event))
+        yield
+        stop_event.set()
+        await task
+
+    app = FastAPI(title=settings.app_name, lifespan=lifespan)
 
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[settings.frontend_origin],
+        allow_origins=settings.frontend_origins,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],

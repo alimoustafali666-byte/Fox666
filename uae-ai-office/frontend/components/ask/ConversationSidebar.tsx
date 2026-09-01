@@ -6,6 +6,8 @@ import { useParams, useRouter } from "next/navigation";
 import { useAskConversations } from "./AskConversationsContext";
 import { useTranslation, formatDate } from "@/lib/i18n";
 import { Button } from "@/components/ui/Button";
+import { ErrorBanner } from "@/components/ui/ErrorBanner";
+import { errorMessage } from "@/lib/auth-context";
 import { Spinner } from "@/components/ui/Spinner";
 import clsx from "@/components/ui/clsx";
 import styles from "@/app/(app)/ask/AskLayout.module.css";
@@ -16,12 +18,16 @@ export function ConversationSidebar() {
   const router = useRouter();
   const { t, locale } = useTranslation();
   const [creating, setCreating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleNew() {
     setCreating(true);
+    setError(null);
     try {
       const conversation = await createConversation();
       router.push(`/ask/${conversation.id}`);
+    } catch (err) {
+      setError(errorMessage(err, t("ask.genericListError")));
     } finally {
       setCreating(false);
     }
@@ -35,6 +41,7 @@ export function ConversationSidebar() {
           {creating ? t("ask.starting") : t("ask.newConversation")}
         </Button>
       </div>
+      {error ? <div style={{ padding: "0 var(--space-3) var(--space-3)" }}><ErrorBanner message={error} /></div> : null}
       <div className={styles.list}>
         {loading ? (
           <div style={{ padding: 16 }}>

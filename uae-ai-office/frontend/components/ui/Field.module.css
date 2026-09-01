@@ -20,10 +20,10 @@
   padding: 9px 12px;
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border-strong);
-  background: var(--color-surface);
-  color: var(--color-text-primary);
+  background: rgba(4, 11, 24, 0.56);
+  background: var(--color-surface-glass);
   font-size: var(--font-size-base);
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  box-shadow: var(--glow-focus);
 }
 
 .control::placeholder {
@@ -33,7 +33,7 @@
 .control:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px var(--color-primary-subtle);
+  box-shadow: 0 0 0 3px var(--color-primary-subtle), 0 0 20px rgba(57, 214, 232, 0.08);
 }
 
 .control:disabled {

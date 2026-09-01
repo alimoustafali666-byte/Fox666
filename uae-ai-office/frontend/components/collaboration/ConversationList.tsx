@@ -7,6 +7,7 @@ import { useCollaboration } from "./CollaborationContext";
 import { useTranslation, formatDate, type TranslationKey } from "@/lib/i18n";
 import { buttonClassName } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
+import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import clsx from "@/components/ui/clsx";
 import type { ChatConversationPublic, ConversationType } from "@/lib/types";
 import styles from "@/app/(app)/messages/MessagesLayout.module.css";
@@ -29,7 +30,7 @@ const TYPE_KEY: Record<ConversationType, TranslationKey> = {
 };
 
 export function ConversationList() {
-  const { conversations, loading, directPeerNames } = useCollaboration();
+  const { conversations, loading, error, refresh, directPeerNames } = useCollaboration();
   const params = useParams<{ conversationId?: string }>();
   const { t, locale } = useTranslation();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -67,6 +68,7 @@ export function ConversationList() {
       <Link href="/messages/notifications" className={styles.notificationsLink}>
         {t("messages.notificationsLink")}
       </Link>
+      {error ? <div style={{ padding: "0 var(--space-3) var(--space-3)" }}><ErrorBanner message={error} /><button type="button" className={buttonClassName("ghost", "sm")} onClick={() => void refresh()}>{t("common.loadMore")}</button></div> : null}
 
       <div className={styles.list}>
         {loading ? (

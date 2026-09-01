@@ -12,6 +12,14 @@ pip install -e ".[dev]"
 cp .env.example .env
 ```
 
+## Starting UAE AI Office
+
+From the repository root, run `./start.sh`. It starts the backend and
+frontend, waits for both HTTP endpoints, and verifies readiness. Use
+`./status.sh` to inspect them or `./stop.sh` to stop this project's services.
+Do not source `.env`; the backend loads `backend/.env` through its settings
+configuration.
+
 ### Database
 
 Requires a local PostgreSQL 16 server. The app connects as a **non-superuser**
@@ -38,6 +46,32 @@ uvicorn app.main:app --reload
 `CREATEDB` on the role is only needed to run the migration test suite (it
 creates and drops scratch databases); the running app itself never needs it.
 
+#### Managed Postgres (Neon, RDS, Supabase, ...)
+
+Paste the provider's DSN into `DATABASE_URL` as-is — a plain
+`postgresql://` / `postgres://` prefix is rewritten to the psycopg3 driver
+automatically (`app/core/config.py`), so you do not have to hand-edit it to
+`postgresql+psycopg://`, and provider-specific query options such as Neon's
+`sslmode=require&channel_binding=require` are then honoured (psycopg2, which
+SQLAlchemy would otherwise pick, rejects `channel_binding` outright).
+
+Two differences from the local setup above:
+
+```bash
+# 1. The extension, in the target database. There is no template1 to seed,
+#    and the role the provider gives you is normally allowed to do this:
+psql "$DATABASE_URL" -c "CREATE EXTENSION IF NOT EXISTS vector;"
+
+# 2. That same role owns every table, so RLS only applies to it because
+#    every migration also issues FORCE ROW LEVEL SECURITY. Nothing extra to
+#    do -- but do NOT "simplify" those statements away.
+alembic upgrade head
+```
+
+The migrations never name a specific role: privilege statements target
+`CURRENT_USER`, so `uae_app` locally and `neondb_owner` (or whatever the
+provider issues) work identically.
+
 ### Auth
 
 `.env.example` has placeholders for the rest. At minimum, set a real
@@ -47,10 +81,20 @@ development, `COOKIE_SECURE=false` is required or the browser (and the test
 client) will silently refuse to send the refresh cookie; this must stay
 `true` in any real deployment.
 
+`COOKIE_SAMESITE` matters as soon as the frontend and the API are not on the
+same site — a forwarded-port setup (Codespaces gives each port its own
+`*.app.github.dev` subdomain), or an `app.example.com` / `api.example.com`
+split. The refresh cookie is then a cross-site cookie and the default `lax`
+makes the browser withhold it from `POST /v1/auth/refresh`: login works, then
+every page reload logs the user back out. Set `COOKIE_SAMESITE=none` together
+with `COOKIE_SECURE=true` (browsers reject `SameSite=None` without `Secure`).
+`FRONTEND_ORIGIN` accepts a comma-separated list, so the forwarded origin and
+`http://localhost:3000` can both be allowed.
+
 ## Tests
 
 ```bash
-export TEST_DATABASE_URL=postgresql+psycopg://uae_app:uae_app@localhost:5432/uae_ai_office
+export TEST_DATABASE_URL=postgresql+psycopg://uae_app:uae_app@localhost:5432/uae_ai_office_test
 export JWT_SECRET_KEY=$(openssl rand -hex 32)
 export COOKIE_SECURE=false
 pytest

@@ -21,6 +21,7 @@ interface AuthContextValue extends AuthState {
   signup: (data: { email: string; password: string; full_name: string; company_name: string }) => Promise<void>;
   logout: () => Promise<void>;
   refreshCompany: () => Promise<void>;
+  switchCompany: (companyId: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -115,9 +116,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const switchCompany = useCallback(async (companyId: string) => {
+    const tokenResponse = await authApi.switchCompany(companyId);
+    setAccessToken(tokenResponse.access_token);
+    setState(await loadAuthenticatedState());
+  }, []);
+
   const value = useMemo(
-    () => ({ ...state, login, signup, logout, refreshCompany }),
-    [state, login, signup, logout, refreshCompany]
+    () => ({ ...state, login, signup, logout, refreshCompany, switchCompany }),
+    [state, login, signup, logout, refreshCompany, switchCompany]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

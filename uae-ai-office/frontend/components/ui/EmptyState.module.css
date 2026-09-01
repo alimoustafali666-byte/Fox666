@@ -6,6 +6,9 @@
   text-align: center;
   padding: var(--space-12) var(--space-6);
   gap: var(--space-2);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  background: rgba(4, 11, 24, 0.24);
 }
 
 .icon {
@@ -16,7 +19,7 @@
   height: 48px;
   margin-bottom: var(--space-2);
   border-radius: var(--radius-lg);
-  background: var(--color-primary-subtle);
+  background: linear-gradient(135deg, var(--color-primary-subtle), var(--color-accent-subtle));
   color: var(--color-primary);
 }
 

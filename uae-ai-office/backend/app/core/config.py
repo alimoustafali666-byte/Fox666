@@ -1,3 +1,7 @@
+import os
+from typing import Literal
+
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -9,6 +13,11 @@ class Settings(BaseSettings):
     app_env: str = "development"
     app_name: str = "UAE AI Office API"
     log_level: str = "info"
+    # One origin, or a comma-separated list of them, for CORS. A list is
+    # needed in practice because the same backend is reached both from a
+    # forwarded/public frontend URL and from http://localhost:3000 during
+    # development, and CORSMiddleware matches Origin exactly -- a single
+    # value silently rejects the other one.
     frontend_origin: str = "http://localhost:3000"
 
     database_url: str = "postgresql+psycopg://uae_app:uae_app@localhost:5432/uae_ai_office"
@@ -26,6 +35,15 @@ class Settings(BaseSettings):
     # plain HTTP, exposing the refresh token to network eavesdroppers.
     # Only override to False for local HTTP development.
     cookie_secure: bool = True
+    # "lax" is right when the browser reaches the frontend and the API on
+    # the same site. When they are on different hostnames (a Codespaces /
+    # Vercel-style split, where each port gets its own subdomain) the
+    # refresh cookie is a cross-site cookie and Lax makes the browser
+    # withhold it from the frontend's fetch to /v1/auth/refresh, silently
+    # breaking session persistence. "none" is required there -- and only
+    # accepted by browsers alongside cookie_secure=True, which is why
+    # both are configured together.
+    cookie_samesite: Literal["lax", "strict", "none"] = "lax"
 
     login_rate_limit_max_attempts: int = 5
     login_rate_limit_window_seconds: int = 900
@@ -79,6 +97,8 @@ class Settings(BaseSettings):
     processing_max_xlsx_rows_per_sheet: int = 50_000
     processing_max_xlsx_columns_per_sheet: int = 500
     processing_max_extracted_text_chars: int = 5_000_000
+    ocr_languages: str = "eng+ara"
+    ocr_pdf_render_scale: float = 2.0
     # DOCX/XLSX are zip archives; python-docx/openpyxl decompress their
     # internal XML parts without a built-in size cap, so every zip entry
     # is checked against these before either library ever touches the
@@ -223,6 +243,39 @@ class Settings(BaseSettings):
     collaboration_insights_max_output_tokens: int = 2048
     collaboration_ai_rate_limit_max: int = 20
     collaboration_ai_rate_limit_window_seconds: int = 3600
+
+    @property
+    def frontend_origins(self) -> list[str]:
+        """`frontend_origin` split into the exact-match list CORSMiddleware
+        wants, with trailing slashes stripped (a browser's Origin header
+        never has one, so a configured "http://host:3000/" would never
+        match and would fail as an opaque CORS error)."""
+        origins = [origin.strip().rstrip("/") for origin in self.frontend_origin.split(",") if origin.strip()]
+        codespace_name = os.getenv("CODESPACE_NAME")
+        forwarding_domain = os.getenv("GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN")
+        if codespace_name and forwarding_domain:
+            origins.extend(
+                [
+                    f"https://{codespace_name}-3000.{forwarding_domain}",
+                    f"https://3000-{codespace_name}.{forwarding_domain}",
+                ]
+            )
+        return list(dict.fromkeys(origins))
+
+    @field_validator("database_url")
+    @classmethod
+    def _normalize_database_driver(cls, value: str) -> str:
+        """Managed Postgres providers hand out plain `postgres://` /
+        `postgresql://` DSNs. SQLAlchemy resolves those to psycopg2, which
+        is not this project's declared driver (`psycopg[binary]`, i.e.
+        psycopg3) and which rejects options psycopg3 accepts -- notably
+        Neon's `channel_binding=require`. Pin the driver explicitly so the
+        DSN a provider gives you works verbatim.
+        """
+        for prefix in ("postgresql://", "postgres://"):
+            if value.startswith(prefix):
+                return "postgresql+psycopg://" + value[len(prefix) :]
+        return value
 
 
 settings = Settings()

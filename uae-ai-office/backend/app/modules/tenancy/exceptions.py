@@ -69,3 +69,18 @@ class CannotRemoveSelfError(AppError):
     status_code = 400
     code = "cannot_remove_self"
 
+
+class InvitationNotFoundError(AppError):
+    status_code = 404
+    code = "invitation_not_found"
+
+
+class InvitationInvalidError(AppError):
+    status_code = 400
+    code = "invitation_invalid"
+
+
+class InvitationAlreadyExistsError(AppError):
+    status_code = 409
+    code = "invitation_already_exists"
+

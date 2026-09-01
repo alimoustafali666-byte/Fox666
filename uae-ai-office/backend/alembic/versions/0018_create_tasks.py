@@ -169,7 +169,7 @@ def upgrade() -> None:
     # Neither FK below uses ondelete="CASCADE" -- migration 0009 discovered
     # (for audit_logs) that Postgres enforces a FK's CASCADE action using
     # the REFERENCING table's own grants, not the deleting statement's;
-    # since UPDATE/DELETE/TRUNCATE are revoked from uae_app on this table
+    # since UPDATE/DELETE/TRUNCATE are revoked from the app role on this table
     # below, a CASCADE into it (from deleting a company, or a task) would
     # fail with a confusing "permission denied for table task_comments"
     # on a statement that never mentions this table at all. Neither
@@ -198,7 +198,7 @@ def upgrade() -> None:
         f"CREATE POLICY tenant_visibility_insert ON task_comments FOR INSERT "
         f"WITH CHECK ({_COMPANY_EXPR} AND author_user_id = {_USER_EXPR} AND {_TASK_EXISTS_EXPR})"
     )
-    op.execute("REVOKE UPDATE, DELETE, TRUNCATE ON task_comments FROM uae_app")
+    op.execute("REVOKE UPDATE, DELETE, TRUNCATE ON task_comments FROM CURRENT_USER")
 
     # --- task_activity (append-only) ---
     op.create_table(
@@ -226,7 +226,7 @@ def upgrade() -> None:
     op.execute("ALTER TABLE task_activity FORCE ROW LEVEL SECURITY")
     op.execute(f"CREATE POLICY tenant_visibility_select ON task_activity FOR SELECT USING ({_COMPANY_EXPR} AND {_TASK_EXISTS_EXPR})")
     op.execute(f"CREATE POLICY tenant_visibility_insert ON task_activity FOR INSERT WITH CHECK ({_COMPANY_EXPR} AND {_TASK_EXISTS_EXPR})")
-    op.execute("REVOKE UPDATE, DELETE, TRUNCATE ON task_activity FROM uae_app")
+    op.execute("REVOKE UPDATE, DELETE, TRUNCATE ON task_activity FROM CURRENT_USER")
 
     # --- chat_notifications extension ---
     op.add_column("chat_notifications", sa.Column("task_id", postgresql.UUID(as_uuid=True), nullable=True))
@@ -235,10 +235,10 @@ def upgrade() -> None:
 def downgrade() -> None:
     op.drop_column("chat_notifications", "task_id")
 
-    op.execute("GRANT UPDATE, DELETE, TRUNCATE ON task_activity TO uae_app")
+    op.execute("GRANT UPDATE, DELETE, TRUNCATE ON task_activity TO CURRENT_USER")
     op.drop_table("task_activity")
 
-    op.execute("GRANT UPDATE, DELETE, TRUNCATE ON task_comments TO uae_app")
+    op.execute("GRANT UPDATE, DELETE, TRUNCATE ON task_comments TO CURRENT_USER")
     op.drop_table("task_comments")
 
     op.drop_table("tasks")

@@ -1,0 +1,16 @@
+{
+  "name": "UAE AI Office",
+  "forwardPorts": [3000, 8000],
+  "portsAttributes": {
+    "3000": {
+      "label": "UAE AI Office frontend",
+      "visibility": "public",
+      "onAutoForward": "notify"
+    },
+    "8000": {
+      "label": "UAE AI Office API",
+      "visibility": "public",
+      "onAutoForward": "notify"
+    }
+  }
+}

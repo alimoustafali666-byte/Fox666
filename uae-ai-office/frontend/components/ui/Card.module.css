@@ -1,8 +1,8 @@
 .card {
-  background: var(--color-surface);
+  background: linear-gradient(145deg, rgba(17, 34, 61, 0.94), rgba(10, 24, 45, 0.9));
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--shadow-card), inset 0 1px 0 rgba(255, 255, 255, 0.035);
   transition: box-shadow var(--transition-base), border-color var(--transition-base), transform var(--transition-base);
 }
 
@@ -36,9 +36,7 @@
   align-items: center;
   gap: var(--space-3);
 }
-
 .iconChip {
-  display: flex;
   align-items: center;
   justify-content: center;
   width: 32px;

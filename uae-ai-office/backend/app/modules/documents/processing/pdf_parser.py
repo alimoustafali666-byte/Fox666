@@ -1,7 +1,4 @@
-"""Native-text PDF extraction only -- no OCR. A PDF with no extractable
-text layer (most commonly a scanned/image-only PDF) raises
-InsufficientTextError rather than silently succeeding with zero content.
-"""
+"""Prefer native PDF text and fall back to OCR for scanned PDFs."""
 
 import re
 from typing import BinaryIO
@@ -15,6 +12,7 @@ from app.modules.documents.processing.errors import (
     ParserFailureError,
     PathologicalDocumentError,
 )
+from app.modules.documents.processing.ocr_parser import parse_pdf_with_ocr
 
 _PARAGRAPH_SPLIT = re.compile(r"\n\s*\n")
 
@@ -33,6 +31,7 @@ class PdfParser(DocumentParser):
                         f"PDF has more than {settings.processing_max_pdf_pages} pages."
                     )
 
+                native_text_pages: set[int] = set()
                 for page_number, page in enumerate(pdf.pages, start=1):
                     raw_text = page.extract_text() or ""
                     # Page-level text is split into paragraph-like units
@@ -42,6 +41,7 @@ class PdfParser(DocumentParser):
                         paragraph = paragraph.strip()
                         if not paragraph:
                             continue
+                        native_text_pages.add(page_number)
                         elements.append(
                             ParsedElement(
                                 text=paragraph,
@@ -50,16 +50,17 @@ class PdfParser(DocumentParser):
                                 source_location={"page_number": page_number},
                             )
                         )
+                page_count = len(pdf.pages)
         except PathologicalDocumentError:
             raise
         except Exception as exc:
             raise ParserFailureError("PDF could not be read as a valid file.") from exc
 
+        if not elements or len(native_text_pages) < page_count:
+            ocr_document = parse_pdf_with_ocr(fileobj, skip_pages=native_text_pages)
+            elements.extend(ocr_document.elements)
         if not elements:
-            raise InsufficientTextError(
-                "PDF has no extractable native text -- it may be a scanned/image-only "
-                "PDF, which OCR (not yet implemented) would be required for."
-            )
+            raise InsufficientTextError("PDF has no usable extracted text.")
 
         return ParsedDocument(elements=elements)
 

@@ -16,8 +16,9 @@ the same way every other company-root read already is: the caller must
 already be an authenticated member of the company (get_tenant_context).
 """
 
-from alembic import op
 import sqlalchemy as sa
+
+from alembic import op
 
 revision = "0019"
 down_revision = "0018"

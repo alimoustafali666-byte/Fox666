@@ -27,6 +27,21 @@ def touch_last_login(db: Session, user_id: uuid.UUID, when: datetime) -> None:
     db.execute(update(User).where(User.id == user_id).values(last_login_at=when))
 
 
+def update_user_profile(db: Session, user: User, *, full_name: str) -> User:
+    user.full_name = full_name.strip()
+    db.flush()
+    return user
+
+
+def update_user_password(db: Session, user: User, *, password_hash: str) -> None:
+    user.password_hash = password_hash
+    db.flush()
+
+
+def revoke_all_user_sessions(db: Session, user_id: uuid.UUID, *, when: datetime) -> None:
+    db.execute(update(RefreshSession).where(RefreshSession.user_id == user_id, RefreshSession.revoked_at.is_(None)).values(revoked_at=when))
+
+
 def create_company(db: Session, *, name: str, timezone: str, country: str) -> Company:
     company = Company(name=name, timezone=timezone, country=country)
     db.add(company)
@@ -70,6 +85,10 @@ def get_membership(
             CompanyMember.user_id == user_id, CompanyMember.company_id == company_id
         )
     ).scalar_one_or_none()
+
+
+def get_memberships_with_companies(db: Session, user_id: uuid.UUID) -> list[tuple[CompanyMember, Company]]:
+    return list(db.execute(select(CompanyMember, Company).join(Company, Company.id == CompanyMember.company_id).where(CompanyMember.user_id == user_id).order_by(CompanyMember.created_at.asc())).all())
 
 
 def create_refresh_session(

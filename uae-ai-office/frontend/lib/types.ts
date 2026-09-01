@@ -32,6 +32,13 @@ export interface CompanyPublic {
   has_logo: boolean;
 }
 
+export interface DailyBriefSchedule {
+  enabled: boolean;
+  time: string;
+  timezone: string;
+  last_scheduled_date: string | null;
+}
+
 export interface CurrentCompanyResponse {
   company: CompanyPublic;
   role: Role;
@@ -43,6 +50,21 @@ export interface CompanyMemberPublic {
   full_name: string | null;
   role: Role;
   created_at: string;
+}
+
+export type InvitationStatus = "pending" | "accepted" | "expired" | "revoked";
+
+export interface InvitationPublic {
+  id: string;
+  email: string;
+  role: Role;
+  status: InvitationStatus;
+  expires_at: string;
+  created_at: string;
+}
+
+export interface InvitationCreateResponse extends InvitationPublic {
+  token: string;
 }
 
 // --- Projects ---

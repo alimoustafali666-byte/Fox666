@@ -137,6 +137,11 @@ export default function TaskDetailPage() {
     }
   }
 
+  async function handleArchive() {
+    if (!task || !window.confirm(t("tasks.detail.confirmArchive"))) return;
+    await handleStatusChange(task.status === "cancelled" ? "todo" : "cancelled");
+  }
+
   async function handleSaveFields(event: FormEvent) {
     event.preventDefault();
     if (!task) return;
@@ -197,9 +202,10 @@ export default function TaskDetailPage() {
           </div>
         </div>
         {canEditAllFields && !editingFields ? (
-          <Button size="sm" variant="secondary" onClick={() => setEditingFields(true)}>
-            {t("common.edit")}
-          </Button>
+          <div style={{ display: "flex", gap: "var(--space-2)" }}>
+            <Button size="sm" variant="secondary" onClick={() => setEditingFields(true)}>{t("common.edit")}</Button>
+            <Button size="sm" variant="danger" onClick={handleArchive}>{task.status === "cancelled" ? t("tasks.detail.restore") : t("tasks.detail.archive")}</Button>
+          </div>
         ) : null}
       </div>
 

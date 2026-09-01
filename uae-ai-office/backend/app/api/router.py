@@ -29,6 +29,4 @@ api_router.include_router(collaboration_router)
 api_router.include_router(tasks_router)
 api_router.include_router(reports_router)
 
-# Future modules (added in their respective implementation steps):
-#   invitations (team management)
 

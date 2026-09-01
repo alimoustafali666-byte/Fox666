@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslation, type TranslationKey } from "@/lib/i18n";
+import { useAuth } from "@/lib/auth-context";
 import { useMessagesUnreadBadge } from "@/lib/use-messages-badge";
 import clsx from "../ui/clsx";
 import { BrandMark } from "./BrandMark";
+import { ROLE_LABEL_KEYS } from "./roles";
 import {
   AskIcon,
   BriefIcon,
@@ -20,22 +22,30 @@ import {
 } from "./icons";
 import styles from "./Sidebar.module.css";
 
-const NAV_ITEMS: { href: string; labelKey: TranslationKey; icon: typeof DashboardIcon }[] = [
-  { href: "/dashboard", labelKey: "nav.dashboard", icon: DashboardIcon },
-  { href: "/ask", labelKey: "nav.ask", icon: AskIcon },
-  { href: "/messages", labelKey: "nav.messages", icon: MessagesIcon },
-  { href: "/documents", labelKey: "nav.documents", icon: DocumentsIcon },
-  { href: "/projects", labelKey: "nav.projects", icon: ProjectsIcon },
-  { href: "/tasks", labelKey: "nav.tasks", icon: TasksIcon },
-  { href: "/brief", labelKey: "nav.brief", icon: BriefIcon },
-  { href: "/reports", labelKey: "nav.reports", icon: ReportsIcon },
-  { href: "/support", labelKey: "nav.help", icon: HelpIcon },
-  { href: "/settings", labelKey: "nav.settings", icon: SettingsIcon },
+const NAV_ITEMS: { href: string; labelKey: TranslationKey; icon: typeof DashboardIcon; accent: string }[] = [
+  { href: "/dashboard", labelKey: "nav.dashboard", icon: DashboardIcon, accent: "blue" },
+  { href: "/ask", labelKey: "nav.ask", icon: AskIcon, accent: "cyan" },
+  { href: "/messages", labelKey: "nav.messages", icon: MessagesIcon, accent: "magenta" },
+  { href: "/documents", labelKey: "nav.documents", icon: DocumentsIcon, accent: "amber" },
+  { href: "/projects", labelKey: "nav.projects", icon: ProjectsIcon, accent: "green" },
+  { href: "/tasks", labelKey: "nav.tasks", icon: TasksIcon, accent: "rose" },
+  { href: "/brief", labelKey: "nav.brief", icon: BriefIcon, accent: "sky" },
+  { href: "/reports", labelKey: "nav.reports", icon: ReportsIcon, accent: "violet" },
+  { href: "/support", labelKey: "nav.help", icon: HelpIcon, accent: "orange" },
+  { href: "/settings", labelKey: "nav.settings", icon: SettingsIcon, accent: "teal" },
 ];
+
+function initials(name: string | null, email: string): string {
+  const source = name?.trim() || email;
+  const parts = source.split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return source.slice(0, 2).toUpperCase();
+}
 
 export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
   const pathname = usePathname();
   const { t } = useTranslation();
+  const { user, role } = useAuth();
   const unreadMessages = useMessagesUnreadBadge();
 
   return (
@@ -58,7 +68,7 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
               <Link
                 key={item.href}
                 href={item.href}
-                className={clsx(styles.navItem, active && styles.navItemActive)}
+                className={clsx(styles.navItem, styles[`accent-${item.accent}`], active && styles.navItemActive)}
               >
                 <span className={styles.activeBar} />
                 <span className={styles.icon}>
@@ -72,6 +82,14 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
             );
           })}
         </nav>
+        <div className={styles.profile}>
+          <div className={styles.profileAvatar}>{user ? initials(user.full_name, user.email) : ""}</div>
+          <div className={styles.profileInfo}>
+            <div className={styles.profileName}>{user?.full_name || user?.email}</div>
+            {role ? <div className={styles.profileRole}>{t(ROLE_LABEL_KEYS[role])}</div> : null}
+          </div>
+          <span className={styles.status} aria-label="Online" />
+        </div>
       </aside>
     </>
   );

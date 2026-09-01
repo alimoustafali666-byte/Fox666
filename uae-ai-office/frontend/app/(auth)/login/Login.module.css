@@ -1,0 +1,48 @@
+.loginCard {
+  position: relative;
+  overflow: hidden;
+  border-color: rgba(123, 184, 255, 0.28);
+  background: linear-gradient(145deg, rgba(18, 35, 67, 0.86), rgba(7, 17, 35, 0.82));
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.38), 0 0 0 1px rgba(57, 214, 232, 0.08), 0 0 48px rgba(54, 119, 255, 0.12);
+  backdrop-filter: blur(24px);
+}
+
+.loginCard::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 2px;
+  background: linear-gradient(90deg, var(--color-accent), var(--color-violet), var(--color-primary));
+  opacity: 0.9;
+}
+
+.secureStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: var(--space-5);
+  padding: 5px 9px;
+  border: 1px solid rgba(85, 214, 154, 0.24);
+  border-radius: var(--radius-full);
+  background: rgba(85, 214, 154, 0.08);
+  color: var(--color-success);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.secureStatus span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 10px currentColor;
+}
+
+.welcomeTitle { margin: 0; color: var(--color-text-primary); font-size: 28px; line-height: 1.15; }
+.welcomeSubtitle { margin-top: 6px; color: var(--color-text-secondary); font-size: var(--font-size-sm); }
+.cardOrb { position: relative; width: 64px; height: 64px; margin: 0 auto var(--space-5); border-radius: 50%; background: radial-gradient(circle at 36% 32%, #eafcff 0 5%, #39d6e8 15%, #3677ff 42%, #6d3fd6 68%, transparent 72%); box-shadow: 0 0 24px rgba(57, 214, 232, 0.55), 0 0 46px rgba(109, 63, 214, 0.3); }
+.cardOrb::before, .cardOrb::after { content: ""; position: absolute; inset: -10px -19px; border: 1px solid rgba(57, 214, 232, 0.44); border-radius: 50%; transform: rotate(24deg); }
+.cardOrb::after { inset: -17px -8px; border-color: rgba(169, 139, 255, 0.4); transform: rotate(-42deg); }
+.cardOrb span { position: absolute; top: 8px; right: 3px; width: 5px; height: 5px; border-radius: 50%; background: #fff; box-shadow: 0 0 9px #fff; }

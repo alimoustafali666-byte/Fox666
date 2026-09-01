@@ -58,7 +58,21 @@ _font_registered = False
 def _ensure_arabic_font_registered() -> None:
     global _font_registered
     if not _font_registered:
-        pdfmetrics.registerFont(TTFont(_ARABIC_FONT_NAME, _ARABIC_FONT_PATH))
+        try:
+            pdfmetrics.registerFont(TTFont(_ARABIC_FONT_NAME, _ARABIC_FONT_PATH))
+        except Exception as exc:
+            # This asset is a binary file. Copying the tree through any
+            # text-only channel (an export, a patch, a chat transcript)
+            # silently replaces it with a placeholder, and reportlab then
+            # fails deep inside its TTF parser with "Not a recognized
+            # TrueType font" -- which says nothing about what to do.
+            raise RuntimeError(
+                f"The bundled Arabic PDF font at {_ARABIC_FONT_PATH} is missing or is not a "
+                "valid TrueType file, so Arabic PDF reports cannot be rendered. Restore it with "
+                "a real copy of Noto Naskh Arabic Regular (e.g. Debian/Ubuntu's fonts-noto-core "
+                "package ships it at "
+                "/usr/share/fonts/truetype/noto/NotoNaskhArabic-Regular.ttf)."
+            ) from exc
         _font_registered = True
 
 

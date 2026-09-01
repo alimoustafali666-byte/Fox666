@@ -1,6 +1,8 @@
 "use client";
 
 import { useAuth } from "@/lib/auth-context";
+import { useEffect, useState } from "react";
+import { authApi } from "@/lib/api-client";
 import { useTranslation } from "@/lib/i18n";
 import { buttonClassName } from "../ui/Button";
 import { Badge } from "../ui/Badge";
@@ -18,8 +20,10 @@ function initials(name: string | null, email: string): string {
 }
 
 export function Header({ onToggleMenu }: { onToggleMenu: () => void }) {
-  const { user, company, role, logout } = useAuth();
+  const { user, company, role, logout, switchCompany } = useAuth();
   const { t } = useTranslation();
+  const [companies, setCompanies] = useState<{ company_id: string; company_name: string }[]>([]);
+  useEffect(() => { authApi.listCompanies().then(setCompanies).catch(() => setCompanies([])); }, []);
 
   return (
     <header className={styles.header}>
@@ -43,6 +47,7 @@ export function Header({ onToggleMenu }: { onToggleMenu: () => void }) {
           </div>
         </div>
       ) : null}
+      {companies.length > 1 ? <select aria-label="Company" value={company?.id ?? ""} onChange={(event) => void switchCompany(event.target.value)}><option value="">{company?.name}</option>{companies.filter((item) => item.company_id !== company?.id).map((item) => <option key={item.company_id} value={item.company_id}>{item.company_name}</option>)}</select> : null}
 
       <div className={styles.spacer} />
 

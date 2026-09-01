@@ -17,14 +17,18 @@ architecture" this step is meant to avoid inventing on the fly).
 
 import logging
 import uuid
+from datetime import UTC, datetime, timedelta
+from app.db.session import set_company_context, set_user_context
 from typing import BinaryIO
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.storage.exceptions import ObjectNotFoundError, StorageError
 from app.core.storage.factory import get_storage_provider
 from app.core.storage.keys import build_company_logo_object_key
 from app.core.storage.provider import StorageProvider
+from app.core.security import generate_refresh_token, hash_refresh_token
 from app.modules.audit_log.service import record_audit_event
 from app.modules.auth import repository as auth_repository
 from app.modules.documents.content_validation import detect_and_validate_content_type
@@ -41,14 +45,18 @@ from app.modules.tenancy.exceptions import (
     LogoTooLargeError,
     MemberNotFoundError,
     UnsupportedLogoTypeError,
+    InvitationAlreadyExistsError,
+    InvitationInvalidError,
+    InvitationNotFoundError,
 )
-from app.modules.tenancy.models import Company, CompanyMember
+from app.modules.tenancy.models import Company, CompanyInvitation, CompanyMember
 from app.modules.tenancy.roles import ROLE_HIERARCHY
 
 logger = logging.getLogger(__name__)
 
 _ALLOWED_LOGO_MIME_TYPES = {"image/png", "image/jpeg"}
 _MAX_LOGO_BYTES = 2 * 1024 * 1024  # 2 MiB -- a logo, not a document
+_INVITATION_TTL = timedelta(days=7)
 
 
 def _compensate_storage_delete(provider: StorageProvider, storage_key: str) -> None:
@@ -275,4 +283,100 @@ def remove_member(
         ip_address=ip_address,
     )
     db.commit()
+
+
+def invitation_status(invitation: CompanyInvitation, now: datetime | None = None) -> str:
+    if invitation.revoked_at is not None:
+        return "revoked"
+    if invitation.accepted_at is not None:
+        return "accepted"
+    if invitation.expires_at <= (now or datetime.now(UTC)):
+        return "expired"
+    return "pending"
+
+
+def _ensure_invitation_role(role: str) -> None:
+    if role not in ROLE_HIERARCHY:
+        raise InvalidRoleError(f"role must be one of {list(ROLE_HIERARCHY)}.")
+    if role == "owner":
+        raise InsufficientRoleForActionError("Invitations cannot grant owner access.")
+
+
+def create_invitation(db: Session, *, company_id: uuid.UUID, actor_user_id: uuid.UUID,
+                      email: str, role: str) -> tuple[CompanyInvitation, str]:
+    _ensure_invitation_role(role)
+    active = db.execute(select(CompanyInvitation).where(
+        CompanyInvitation.company_id == company_id,
+        CompanyInvitation.email == email,
+        CompanyInvitation.accepted_at.is_(None),
+        CompanyInvitation.revoked_at.is_(None),
+    )).scalar_one_or_none()
+    if active and invitation_status(active) == "pending":
+        raise InvitationAlreadyExistsError("A pending invitation already exists for this email.")
+    raw_token = generate_refresh_token()
+    invitation = repository.create_invitation(
+        db, company_id=company_id, email=email, role=role, invited_by=actor_user_id,
+        token_hash=hash_refresh_token(raw_token), expires_at=datetime.now(UTC) + _INVITATION_TTL,
+    )
+    db.commit()
+    return invitation, raw_token
+
+
+def list_company_invitations(db: Session, company_id: uuid.UUID) -> list[CompanyInvitation]:
+    return repository.list_invitations(db, company_id)
+
+
+def resend_invitation(db: Session, *, company_id: uuid.UUID, invitation_id: uuid.UUID) -> tuple[CompanyInvitation, str]:
+    invitation = repository.get_invitation(db, company_id, invitation_id)
+    if invitation is None or invitation_status(invitation) != "pending":
+        raise InvitationNotFoundError("This pending invitation could not be found.")
+    raw_token = generate_refresh_token()
+    invitation.token_hash = hash_refresh_token(raw_token)
+    invitation.expires_at = datetime.now(UTC) + _INVITATION_TTL
+    db.commit()
+    return invitation, raw_token
+
+
+def revoke_invitation(db: Session, *, company_id: uuid.UUID, invitation_id: uuid.UUID) -> None:
+    invitation = repository.get_invitation(db, company_id, invitation_id)
+    if invitation is None or invitation_status(invitation) != "pending":
+        raise InvitationNotFoundError("This pending invitation could not be found.")
+    invitation.revoked_at = datetime.now(UTC)
+    db.commit()
+
+
+def get_invitation_for_acceptance(db: Session, raw_token: str) -> CompanyInvitation:
+    invitation = repository.get_invitation_by_token_hash(db, hash_refresh_token(raw_token))
+    if invitation is None or invitation_status(invitation) != "pending":
+        raise InvitationInvalidError("This invitation is no longer valid.")
+    return invitation
+
+
+def accept_invitation(db: Session, *, raw_token: str, email: str, password: str,
+                      full_name: str) -> tuple[object, str]:
+    from app.modules.auth import service as auth_service
+
+    invitation = get_invitation_for_acceptance(db, raw_token)
+    if invitation.email.lower() != email.lower():
+        raise InvitationInvalidError("This invitation is for a different email address.")
+    user = auth_repository.get_user_by_email(db, email)
+    if user is None:
+        user = auth_repository.create_user(
+            db, email=email, password_hash=hash_password(password), full_name=full_name
+        )
+    set_company_context(db, invitation.company_id)
+    if auth_repository.get_membership(db, user.id, invitation.company_id) is None:
+        auth_repository.create_company_member(
+            db, company_id=invitation.company_id, user_id=user.id, role=invitation.role
+        )
+    invitation.accepted_at = datetime.now(UTC)
+    set_user_context(db, user.id)
+    access_token_response = auth_service._access_token_response(
+        user_id=user.id, company_id=invitation.company_id, role=invitation.role
+    )
+    raw_refresh_token, _ = auth_service._issue_refresh_session(
+        db, user_id=user.id, company_id=invitation.company_id, family_id=uuid.uuid4()
+    )
+    db.commit()
+    return access_token_response, raw_refresh_token
 

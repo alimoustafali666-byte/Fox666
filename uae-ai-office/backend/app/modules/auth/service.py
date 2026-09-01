@@ -28,6 +28,7 @@ from app.modules.auth.exceptions import (
 from app.modules.auth.models import RefreshSession, User
 from app.modules.auth.rate_limit import login_rate_limiter
 from app.modules.auth.schemas import AccessTokenResponse, LoginRequest, SignupRequest
+from app.modules.auth.schemas import PasswordChangeRequest, ProfileUpdateRequest
 
 
 @dataclass
@@ -217,6 +218,33 @@ def login(
     return TokenIssueResult(
         access_token_response=access_token_response, raw_refresh_token=raw_refresh_token
     )
+
+
+def update_profile(db: Session, *, user: User, data: ProfileUpdateRequest) -> User:
+    updated = repository.update_user_profile(db, user, full_name=data.full_name)
+    db.commit()
+    return updated
+
+
+def change_password(db: Session, *, user: User, data: PasswordChangeRequest) -> None:
+    if not verify_password_or_dummy(data.current_password, user.password_hash):
+        raise InvalidCredentialsError("Current password is incorrect.")
+    repository.update_user_password(db, user, password_hash=hash_password(data.new_password))
+    repository.revoke_all_user_sessions(db, user.id, when=datetime.now(UTC))
+    db.commit()
+
+
+def switch_company(db: Session, *, user: User, company_id: uuid.UUID) -> TokenIssueResult:
+    memberships = repository.get_memberships_with_companies(db, user.id)
+    membership = next((member for member, _company in memberships if member.company_id == company_id), None)
+    if membership is None:
+        raise InvalidCredentialsError("Company membership not found.")
+    set_user_context(db, user.id)
+    set_company_context(db, company_id)
+    access_token_response = _access_token_response(user_id=user.id, company_id=company_id, role=membership.role)
+    raw_refresh_token, _ = _issue_refresh_session(db, user_id=user.id, company_id=company_id, family_id=uuid.uuid4())
+    db.commit()
+    return TokenIssueResult(access_token_response=access_token_response, raw_refresh_token=raw_refresh_token)
 
 
 def refresh(

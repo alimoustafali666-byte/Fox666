@@ -77,8 +77,9 @@ def generate_brief(
     company_id: uuid.UUID,
     actor_user_id: uuid.UUID,
     ip_address: str | None,
+    brief_date: date | None = None,
 ) -> BriefResult:
-    today = datetime.now(UTC).date()
+    today = brief_date or datetime.now(UTC).date()
     existing_brief = repository.get_daily_brief_by_date(db, company_id=company_id, brief_date=today)
 
     previous_brief = repository.get_previous_daily_brief(db, company_id=company_id, before_date=today)

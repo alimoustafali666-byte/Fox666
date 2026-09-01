@@ -26,12 +26,13 @@ export function UploadPanel({
   const [projectId, setProjectId] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [projectsError, setProjectsError] = useState(false);
 
   useEffect(() => {
     projectsApi
       .list({ limit: 100 })
       .then((page) => setProjects(page.items))
-      .catch(() => setProjects([]));
+      .catch(() => setProjectsError(true));
   }, []);
 
   async function handleSubmit(event: FormEvent) {
@@ -71,7 +72,7 @@ export function UploadPanel({
                 <Input
                   id="file"
                   type="file"
-                  accept=".pdf,.doc,.docx,.xls,.xlsx"
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
                   required
                   onChange={(e) => setFile(e.target.files?.[0] ?? null)}
                 />
@@ -102,6 +103,7 @@ export function UploadPanel({
                 ))}
               </Select>
             </FieldWrapper>
+            {projectsError ? <div style={{ color: "var(--color-warning)", fontSize: "var(--font-size-xs)" }}>{t("documents.upload.projectsLoadError")}</div> : null}
           </div>
 
           <div className={styles.actions}>

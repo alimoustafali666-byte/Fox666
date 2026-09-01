@@ -25,6 +25,7 @@ import type {
   CitationPublic,
   CollaborationNotificationPage,
   CompanyPublic,
+  DailyBriefSchedule,
   ConversationMemberPublic,
   ConversationPage,
   ConversationPublic,
@@ -38,6 +39,9 @@ import type {
   DocumentPublic,
   DocumentType,
   MeResponse,
+  CompanyMembershipPublic,
+  InvitationCreateResponse,
+  InvitationPublic,
   MessagePage,
   MessagePublic,
   NotificationPref,
@@ -73,8 +77,20 @@ import type {
   TaskStatus,
 } from "./types";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/v1";
+function getApiBaseUrl(): string {
+  if (process.env.NEXT_PUBLIC_API_BASE_URL) return process.env.NEXT_PUBLIC_API_BASE_URL;
+  if (typeof window === "undefined") return "http://localhost:8000/v1";
+  const { hostname, protocol } = window.location;
+  if (hostname === "localhost" || hostname === "127.0.0.1") {
+    return `${protocol}//${hostname}:8000/v1`;
+  }
+  const codespacesHost = hostname
+    .replace(/(^|\.)3000-/, (_match, prefix: string) => `${prefix}8000-`)
+    .replace(/-3000\./, "-8000.");
+  return `${protocol}//${codespacesHost}/v1`;
+}
+
+const API_BASE_URL = getApiBaseUrl();
 
 // The realtime WebSocket endpoint lives on the same origin/path prefix as
 // the REST API (see backend/app/modules/collaboration/router.py's "/ws"
@@ -198,12 +214,30 @@ async function rawRequest(path: string, options: RequestOptions): Promise<Respon
     body = JSON.stringify(options.body);
   }
 
-  return fetch(buildUrl(path, options.query), {
+  const url = buildUrl(path, options.query);
+  const response = await fetch(url, {
     method: options.method ?? "GET",
     headers,
     body,
     credentials: "include",
   });
+  if (path === "/auth/login") {
+    void response
+      .clone()
+      .text()
+      .then((responseBody) => {
+        console.error("UAE AI Office login diagnostic", {
+          url,
+          method: options.method ?? "GET",
+          status: response.status,
+          responseBody,
+        });
+      })
+      .catch((error: unknown) => {
+        console.error("UAE AI Office login diagnostic network error", { url, error });
+      });
+  }
+  return response;
 }
 
 async function requestResponse(path: string, options: RequestOptions = {}): Promise<Response> {
@@ -264,7 +298,13 @@ export const authApi = {
   }) => request<AccessTokenResponse>("/auth/signup", { method: "POST", body: data }),
 
   login: (data: { email: string; password: string }) =>
-    request<AccessTokenResponse>("/auth/login", { method: "POST", body: data }),
+    request<AccessTokenResponse>("/auth/login", {
+      method: "POST",
+      body: { email: data.email, password: data.password },
+    }),
+
+  acceptInvitation: (token: string, data: { password: string; full_name: string }) =>
+    request<AccessTokenResponse>(`/auth/invitations/${encodeURIComponent(token)}/accept`, { method: "POST", body: data }),
 
   refresh: () => refreshAccessToken(),
 
@@ -272,6 +312,10 @@ export const authApi = {
     request<void>("/auth/logout", { method: "POST", skipAuthRetry: true }).catch(() => undefined),
 
   me: () => request<MeResponse>("/auth/me"),
+  updateProfile: (data: { full_name: string }) => request<MeResponse["user"]>("/auth/me", { method: "PATCH", body: data }),
+  changePassword: (data: { current_password: string; new_password: string }) => request<void>("/auth/me/password", { method: "POST", body: data }),
+  listCompanies: () => request<CompanyMembershipPublic[]>("/auth/me/companies"),
+  switchCompany: (company_id: string) => request<AccessTokenResponse>("/auth/me/companies/switch", { method: "POST", body: { company_id } }),
 };
 
 // --- Tenancy ---
@@ -291,6 +335,11 @@ export const tenancyApi = {
 
   deleteLogo: () => request<CompanyPublic>("/companies/current/logo", { method: "DELETE" }),
 
+  getDailyBriefSchedule: () => request<DailyBriefSchedule>("/companies/current/daily-brief-schedule"),
+
+  updateDailyBriefSchedule: (data: { enabled: boolean; time: string }) =>
+    request<DailyBriefSchedule>("/companies/current/daily-brief-schedule", { method: "PATCH", body: data }),
+
   getLogoBlob: () => requestBlob("/companies/current/logo").then((r) => r.blob),
 
   updateMemberRole: (userId: string, role: Role) =>
@@ -298,6 +347,17 @@ export const tenancyApi = {
 
   removeMember: (userId: string) =>
     request<void>(`/companies/current/members/${userId}`, { method: "DELETE" }),
+
+  listInvitations: () => request<InvitationPublic[]>("/companies/current/invitations"),
+
+  createInvitation: (data: { email: string; role: Role }) =>
+    request<InvitationCreateResponse>("/companies/current/invitations", { method: "POST", body: data }),
+
+  resendInvitation: (invitationId: string) =>
+    request<InvitationCreateResponse>(`/companies/current/invitations/${invitationId}/resend`, { method: "POST" }),
+
+  cancelInvitation: (invitationId: string) =>
+    request<void>(`/companies/current/invitations/${invitationId}`, { method: "DELETE" }),
 };
 
 // --- Projects ---

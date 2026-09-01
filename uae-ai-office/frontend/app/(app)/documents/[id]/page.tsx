@@ -30,10 +30,10 @@ export default function DocumentDetailPage() {
   const [doc, setDoc] = useState<DocumentPublic | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [actionBusy, setActionBusy] = useState<"process" | "index" | "download" | "delete" | null>(null);
+  const [actionBusy, setActionBusy] = useState<"process" | "index" | "download" | "delete" | "refresh" | null>(null);
 
   const load = useCallback(async () => {
-    setLoading(true);
+    if (!doc) setLoading(true);
     setError(null);
     try {
       const document = await documentsApi.get(params.id);
@@ -49,6 +49,12 @@ export default function DocumentDetailPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    if (!doc || (doc.status !== "processing" && doc.indexing_status !== "indexing")) return;
+    const timer = window.setInterval(load, 3000);
+    return () => window.clearInterval(timer);
+  }, [doc, load]);
 
   async function handleLifecycleAction(action: "process" | "index") {
     setActionBusy(action);
@@ -79,6 +85,25 @@ export default function DocumentDetailPage() {
     } finally {
       setActionBusy(null);
     }
+  }
+
+  async function handlePreview() {
+    setActionBusy("download");
+    setError(null);
+    try {
+      const { download_url } = await documentsApi.getDownloadUrl(params.id);
+      window.open(download_url, "_blank", "noopener,noreferrer");
+    } catch (err) {
+      setError(errorMessage(err, t("documents.detail.genericDownloadError")));
+    } finally {
+      setActionBusy(null);
+    }
+  }
+
+  async function handleRefresh() {
+    setActionBusy("refresh");
+    await load();
+    setActionBusy(null);
   }
 
   async function handleDelete() {
@@ -161,9 +186,13 @@ export default function DocumentDetailPage() {
           </div>
 
           <div className={styles.actions}>
+            <Button variant="secondary" onClick={handleRefresh} loading={actionBusy === "refresh"}>
+              {actionBusy === "refresh" ? t("common.loading") : t("documents.detail.refresh")}
+            </Button>
             <Button variant="secondary" onClick={handleDownload} loading={actionBusy === "download"}>
               {actionBusy === "download" ? t("documents.detail.preparing") : t("documents.detail.download")}
             </Button>
+            {doc.file_type === "application/pdf" ? <Button variant="secondary" onClick={handlePreview}>{t("documents.detail.preview")}</Button> : null}
             {canManage && info.nextAction ? (
               <Button
                 variant="secondary"

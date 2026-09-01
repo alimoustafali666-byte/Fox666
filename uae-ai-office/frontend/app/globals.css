@@ -5,85 +5,88 @@
 
 :root {
   /* Color: neutrals (cool, blue-tinted gray) */
-  --color-bg: #f4f6fa;
-  --color-surface: #ffffff;
-  --color-surface-subtle: #f8f9fc;
-  --color-surface-sunken: #eef1f7;
-  --color-border: #e2e6ee;
-  --color-border-strong: #ccd3e0;
+  --color-bg: #071225;
+  --color-surface: #0d1b32;
+  --color-surface-subtle: #11223d;
+  --color-surface-sunken: #06101f;
+  --color-surface-glass: rgba(16, 32, 60, 0.72);
+  --color-border: rgba(148, 183, 224, 0.16);
+  --color-border-strong: rgba(148, 183, 224, 0.28);
 
   /* Color: text */
-  --color-text-primary: #0f1a2e;
-  --color-text-secondary: #4b5670;
-  --color-text-muted: #8993a8;
+  --color-text-primary: #eff6ff;
+  --color-text-secondary: #a9bad1;
+  --color-text-muted: #7186a3;
   --color-text-inverse: #ffffff;
 
   /* Color: brand -- deep navy (structural surfaces: sidebar, auth hero) */
-  --color-navy-950: #060b18;
-  --color-navy-900: #0a1530;
-  --color-navy-800: #101f3f;
-  --color-navy-700: #172b54;
-  --color-navy-600: #223a6b;
+  --color-navy-950: #040b18;
+  --color-navy-900: #071225;
+  --color-navy-800: #0b1b35;
+  --color-navy-700: #10284a;
+  --color-navy-600: #173967;
   --color-navy-border: rgba(255, 255, 255, 0.09);
   --color-navy-text-muted: rgba(255, 255, 255, 0.6);
 
   /* Color: brand / primary -- royal blue (interactive) */
-  --color-primary: #2148d6;
-  --color-primary-hover: #1a38ac;
-  --color-primary-active: #142b87;
-  --color-primary-subtle: #ebf0fe;
-  --color-primary-border: #c2d0fa;
+  --color-primary: #3677ff;
+  --color-primary-hover: #5c91ff;
+  --color-primary-active: #2455c9;
+  --color-primary-subtle: rgba(54, 119, 255, 0.16);
+  --color-primary-border: rgba(92, 145, 255, 0.42);
 
   /* Color: AI accent -- electric cyan, used sparingly for grounded-AI signals */
-  --color-accent: #0eaec4;
-  --color-accent-strong: #0a8698;
-  --color-accent-subtle: #e3f7fa;
-  --color-accent-border: #a9e7f0;
+  --color-accent: #39d6e8;
+  --color-accent-strong: #20aabd;
+  --color-accent-subtle: rgba(57, 214, 232, 0.14);
+  --color-accent-border: rgba(57, 214, 232, 0.42);
 
   /* Color: violet -- a second, sparing AI accent for depth in gradients
      and premium highlights (glow rings, hero backgrounds). Never used as
      a primary interactive color -- royal blue keeps that role. */
   --color-violet: #6d3fd6;
   --color-violet-strong: #5527b8;
-  --color-violet-subtle: #f1ecfc;
-  --color-violet-border: #d9c9f7;
+  --color-violet-subtle: rgba(109, 63, 214, 0.16);
+  --color-violet-border: rgba(164, 132, 240, 0.38);
 
   --gradient-ai: linear-gradient(135deg, #2148d6 0%, #0eaec4 100%);
   --gradient-ai-violet: linear-gradient(120deg, #2148d6 0%, #6d3fd6 55%, #0eaec4 100%);
   --gradient-navy: linear-gradient(160deg, #101f3f 0%, #060b18 100%);
   --gradient-navy-radial: radial-gradient(120% 140% at 12% -10%, #1a2c5c 0%, #101f3f 42%, #060b18 100%);
+  --sidebar-background: radial-gradient(120% 90% at 0% 0%, rgba(42, 66, 132, 0.42) 0%, transparent 48%), linear-gradient(165deg, #0a1731 0%, #050b19 72%);
 
   /* Premium glow rings -- sparing use on hero surfaces and AI-active states */
   --glow-accent: 0 0 0 1px rgba(14, 174, 196, 0.18), 0 8px 28px rgba(14, 174, 196, 0.22);
   --glow-primary: 0 0 0 1px rgba(33, 72, 214, 0.16), 0 10px 28px rgba(33, 72, 214, 0.22);
+  --glow-focus: 0 0 0 3px rgba(57, 214, 232, 0.14), 0 0 22px rgba(57, 214, 232, 0.1);
 
   /* Color: semantic */
-  --color-success: #157a4d;
-  --color-success-subtle: #e6f5ee;
-  --color-success-border: #b9e4cd;
+  --color-success: #55d69a;
+  --color-success-subtle: rgba(45, 190, 122, 0.14);
+  --color-success-border: rgba(85, 214, 154, 0.34);
 
-  --color-warning: #9a5b0a;
-  --color-warning-subtle: #fdf1e2;
-  --color-warning-border: #f5d8a8;
+  --color-warning: #f5c768;
+  --color-warning-subtle: rgba(245, 199, 104, 0.14);
+  --color-warning-border: rgba(245, 199, 104, 0.34);
 
-  --color-danger: #b3273d;
-  --color-danger-subtle: #fceaed;
-  --color-danger-border: #f2c1c9;
+  --color-danger: #ff7d93;
+  --color-danger-subtle: rgba(255, 87, 115, 0.14);
+  --color-danger-border: rgba(255, 125, 147, 0.34);
 
-  --color-info: #205ea3;
-  --color-info-subtle: #eaf2fb;
-  --color-info-border: #bcd6f2;
+  --color-info: #7eb8ff;
+  --color-info-subtle: rgba(73, 145, 237, 0.14);
+  --color-info-border: rgba(126, 184, 255, 0.34);
 
-  --color-neutral-subtle: #eef0f3;
-  --color-neutral-border: #dadde3;
-  --color-neutral-text: #4b5563;
+  --color-neutral-subtle: rgba(148, 183, 224, 0.1);
+  --color-neutral-border: rgba(148, 183, 224, 0.2);
+  --color-neutral-text: #a9bad1;
 
   /* Typography -- system stack, ordered so Arabic-capable system fonts
      (Segoe UI / Tahoma / Noto Sans Arabic) are reachable as fallbacks
      without a separate RTL stack: font matching is per-codepoint, so
      Latin text still resolves to -apple-system/Segoe UI first. */
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    Helvetica, Arial, "Noto Sans Arabic", Tahoma, sans-serif,
+  --font-sans: "Avenir Next", "Segoe UI", "Noto Sans Arabic", Tahoma,
+    sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji";
   --font-size-xs: 12px;
   --font-size-sm: 13px;
@@ -110,20 +113,21 @@
   /* Radius */
   --radius-sm: 4px;
   --radius-md: 6px;
-  --radius-lg: 12px;
-  --radius-xl: 18px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
   --radius-full: 999px;
 
   /* Elevation -- soft two-layer "premium" shadow */
   --shadow-sm: 0 1px 2px rgba(15, 26, 46, 0.05);
   --shadow-md: 0 2px 8px rgba(15, 26, 46, 0.08);
-  --shadow-card: 0 1px 2px rgba(15, 26, 46, 0.04), 0 8px 24px rgba(15, 26, 46, 0.06);
-  --shadow-card-hover: 0 2px 4px rgba(15, 26, 46, 0.05), 0 16px 36px rgba(15, 26, 46, 0.1);
+  --shadow-card: 0 12px 28px rgba(0, 5, 16, 0.2), 0 0 0 1px rgba(148, 183, 224, 0.03);
+  --shadow-card-hover: 0 18px 36px rgba(0, 5, 16, 0.32), 0 0 0 1px rgba(57, 214, 232, 0.16);
   --shadow-lg: 0 12px 32px rgba(6, 11, 24, 0.16);
 
   /* Motion */
   --transition-fast: 120ms ease;
   --transition-base: 180ms cubic-bezier(0.2, 0, 0, 1);
+  --transition-smooth: 240ms cubic-bezier(0.2, 0.75, 0.25, 1);
 
   /* Layout */
   --sidebar-width: 252px;
@@ -144,6 +148,8 @@ body {
 
 body {
   background: var(--color-bg);
+  background-image: radial-gradient(circle at 82% -10%, rgba(54, 119, 255, 0.12), transparent 34%),
+    linear-gradient(180deg, #09172c 0%, var(--color-bg) 44%);
   color: var(--color-text-primary);
   font-family: var(--font-sans);
   font-size: var(--font-size-base);
