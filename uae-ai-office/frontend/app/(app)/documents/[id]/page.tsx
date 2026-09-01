@@ -28,6 +28,7 @@ export default function DocumentDetailPage() {
   const backArrow = dir === "rtl" ? "→" : "←";
 
   const [doc, setDoc] = useState<DocumentPublic | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionBusy, setActionBusy] = useState<"process" | "index" | "download" | "delete" | "refresh" | null>(null);
@@ -88,10 +89,16 @@ export default function DocumentDetailPage() {
   }
 
   async function handlePreview() {
+    if (!doc) return;
     setActionBusy("download");
     setError(null);
     try {
       const { download_url } = await documentsApi.getDownloadUrl(params.id);
+      setPreviewUrl(download_url);
+      const mime = (doc.file_type || "").toLowerCase();
+      if (mime === "application/pdf" || mime.startsWith("image/") || mime.startsWith("text/") || mime.includes("json") || mime.includes("xml") || mime.includes("svg")) {
+        return;
+      }
       window.open(download_url, "_blank", "noopener,noreferrer");
     } catch (err) {
       setError(errorMessage(err, t("documents.detail.genericDownloadError")));
@@ -167,6 +174,26 @@ export default function DocumentDetailPage() {
           </CardBody>
         </Card>
       </div>
+
+      {previewUrl ? (
+        <div style={{ marginBottom: "var(--space-4)" }}>
+          <Card>
+            <CardBody>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--space-3)" }}>
+                <strong>{t("documents.detail.preview")}</strong>
+                <Button size="sm" variant="secondary" onClick={() => window.open(previewUrl, "_blank", "noopener,noreferrer")}>
+                  {t("documents.detail.download")}
+                </Button>
+              </div>
+              <iframe
+                title={doc.file_name}
+                src={previewUrl}
+                style={{ width: "100%", minHeight: "720px", border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)" }}
+              />
+            </CardBody>
+          </Card>
+        </div>
+      ) : null}
 
       <Card>
         <CardBody>

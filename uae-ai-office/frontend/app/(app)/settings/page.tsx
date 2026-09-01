@@ -15,7 +15,7 @@ import { FieldWrapper, Input } from "@/components/ui/Field";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 
 export default function SettingsPage() {
-  const { company, role, user } = useAuth();
+  const { company, role, user, updateProfile, changePassword } = useAuth();
   const { t } = useTranslation();
   const canViewAuditLog = role === "owner" || role === "admin";
   const [scheduleEnabled, setScheduleEnabled] = useState(false);
@@ -30,6 +30,10 @@ export default function SettingsPage() {
   const [newPassword, setNewPassword] = useState("");
   const [passwordMessage, setPasswordMessage] = useState<string | null>(null);
   const [passwordBusy, setPasswordBusy] = useState(false);
+
+  useEffect(() => {
+    setFullName(user?.full_name ?? "");
+  }, [user?.full_name]);
 
   useEffect(() => {
     if (!canViewAuditLog) return;
@@ -55,14 +59,14 @@ export default function SettingsPage() {
 
   async function saveProfile() {
     setProfileBusy(true); setProfileMessage(null);
-    try { await authApi.updateProfile({ full_name: fullName }); setProfileMessage(t("settings.profile.saved")); }
+    try { await updateProfile(fullName); setProfileMessage(t("settings.profile.saved")); }
     catch (err) { setProfileMessage(errorMessage(err, t("settings.profile.error"))); }
     finally { setProfileBusy(false); }
   }
 
   async function savePassword() {
     setPasswordBusy(true); setPasswordMessage(null);
-    try { await authApi.changePassword({ current_password: currentPassword, new_password: newPassword }); setCurrentPassword(""); setNewPassword(""); setPasswordMessage(t("settings.profile.passwordSaved")); }
+    try { await changePassword(currentPassword, newPassword); setCurrentPassword(""); setNewPassword(""); setPasswordMessage(t("settings.profile.passwordSaved")); }
     catch (err) { setPasswordMessage(errorMessage(err, t("settings.profile.passwordError"))); }
     finally { setPasswordBusy(false); }
   }

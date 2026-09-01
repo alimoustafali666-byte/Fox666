@@ -19,6 +19,8 @@ interface AuthState {
 interface AuthContextValue extends AuthState {
   login: (email: string, password: string) => Promise<void>;
   signup: (data: { email: string; password: string; full_name: string; company_name: string }) => Promise<void>;
+  updateProfile: (fullName: string) => Promise<void>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshCompany: () => Promise<void>;
   switchCompany: (companyId: string) => Promise<void>;
@@ -102,6 +104,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     []
   );
 
+  const updateProfile = useCallback(async (fullName: string) => {
+    const updated = await authApi.updateProfile({ full_name: fullName });
+    setState((prev) => {
+      if (!prev.user) return prev;
+      return { ...prev, user: { ...prev.user, full_name: updated.full_name } };
+    });
+  }, []);
+
+  const changePassword = useCallback(async (currentPassword: string, newPassword: string) => {
+    await authApi.changePassword({ current_password: currentPassword, new_password: newPassword });
+  }, []);
+
   const logout = useCallback(async () => {
     await authApi.logout();
     setAccessToken(null);
@@ -123,8 +137,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ ...state, login, signup, logout, refreshCompany, switchCompany }),
-    [state, login, signup, logout, refreshCompany, switchCompany]
+    () => ({ ...state, login, signup, updateProfile, changePassword, logout, refreshCompany, switchCompany }),
+    [state, login, signup, updateProfile, changePassword, logout, refreshCompany, switchCompany]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
