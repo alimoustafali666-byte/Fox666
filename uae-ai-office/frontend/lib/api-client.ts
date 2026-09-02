@@ -79,15 +79,7 @@ import type {
 
 function getApiBaseUrl(): string {
   if (process.env.NEXT_PUBLIC_API_BASE_URL) return process.env.NEXT_PUBLIC_API_BASE_URL;
-  if (typeof window === "undefined") return "http://localhost:8000/v1";
-  const { hostname, protocol } = window.location;
-  if (hostname === "localhost" || hostname === "127.0.0.1") {
-    return `${protocol}//${hostname}:8000/v1`;
-  }
-  const codespacesHost = hostname
-    .replace(/(^|\.)3000-/, (_match, prefix: string) => `${prefix}8000-`)
-    .replace(/-3000\./, "-8000.");
-  return `${protocol}//${codespacesHost}/v1`;
+  return "/v1";
 }
 
 const API_BASE_URL = getApiBaseUrl();
@@ -98,8 +90,9 @@ const API_BASE_URL = getApiBaseUrl();
 // access token travels as a query parameter because the browser
 // WebSocket API cannot set an Authorization header on the handshake.
 export function buildCollaborationWebSocketUrl(token: string): string {
-  const wsBase = API_BASE_URL.replace(/^http/, "ws");
-  return `${wsBase}/collaboration/ws?token=${encodeURIComponent(token)}`;
+  const { protocol, host } = window.location;
+  const wsProtocol = protocol === "https:" ? "wss" : "ws";
+  return `${wsProtocol}://${host}/v1/collaboration/ws?token=${encodeURIComponent(token)}`;
 }
 
 export class ApiError extends Error {
@@ -190,7 +183,7 @@ interface RequestOptions {
 }
 
 function buildUrl(path: string, query?: RequestOptions["query"]): string {
-  const url = new URL(`${API_BASE_URL}${path}`);
+  const url = new URL(`${API_BASE_URL}${path}`, window.location.origin);
   if (query) {
     for (const [key, value] of Object.entries(query)) {
       if (value !== undefined && value !== null && value !== "") {

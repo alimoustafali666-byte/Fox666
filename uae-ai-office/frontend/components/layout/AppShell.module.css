@@ -4,13 +4,16 @@
   display: flex;
   flex-direction: column;
   transition: margin-inline-start var(--transition-base);
+  background:
+    linear-gradient(180deg, rgba(8, 15, 30, 0.78), rgba(6, 11, 22, 0.94)),
 }
 
 .content {
   flex: 1;
-  padding: var(--space-8);
+  padding: 24px 22px 32px;
   max-width: var(--content-max-width);
   width: 100%;
+  margin: 0 auto;
 }
 
 .guardLoading {
@@ -18,38 +21,20 @@
   align-items: center;
   justify-content: center;
   min-height: 100vh;
+  background: #040b18;
 }
 
 @media (max-width: 900px) {
-  .main {
-    margin-inline-start: 0;
-  }
+  .main { margin-inline-start: 0; }
 }
 
 @media (max-width: 640px) {
-  .content {
-    padding: var(--space-4);
-  }
+  .content { padding: var(--space-4); }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .main {
-    transition: none;
-  }
-}
-
-/* Reports (Step 20): a printed report page shows only the report
-   content, not the app chrome -- Sidebar/Header hide themselves via
-   their own print rules; this just removes the layout space they'd
-   otherwise reserve. */
+@media (prefers-reduced-motion: reduce) { .main { transition: none; } }
 @media print {
-  .main {
-    margin-inline-start: 0;
-  }
-
-  .content {
-    padding: 0;
-    max-width: none;
-  }
+  .main { margin-inline-start: 0; }
+  .content { padding: 0; max-width: none; }
 }
 

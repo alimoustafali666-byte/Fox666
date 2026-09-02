@@ -24,11 +24,12 @@ export function Button({
   block = false,
   loading = false,
   disabled,
+  className,
   children,
   ...rest
 }: ButtonProps) {
   return (
-    <button className={buttonClassName(variant, size, block)} disabled={disabled || loading} {...rest}>
+    <button className={clsx(buttonClassName(variant, size, block), className)} disabled={disabled || loading} {...rest}>
       {children}
     </button>
   );

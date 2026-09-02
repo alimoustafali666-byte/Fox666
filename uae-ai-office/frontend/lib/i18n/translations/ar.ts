@@ -1,4 +1,3 @@
-  allProjects: "كل المشاريع",
 import type { Translations } from "../types";
 
 // Modern Standard Arabic. Must mirror en.ts's shape exactly -- `satisfies
@@ -314,6 +313,7 @@ const ar = {
     newProject: "مشروع جديد",
     searchPlaceholder: "البحث باسم المشروع…",
     allStatuses: "جميع الحالات",
+    allProjects: "كل المشاريع",
     noProjectsTitle: "لا توجد مشاريع بعد",
     noProjectsManager: "أنشئ مشروعًا لتنظيم المستندات والمحادثات.",
     noProjectsMember: "لم يتم إنشاء أي مشاريع بعد.",
@@ -599,6 +599,7 @@ const ar = {
     genericLoadError: "تعذّر تحميل هذا التقرير.",
     genericExportError: "تعذّر تصدير هذا التقرير في الوقت الحالي.",
     searchPlaceholder: "بحث…",
+    allProjects: "كل المشاريع",
     allStatuses: "جميع الحالات",
     allPriorities: "جميع الأولويات",
     allDueDates: "جميع تواريخ الاستحقاق",

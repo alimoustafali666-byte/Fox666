@@ -1,93 +1,72 @@
-/* Design tokens -- UAE AI Office design system. Plain CSS custom
-   properties, no framework dependency: keeps the frontend's npm surface
-   (and npm audit) minimal, and gives full control over the premium
-   enterprise AI look established in Step 16. */
-
 :root {
-  /* Color: neutrals (cool, blue-tinted gray) */
-  --color-bg: #071225;
-  --color-surface: #0d1b32;
-  --color-surface-subtle: #11223d;
-  --color-surface-sunken: #06101f;
-  --color-surface-glass: rgba(16, 32, 60, 0.72);
-  --color-border: rgba(148, 183, 224, 0.16);
-  --color-border-strong: rgba(148, 183, 224, 0.28);
+  --color-bg: #050d1d;
+  --color-surface: #0d1f38;
+  --color-surface-subtle: #11284a;
+  --color-surface-sunken: #060e1c;
+  --color-surface-glass: rgba(13, 25, 46, 0.78);
+  --color-border: rgba(130, 177, 255, 0.14);
+  --color-border-strong: rgba(159, 186, 255, 0.22);
 
-  /* Color: text */
-  --color-text-primary: #eff6ff;
-  --color-text-secondary: #a9bad1;
-  --color-text-muted: #7186a3;
+  --color-text-primary: #edf3ff;
+  --color-text-secondary: #b5c4d8;
+  --color-text-muted: #7f93b4;
   --color-text-inverse: #ffffff;
 
-  /* Color: brand -- deep navy (structural surfaces: sidebar, auth hero) */
   --color-navy-950: #040b18;
   --color-navy-900: #071225;
   --color-navy-800: #0b1b35;
   --color-navy-700: #10284a;
   --color-navy-600: #173967;
   --color-navy-border: rgba(255, 255, 255, 0.09);
-  --color-navy-text-muted: rgba(255, 255, 255, 0.6);
+  --color-navy-text-muted: rgba(255, 255, 255, 0.68);
 
-  /* Color: brand / primary -- royal blue (interactive) */
-  --color-primary: #3677ff;
-  --color-primary-hover: #5c91ff;
-  --color-primary-active: #2455c9;
-  --color-primary-subtle: rgba(54, 119, 255, 0.16);
-  --color-primary-border: rgba(92, 145, 255, 0.42);
+  --color-primary: #5a7dff;
+  --color-primary-hover: #7e9bfd;
+  --color-primary-active: #3a65df;
+  --color-primary-subtle: rgba(90, 125, 255, 0.18);
+  --color-primary-border: rgba(128, 160, 255, 0.42);
 
-  /* Color: AI accent -- electric cyan, used sparingly for grounded-AI signals */
-  --color-accent: #39d6e8;
-  --color-accent-strong: #20aabd;
-  --color-accent-subtle: rgba(57, 214, 232, 0.14);
-  --color-accent-border: rgba(57, 214, 232, 0.42);
+  --color-accent: #46d8f5;
+  --color-accent-strong: #32b9e8;
+  --color-accent-subtle: rgba(70, 216, 245, 0.12);
+  --color-accent-border: rgba(70, 216, 245, 0.44);
 
-  /* Color: violet -- a second, sparing AI accent for depth in gradients
-     and premium highlights (glow rings, hero backgrounds). Never used as
-     a primary interactive color -- royal blue keeps that role. */
-  --color-violet: #6d3fd6;
-  --color-violet-strong: #5527b8;
-  --color-violet-subtle: rgba(109, 63, 214, 0.16);
-  --color-violet-border: rgba(164, 132, 240, 0.38);
+  --color-violet: #bb77ff;
+  --color-violet-strong: #8f57e6;
+  --color-violet-subtle: rgba(187, 119, 255, 0.16);
+  --color-violet-border: rgba(187, 119, 255, 0.36);
 
-  --gradient-ai: linear-gradient(135deg, #2148d6 0%, #0eaec4 100%);
-  --gradient-ai-violet: linear-gradient(120deg, #2148d6 0%, #6d3fd6 55%, #0eaec4 100%);
-  --gradient-navy: linear-gradient(160deg, #101f3f 0%, #060b18 100%);
-  --gradient-navy-radial: radial-gradient(120% 140% at 12% -10%, #1a2c5c 0%, #101f3f 42%, #060b18 100%);
-  --sidebar-background: radial-gradient(120% 90% at 0% 0%, rgba(42, 66, 132, 0.42) 0%, transparent 48%), linear-gradient(165deg, #0a1731 0%, #050b19 72%);
+  --gradient-ai: linear-gradient(135deg, #3f66ff 0%, #2ad6f7 45%, #d56eff 100%);
+  --gradient-ai-violet: linear-gradient(135deg, #4d75ff 0%, #9060ff 48%, #26d8f1 100%);
+  --gradient-navy: linear-gradient(160deg, #101d39 0%, #070e1a 100%);
+  --gradient-navy-radial: radial-gradient(120% 140% at 12% -10%, #1d2d5d 0%, #101d39 42%, #060b18 100%);
+  --sidebar-background: radial-gradient(110% 100% at 12% 0%, rgba(80, 111, 255, 0.38) 0%, transparent 32%), linear-gradient(180deg, rgba(7, 18, 37, 0.96), rgba(5, 13, 29, 0.98));
 
-  /* Premium glow rings -- sparing use on hero surfaces and AI-active states */
-  --glow-accent: 0 0 0 1px rgba(14, 174, 196, 0.18), 0 8px 28px rgba(14, 174, 196, 0.22);
-  --glow-primary: 0 0 0 1px rgba(33, 72, 214, 0.16), 0 10px 28px rgba(33, 72, 214, 0.22);
-  --glow-focus: 0 0 0 3px rgba(57, 214, 232, 0.14), 0 0 22px rgba(57, 214, 232, 0.1);
+  --glow-accent: 0 0 0 1px rgba(70, 216, 245, 0.18), 0 12px 34px rgba(70, 216, 245, 0.18);
+  --glow-primary: 0 0 0 1px rgba(90, 125, 255, 0.25), 0 18px 32px rgba(90, 125, 255, 0.22);
+  --glow-focus: 0 0 0 3px rgba(70, 216, 245, 0.13), 0 0 20px rgba(70, 216, 245, 0.08);
 
-  /* Color: semantic */
-  --color-success: #55d69a;
-  --color-success-subtle: rgba(45, 190, 122, 0.14);
-  --color-success-border: rgba(85, 214, 154, 0.34);
+  --color-success: #48e2a2;
+  --color-success-subtle: rgba(72, 226, 162, 0.12);
+  --color-success-border: rgba(72, 226, 162, 0.28);
 
-  --color-warning: #f5c768;
-  --color-warning-subtle: rgba(245, 199, 104, 0.14);
-  --color-warning-border: rgba(245, 199, 104, 0.34);
+  --color-warning: #ffb968;
+  --color-warning-subtle: rgba(255, 185, 104, 0.12);
+  --color-warning-border: rgba(255, 185, 104, 0.34);
 
-  --color-danger: #ff7d93;
-  --color-danger-subtle: rgba(255, 87, 115, 0.14);
-  --color-danger-border: rgba(255, 125, 147, 0.34);
+  --color-danger: #ff6f8c;
+  --color-danger-subtle: rgba(255, 111, 140, 0.14);
+  --color-danger-border: rgba(255, 111, 140, 0.34);
 
   --color-info: #7eb8ff;
-  --color-info-subtle: rgba(73, 145, 237, 0.14);
+  --color-info-subtle: rgba(126, 184, 255, 0.12);
   --color-info-border: rgba(126, 184, 255, 0.34);
 
   --color-neutral-subtle: rgba(148, 183, 224, 0.1);
   --color-neutral-border: rgba(148, 183, 224, 0.2);
   --color-neutral-text: #a9bad1;
 
-  /* Typography -- system stack, ordered so Arabic-capable system fonts
-     (Segoe UI / Tahoma / Noto Sans Arabic) are reachable as fallbacks
-     without a separate RTL stack: font matching is per-codepoint, so
-     Latin text still resolves to -apple-system/Segoe UI first. */
-  --font-sans: "Avenir Next", "Segoe UI", "Noto Sans Arabic", Tahoma,
-    sans-serif,
-    "Apple Color Emoji", "Segoe UI Emoji";
+  --font-sans: "Avenir Next", "Segoe UI", "Noto Sans Arabic", Tahoma, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
   --font-size-xs: 12px;
   --font-size-sm: 13px;
   --font-size-base: 14px;
@@ -99,7 +78,6 @@
   --line-height-tight: 1.25;
   --line-height-base: 1.5;
 
-  /* Spacing */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -110,35 +88,29 @@
   --space-10: 40px;
   --space-12: 48px;
 
-  /* Radius */
   --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
-  --radius-xl: 12px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
   --radius-full: 999px;
 
-  /* Elevation -- soft two-layer "premium" shadow */
   --shadow-sm: 0 1px 2px rgba(15, 26, 46, 0.05);
   --shadow-md: 0 2px 8px rgba(15, 26, 46, 0.08);
-  --shadow-card: 0 12px 28px rgba(0, 5, 16, 0.2), 0 0 0 1px rgba(148, 183, 224, 0.03);
-  --shadow-card-hover: 0 18px 36px rgba(0, 5, 16, 0.32), 0 0 0 1px rgba(57, 214, 232, 0.16);
-  --shadow-lg: 0 12px 32px rgba(6, 11, 24, 0.16);
+  --shadow-card: 0 18px 44px rgba(0, 5, 16, 0.26), 0 0 0 1px rgba(148, 183, 224, 0.04);
+  --shadow-card-hover: 0 22px 52px rgba(0, 5, 16, 0.36), 0 0 0 1px rgba(70, 216, 245, 0.12);
+  --shadow-lg: 0 18px 42px rgba(6, 11, 24, 0.2);
 
-  /* Motion */
   --transition-fast: 120ms ease;
   --transition-base: 180ms cubic-bezier(0.2, 0, 0, 1);
   --transition-smooth: 240ms cubic-bezier(0.2, 0.75, 0.25, 1);
 
-  /* Layout */
-  --sidebar-width: 252px;
+  --sidebar-width: 260px;
   --sidebar-width-rail: 76px;
-  --header-height: 60px;
-  --content-max-width: 1180px;
+  --header-height: 72px;
+  --content-max-width: 1360px;
 }
 
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 html,
 body {
@@ -147,9 +119,11 @@ body {
 }
 
 body {
-  background: var(--color-bg);
-  background-image: radial-gradient(circle at 82% -10%, rgba(54, 119, 255, 0.12), transparent 34%),
-    linear-gradient(180deg, #09172c 0%, var(--color-bg) 44%);
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 18% 8%, rgba(125, 75, 255, 0.18), transparent 20%),
+    radial-gradient(circle at 82% 16%, rgba(38, 184, 255, 0.18), transparent 22%),
+    linear-gradient(180deg, #09182f 0%, #050d1d 50%, #030912 100%);
   color: var(--color-text-primary);
   font-family: var(--font-sans);
   font-size: var(--font-size-base);
@@ -157,89 +131,34 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-h1,
-h2,
-h3,
-h4,
-p {
-  margin: 0;
-}
+h1, h2, h3, h4, p { margin: 0; }
 
-a {
-  color: var(--color-primary);
-  text-decoration: none;
-}
+a { color: var(--color-primary); text-decoration: none; }
+a:hover { text-decoration: none; }
 
-a:hover {
-  text-decoration: underline;
-}
+button, input, select, textarea { font-family: inherit; font-size: inherit; color: inherit; }
+ul, ol { margin: 0; padding: 0; list-style: none; }
 
-button,
-input,
-select,
-textarea {
-  font-family: inherit;
-  font-size: inherit;
-  color: inherit;
-}
-
-ul,
-ol {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-::selection {
-  background: var(--color-primary-subtle);
-}
+::selection { background: rgba(97, 121, 255, 0.32); }
 
 :focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }
 
-/* Restrained, shared micro-interactions -- page content fades in on
-   mount, loading placeholders use a slow shared pulse. Both are
-   deliberately subtle and fast per the Step 16 "no animation-heavy
-   product" constraint, and both respect prefers-reduced-motion. */
 @keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
-.uae-fade-in {
-  animation: fadeInUp 220ms cubic-bezier(0.2, 0, 0, 1);
-}
-
-/* Subtle dot-grid texture for dark premium surfaces (auth hero, sidebar
-   top) -- a repeating radial-gradient, no image asset, mirrors correctly
-   for RTL since dots are directionless. Used sparingly, always under a
-   darker gradient background. */
+.uae-fade-in { animation: fadeInUp 220ms cubic-bezier(0.2, 0, 0, 1); }
 .uae-dot-grid {
-  background-image: radial-gradient(rgba(255, 255, 255, 0.14) 1px, transparent 1px);
+  background-image: radial-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px);
   background-size: 22px 22px;
 }
 
-/* Skeleton loading placeholder -- shared shimmer for list/card loading
-   states, replacing a bare spinner where a shaped placeholder communicates
-   the incoming layout better. */
 .uae-skeleton {
   position: relative;
   overflow: hidden;
@@ -256,10 +175,7 @@ ol {
   animation: uae-shimmer 1.6s ease-in-out infinite;
 }
 
-[dir="rtl"] .uae-skeleton::after {
-  transform: translateX(100%);
-  animation-direction: reverse;
-}
+[dir="rtl"] .uae-skeleton::after { transform: translateX(100%); }
 
 @keyframes uae-shimmer {
   100% {

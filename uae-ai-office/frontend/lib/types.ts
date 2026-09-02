@@ -52,6 +52,12 @@ export interface CompanyMemberPublic {
   created_at: string;
 }
 
+export interface CompanyMembershipPublic {
+  company_id: string;
+  company_name: string;
+  role: Role;
+}
+
 export type InvitationStatus = "pending" | "accepted" | "expired" | "revoked";
 
 export interface InvitationPublic {

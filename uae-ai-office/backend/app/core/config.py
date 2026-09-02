@@ -15,10 +15,10 @@ class Settings(BaseSettings):
     log_level: str = "info"
     # One origin, or a comma-separated list of them, for CORS. A list is
     # needed in practice because the same backend is reached both from a
-    # forwarded/public frontend URL and from http://localhost:3000 during
+    # forwarded/public frontend URL and from localhost/127.0.0.1 during
     # development, and CORSMiddleware matches Origin exactly -- a single
     # value silently rejects the other one.
-    frontend_origin: str = "http://localhost:3000"
+    frontend_origin: str = "http://localhost:3000,http://127.0.0.1:3000"
 
     database_url: str = "postgresql+psycopg://uae_app:uae_app@localhost:5432/uae_ai_office"
 
@@ -246,21 +246,38 @@ class Settings(BaseSettings):
 
     @property
     def frontend_origins(self) -> list[str]:
-        """`frontend_origin` split into the exact-match list CORSMiddleware
-        wants, with trailing slashes stripped (a browser's Origin header
-        never has one, so a configured "http://host:3000/" would never
-        match and would fail as an opaque CORS error)."""
-        origins = [origin.strip().rstrip("/") for origin in self.frontend_origin.split(",") if origin.strip()]
+        """Return the exact browser origins allowed for the current runtime,
+        including the auto-detected Codespaces forwarded frontend URL and the
+        standard local dev origins. A browser sends Origin without a trailing
+        slash, so trailing slashes must be stripped before matching.
+        """
+        raw_origins = []
+        env_value = os.getenv("FRONTEND_ORIGIN")
+        if env_value:
+            raw_origins.extend(part.strip() for part in env_value.split(",") if part.strip())
+        raw_origins.extend(part.strip() for part in self.frontend_origin.split(",") if part.strip())
+
+        # Codespaces exposes the forwarded app on a public HTTPS origin that is
+        # not the same as localhost. Detect the current forwarded port from the
+        # environment and add the exact origin(s) to the allowlist.
         codespace_name = os.getenv("CODESPACE_NAME")
         forwarding_domain = os.getenv("GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN")
         if codespace_name and forwarding_domain:
-            origins.extend(
+            raw_origins.extend(
                 [
                     f"https://{codespace_name}-3000.{forwarding_domain}",
                     f"https://3000-{codespace_name}.{forwarding_domain}",
+                    f"https://{codespace_name}-8000.{forwarding_domain}",
                 ]
             )
-        return list(dict.fromkeys(origins))
+
+        # Also add the common localhost variants explicitly, even if the
+        # environment has a forwarded origin configured, because local dev and
+        # the browser remote session are both valid while preserving the exact
+        # allowed-origin match semantics expected by CORSMiddleware.
+        raw_origins.extend(["http://localhost:3000", "http://127.0.0.1:3000"])
+
+        return list(dict.fromkeys(origin.rstrip("/") for origin in raw_origins if origin.strip()))
 
     @field_validator("database_url")
     @classmethod

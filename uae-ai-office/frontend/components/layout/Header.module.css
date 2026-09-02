@@ -4,140 +4,72 @@
   height: var(--header-height);
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  gap: var(--space-4);
-  padding: 0 var(--space-8);
-  background: rgba(9, 23, 44, 0.86);
+  gap: 14px;
+  padding: 0 22px 0 18px;
+  background: rgba(6, 15, 30, 0.72);
   backdrop-filter: blur(18px);
-  border-bottom: 1px solid var(--color-border);
-  box-shadow: 0 12px 28px rgba(0, 5, 16, 0.14);
+  border-bottom: 1px solid rgba(131, 175, 255, 0.12);
+  box-shadow: 0 12px 28px rgba(0, 5, 16, 0.2);
   z-index: 10;
 }
 
-/* Reports (Step 20): a printed page never shows the app header. */
-@media print {
-  .header {
-    display: none !important;
-  }
-}
+@media print { .header { display: none !important; } }
 
 .menuButton {
   display: none;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
-  background: var(--color-surface-subtle);
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid rgba(131, 175, 255, 0.16);
+  background: rgba(17, 31, 54, 0.8);
   color: var(--color-text-secondary);
   cursor: pointer;
   flex-shrink: 0;
-  margin-inline-end: var(--space-1);
 }
 
-.menuButton:hover {
-  background: var(--color-surface-subtle);
-  color: var(--color-text-primary);
-}
-
-.spacer {
-  flex: 1;
-}
-
+.menuButton:hover { background: rgba(27, 45, 74, 0.86); color: #fff; }
+.spacer { flex: 1; }
 .companyRow {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: 10px;
   min-width: 0;
 }
-
 .company {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  line-height: 1.3;
+  line-height: 1.2;
   min-width: 0;
 }
-
-.companyName {
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  color: var(--color-text-primary);
-}
-
-.companyMeta {
-  font-size: 11px;
-  color: var(--color-text-muted);
-}
-
-.divider {
-  width: 1px;
-  height: 28px;
-  background: var(--color-border);
-}
-
-.user {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
+.companyName { font-size: var(--font-size-sm); font-weight: 600; color: var(--color-text-primary); }
+.companyMeta { font-size: 11px; color: var(--color-text-muted); }
+.divider { width: 1px; height: 28px; background: rgba(131, 175, 255, 0.14); }
+.user { display: flex; align-items: center; gap: 10px; }
 .avatar {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: var(--gradient-ai-violet);
-  color: #ffffff;
+  background: linear-gradient(135deg, #4d75ff, #d264ff, #2ad6f7);
+  color: #fff;
   font-weight: 700;
   font-size: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  box-shadow: 0 2px 6px rgba(33, 72, 214, 0.28);
+  box-shadow: 0 0 18px rgba(121, 114, 255, 0.32);
 }
-
-.userInfo {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.3;
-}
-
-.userName {
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-  color: var(--color-text-primary);
-}
-
-.userEmail {
-  font-size: 11px;
-  color: var(--color-text-muted);
-}
+.userInfo { display: flex; flex-direction: column; line-height: 1.2; }
+.userName { font-size: var(--font-size-sm); font-weight: 600; color: var(--color-text-primary); }
+.userEmail { font-size: 11px; color: var(--color-text-muted); }
 
 @media (max-width: 900px) {
-  .menuButton {
-    display: flex;
-  }
-
-  .header {
-    padding: 0 var(--space-5);
-  }
+  .menuButton { display: flex; }
+  .header { padding: 0 14px; }
 }
 
-@media (max-width: 760px) {
-  .company {
-    display: none;
-  }
-}
-
-@media (max-width: 560px) {
-  .userInfo {
-    display: none;
-  }
-
-  .header {
-    gap: var(--space-2);
-  }
-}
+@media (max-width: 760px) { .company { display: none; } }
+@media (max-width: 560px) { .userInfo { display: none; } .header { gap: var(--space-2); } }
 

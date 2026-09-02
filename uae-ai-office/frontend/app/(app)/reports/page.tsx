@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { reportsApi, type ReportFilters } from "@/lib/api-client";
 import { projectsApi, reportsApi, type ReportFilters } from "@/lib/api-client";
 import type { ProjectPublic } from "@/lib/types";
 import { errorMessage } from "@/lib/auth-context";
@@ -39,12 +38,9 @@ type FilterKey =
   | "search" | "date" | "date_from" | "date_to" | "action" | "resource_type";
 
 const TYPE_FILTERS: Record<ReportType, FilterKey[]> = {
-  projects: ["status", "search"],
-    projects: ["status", "project_id", "search"],
-  documents: ["status", "document_type", "search"],
-    documents: ["status", "project_id", "document_type", "search"],
-  tasks: ["status", "priority", "due_filter", "search"],
-    tasks: ["status", "project_id", "priority", "due_filter", "search"],
+  projects: ["status", "project_id", "search"],
+  documents: ["status", "project_id", "document_type", "search"],
+  tasks: ["status", "project_id", "priority", "due_filter", "search"],
   daily_brief: ["date"],
   audit_log: ["action", "resource_type", "date_from", "date_to"],
   support_tickets: ["status"],
@@ -186,15 +182,19 @@ export default function ReportsPage() {
 
           {activeFilterKeys.length > 0 ? (
             <div className={clsx(toolbarStyles.toolbar, styles.noPrint)}>
+              {activeFilterKeys.includes("project_id") ? (
+                <div className={toolbarStyles.field}>
+                  <Select value={filters.project_id ?? ""} onChange={(e) => setFilter("project_id", e.target.value)}>
+                    <option value="">{t("reports.allProjects")}</option>
+                    {projects.map((project) => (
+                      <option key={project.id} value={project.id}>
+                        {project.name}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+              ) : null}
               {activeFilterKeys.includes("search") ? (
-                              {activeFilterKeys.includes("project_id") ? (
-                                <div className={toolbarStyles.field}>
-                                  <Select value={filters.project_id ?? ""} onChange={(e) => setFilter("project_id", e.target.value)}>
-                                    <option value="">{t("reports.allProjects")}</option>
-                                    {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
-                                  </Select>
-                                </div>
-                              ) : null}
                 <div className={toolbarStyles.grow}>
                   <Input
                     placeholder={t("reports.searchPlaceholder")}

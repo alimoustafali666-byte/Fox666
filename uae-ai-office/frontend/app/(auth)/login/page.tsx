@@ -67,7 +67,12 @@ export default function LoginPage() {
             />
           </FieldWrapper>
 
-          <Button type="submit" block loading={submitting}>
+          <div className={styles.formRow}>
+            <label className={styles.checkbox}><input type="checkbox" defaultChecked /> <span>Remember me</span></label>
+            <Link href="/signup" className={styles.forgotLink}>Forgot password?</Link>
+          </div>
+
+          <Button type="submit" block loading={submitting} className={styles.signInButton}>
             {submitting ? t("auth.signIn.submitting") : t("auth.signIn.submit")}
           </Button>
         </form>

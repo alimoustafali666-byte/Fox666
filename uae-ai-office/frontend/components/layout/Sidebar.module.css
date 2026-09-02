@@ -5,31 +5,27 @@
   bottom: 0;
   width: var(--sidebar-width);
   background: var(--sidebar-background);
-  overflow: hidden;
   display: flex;
   flex-direction: column;
   z-index: 30;
   transition: transform var(--transition-base), box-shadow var(--transition-base);
-  border-inline-end: 1px solid rgba(113, 153, 211, 0.16);
+  border-inline-end: 1px solid rgba(118, 161, 255, 0.14);
+  box-shadow: inset -1px 0 0 rgba(255,255,255,0.04);
 }
 
 .glow {
   position: absolute;
-  inset-inline-start: -20%;
-  top: -14%;
-  width: 75%;
+  inset-inline-start: -15%;
+  top: -8%;
+  width: 80%;
   aspect-ratio: 1;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(14, 174, 196, 0.22) 0%, rgba(14, 174, 196, 0) 70%);
+  background: radial-gradient(circle, rgba(70, 216, 245, 0.22), rgba(70, 216, 245, 0) 70%);
   pointer-events: none;
 }
 
-/* Reports (Step 20): a printed page never shows the app navigation. */
 @media print {
-  .sidebar,
-  .overlay {
-    display: none !important;
-  }
+  .sidebar, .overlay { display: none !important; }
 }
 
 .brand {
@@ -40,10 +36,9 @@
   gap: 12px;
   height: var(--header-height);
   padding: 0 var(--space-5);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid rgba(151, 185, 255, 0.12);
   flex-shrink: 0;
-  background: linear-gradient(90deg, rgba(33, 72, 214, 0.1), transparent 78%);
-  box-shadow: 0 1px 0 rgba(57, 214, 232, 0.08);
+  background: linear-gradient(90deg, rgba(98, 137, 255, 0.08), transparent 70%);
 }
 
 .brandName {
@@ -55,18 +50,19 @@
 }
 
 .brandSub {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--color-text-muted);
-  letter-spacing: 0.04em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
 .nav {
   position: relative;
   z-index: 1;
-  padding: var(--space-4) var(--space-3);
+  padding: 20px 12px 8px;
   display: flex;
   flex-direction: column;
+  gap: 6px;
   overflow-y: auto;
 }
 
@@ -75,89 +71,79 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px var(--space-3);
-  border-radius: var(--radius-lg);
+  padding: 11px 12px;
+  border-radius: 12px;
   font-size: var(--font-size-sm);
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.72);
+  color: rgba(255, 255, 255, 0.7);
   transition: background-color var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
 }
 
 .navItem:hover {
-  background: color-mix(in srgb, var(--nav-accent) 9%, transparent);
+  background: rgba(255,255,255,0.03);
   color: #ffffff;
   text-decoration: none;
-  box-shadow: 0 0 22px color-mix(in srgb, var(--nav-accent) 18%, transparent);
   transform: translateX(2px);
 }
 
 .navItemActive {
-  background: linear-gradient(100deg, color-mix(in srgb, var(--nav-accent) 22%, transparent), rgba(255, 255, 255, 0.045));
+  background: linear-gradient(100deg, rgba(112, 118, 255, 0.28), rgba(255, 255, 255, 0.04));
   color: #ffffff;
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--nav-accent) 38%, transparent), 0 8px 24px color-mix(in srgb, var(--nav-accent) 12%, transparent);
-}
-
-.navItemActive:hover {
-  background: linear-gradient(100deg, color-mix(in srgb, var(--nav-accent) 28%, transparent), rgba(255, 255, 255, 0.06));
-  color: #ffffff;
+  box-shadow: inset 0 0 0 1px rgba(120, 177, 255, 0.22);
 }
 
 .activeBar {
   position: absolute;
-  inset-inline-start: -12px;
-  top: 4px;
-  bottom: 4px;
+  inset-inline-start: -7px;
+  top: 5px;
+  bottom: 5px;
   width: 3px;
-  border-radius: var(--radius-full);
+  border-radius: 999px;
   background: var(--nav-accent);
   box-shadow: 0 0 12px var(--nav-accent);
   opacity: 0;
-  transition: opacity var(--transition-fast);
 }
 
-.navItemActive .activeBar {
-  opacity: 1;
-}
+.navItemActive .activeBar { opacity: 1; }
 
 .icon {
   width: 30px;
   height: 30px;
-  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid color-mix(in srgb, var(--nav-accent) 34%, transparent);
-  border-radius: var(--radius-md);
+  border-radius: 9px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.03);
   color: var(--nav-accent);
-  background: color-mix(in srgb, var(--nav-accent) 10%, transparent);
-  transition: background-color var(--transition-fast), box-shadow var(--transition-fast), color var(--transition-fast);
+  flex-shrink: 0;
 }
 
 .navItemActive .icon {
-  background: color-mix(in srgb, var(--nav-accent) 20%, transparent);
-  box-shadow: 0 0 16px color-mix(in srgb, var(--nav-accent) 30%, transparent);
-  color: #ffffff;
+  background: rgba(255,255,255,0.04);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
+  color: #fff;
 }
 
 .accent-blue { --nav-accent: #7090ff; }
-.accent-cyan { --nav-accent: #39d6e8; }
-.accent-magenta { --nav-accent: #dd72ff; }
-.accent-amber { --nav-accent: #ffc15c; }
-.accent-green { --nav-accent: #62e3a0; }
-.accent-rose { --nav-accent: #ff7898; }
-.accent-sky { --nav-accent: #60d9ff; }
-.accent-violet { --nav-accent: #a98bff; }
-.accent-orange { --nav-accent: #ff9b5c; }
-.accent-teal { --nav-accent: #59e0c1; }
+.accent-cyan { --nav-accent: #46d8f5; }
+.accent-magenta { --nav-accent: #da87ff; }
+.accent-amber { --nav-accent: #ffbf6b; }
+.accent-green { --nav-accent: #68e4ad; }
+.accent-rose { --nav-accent: #ff7d96; }
+.accent-sky { --nav-accent: #6ad8ff; }
+.accent-violet { --nav-accent: #9d85ff; }
+.accent-orange { --nav-accent: #ff9a67; }
+.accent-teal { --nav-accent: #68e7d0; }
 
 .navBadge {
   margin-inline-start: auto;
   min-width: 18px;
   height: 18px;
   padding: 0 5px;
-  border-radius: var(--radius-full);
+  border-radius: 999px;
   background: var(--color-accent);
-  color: #ffffff;
+  color: #04101b;
   font-size: 10px;
   font-weight: 700;
   line-height: 18px;
@@ -171,73 +157,67 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  margin: auto var(--space-3) var(--space-4);
-  padding: 12px;
-  border: 1px solid rgba(113, 153, 211, 0.2);
-  border-radius: var(--radius-lg);
-  background: rgba(14, 28, 53, 0.72);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 10px 30px rgba(0, 0, 0, 0.18);
-  backdrop-filter: blur(14px);
+  margin: auto 12px 14px;
+  padding: 12px 10px;
+  border: 1px solid rgba(159, 186, 255, 0.16);
+  border-radius: 12px;
+  background: rgba(14, 24, 42, 0.78);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
 }
 
-.profileAvatar { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; flex-shrink: 0; background: var(--gradient-ai-violet); color: #ffffff; font-size: 11px; font-weight: 700; box-shadow: 0 0 16px rgba(77, 136, 255, 0.3); }
+.profileAvatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #5a7dff, #c15eff 70%, #3ad5f4);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
 .profileInfo { min-width: 0; flex: 1; }
 .profileName { overflow: hidden; color: var(--color-text-primary); font-size: var(--font-size-sm); font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
 .profileRole {
   display: inline-flex;
   margin-top: 3px;
-  padding: 1px 6px;
-  border: 1px solid rgba(89, 224, 193, 0.24);
-  border-radius: var(--radius-full);
-  background: rgba(89, 224, 193, 0.08);
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(72, 226, 162, 0.12);
   color: var(--color-success);
+  border: 1px solid rgba(72, 226, 162, 0.18);
   font-size: 10px;
   font-weight: 600;
 }
-.status { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: var(--color-success); box-shadow: 0 0 10px var(--color-success); }
-
-.overlay {
-  display: none;
+.status {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-success);
+  box-shadow: 0 0 12px rgba(72, 226, 162, 0.8);
+  flex-shrink: 0;
 }
 
+.overlay { display: none; }
+
 @media (max-width: 900px) {
-  .sidebar {
-    transform: translateX(-100%);
-    box-shadow: var(--shadow-lg);
-  }
-
-  [dir="rtl"] .sidebar {
-    transform: translateX(100%);
-  }
-
-  /* Higher specificity than the direction-scoped rules above (each adds
-     an extra class to the selector) so the open state reliably wins in
-     both LTR and RTL, regardless of source order. */
-  .sidebar.sidebarOpen {
-    transform: translateX(0);
-  }
-
-  [dir="rtl"] .sidebar.sidebarOpen {
-    transform: translateX(0);
-  }
-
+  .sidebar { transform: translateX(-100%); box-shadow: var(--shadow-lg); }
+  [dir="rtl"] .sidebar { transform: translateX(100%); }
+  .sidebar.sidebarOpen { transform: translateX(0); }
+  [dir="rtl"] .sidebar.sidebarOpen { transform: translateX(0); }
   .overlay {
     display: block;
     position: fixed;
     inset: 0;
-    background: rgba(6, 11, 24, 0.45);
+    background: rgba(5, 12, 22, 0.62);
     z-index: 25;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .sidebar {
-    transition: none;
-  }
-
-  .navItem,
-  .icon {
-    transition: none;
-  }
+  .sidebar { transition: none; }
+  .navItem, .icon { transition: none; }
 }
 
