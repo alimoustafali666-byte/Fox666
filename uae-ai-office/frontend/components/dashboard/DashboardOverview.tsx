@@ -3,45 +3,139 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { useTranslation, formatDateTime } from "@/lib/i18n";
-import type { DailyBriefPublic, DashboardSummaryResponse, RecentActivityEntry } from "@/lib/types";
-import { AskIcon, DocumentsIcon, ProjectsIcon, ReportsIcon, TasksIcon } from "@/components/layout/icons";
+import { useTranslation, formatDateTime, type TranslationKey } from "@/lib/i18n";
+import type { DailyBriefPublic, ProjectStatus, TaskPublic } from "@/lib/types";
+import { PROJECT_STATUS_KEYS } from "@/components/projects/statusLabels";
+import { TASK_PRIORITY_KEYS } from "@/components/tasks/taskLabels";
+import {
+  AskIcon,
+  AuditIcon,
+  BriefIcon,
+  DocumentsIcon,
+  GrowthIcon,
+  InsightIcon,
+  ProjectsIcon,
+  PulseIcon,
+  ReportsIcon,
+  ShieldIcon,
+  SparkIcon,
+  TasksIcon,
+  TrendDownIcon,
+  TrendUpIcon,
+  UploadIcon,
+} from "@/components/layout/icons";
 import { DubaiSkyline } from "@/components/layout/DubaiSkyline";
+import { AreaChart, Meter, ProgressRing, Sparkline } from "./charts";
+import {
+  countsTotal,
+  dailyCounts,
+  healthScore,
+  isOverdue,
+  percent,
+  responseTime,
+  taskMetrics,
+  trendOf,
+  TREND_DAYS,
+  type DashboardData,
+  type Trend,
+} from "./metrics";
 import styles from "./DashboardOverview.module.css";
 
 type Tone = "blue" | "green" | "magenta" | "orange";
 
-function total(counts: Record<string, number>) {
-  return Object.values(counts).reduce((sum, value) => sum + value, 0);
-}
+const TONE_STROKE: Record<Tone, [string, string]> = {
+  blue: ["#35d9f2", "#4d8dff"],
+  green: ["#2fd48a", "#7ef0b6"],
+  magenta: ["#8b6bff", "#e05ad0"],
+  orange: ["#ffa43d", "#ff7a5c"],
+};
 
-/** Real composition bar -- segments are actual counts, never a sample curve. */
-function ProportionBar({ segments }: { segments: { value: number; color: string }[] }) {
-  const sum = segments.reduce((a, b) => a + b.value, 0);
-  if (sum <= 0) return null;
+const STATUS_COLOR: Record<ProjectStatus, [string, string]> = {
+  planning: ["#8b6bff", "#b39cff"],
+  active: ["#35d9f2", "#4d8dff"],
+  on_hold: ["#ffa43d", "#ffcb7d"],
+  completed: ["#2fd48a", "#7ef0b6"],
+  cancelled: ["#ff5470", "#ff8ea3"],
+};
+
+const PRIORITY_COLOR: Record<string, string> = {
+  urgent: "#ff5470",
+  high: "#ffa43d",
+  normal: "#4d8dff",
+  low: "#6d7e9d",
+};
+
+const EM_DASH = "—";
+
+// --- small building blocks ----------------------------------------------
+
+function Panel({
+  children,
+  className,
+  kicker,
+  title,
+  action,
+  icon,
+}: {
+  children: ReactNode;
+  className?: string;
+  kicker: string;
+  title: string;
+  action?: ReactNode;
+  icon?: ReactNode;
+}) {
   return (
-    <div className={styles.proportion} aria-hidden="true">
-      {segments.map((segment, index) =>
-        segment.value > 0 ? (
-          <span key={index} style={{ width: `${(segment.value / sum) * 100}%`, background: segment.color }} />
-        ) : null,
-      )}
-    </div>
+    <section className={className ? `${styles.panel} ${className}` : styles.panel}>
+      <header className={styles.panelHead}>
+        {icon ? <span className={styles.panelIcon}>{icon}</span> : null}
+        <div className={styles.panelTitles}>
+          <span className={styles.kicker}>{kicker}</span>
+          <h2>{title}</h2>
+        </div>
+        {action}
+      </header>
+      {children}
+    </section>
   );
 }
 
-function Donut({ values, colors }: { values: number[]; colors: string[] }) {
-  const sum = values.reduce((a, b) => a + b, 0) || 1;
-  let offset = 0;
-  const stops = values.map((value, index) => {
-    const start = offset;
-    offset += (value / sum) * 100;
-    return `${colors[index]} ${start}% ${offset}%`;
-  });
+function Legend({
+  rows,
+}: {
+  rows: { color: string; label: string; value: string; share?: string }[];
+}) {
   return (
-    <div className={styles.donut} style={{ background: `conic-gradient(${stops.join(", ")})` }}>
-      <span>{values.reduce((a, b) => a + b, 0)}</span>
-    </div>
+    <ul className={styles.legend}>
+      {rows.map((row) => (
+        <li key={row.label}>
+          <i style={{ background: row.color }} />
+          <span>{row.label}</span>
+          <strong>{row.value}</strong>
+          {row.share ? <em>{row.share}</em> : null}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function Delta({ trend, noTrend, newLabel, vsLabel }: { trend: Trend | null; noTrend: string; newLabel: string; vsLabel: string }) {
+  if (!trend) return <span className={styles.deltaMuted}>{noTrend}</span>;
+  if (trend.percent === null) {
+    return (
+      <span className={styles.delta} data-dir="up">
+        <TrendUpIcon width={13} height={13} />
+        +{trend.recent}
+        <em>{newLabel}</em>
+      </span>
+    );
+  }
+  const up = trend.percent >= 0;
+  return (
+    <span className={styles.delta} data-dir={up ? "up" : "down"}>
+      {up ? <TrendUpIcon width={13} height={13} /> : <TrendDownIcon width={13} height={13} />}
+      {up ? "+" : ""}
+      {trend.percent}%<em>{vsLabel}</em>
+    </span>
   );
 }
 
@@ -51,175 +145,68 @@ function KpiCard({
   label,
   caption,
   value,
-  chip,
-  segments,
+  series,
+  trend,
+  noTrend,
+  newLabel,
+  vsLabel,
 }: {
   tone: Tone;
   icon: ReactNode;
   label: string;
   caption: string;
-  value: number;
-  chip: string | null;
-  segments?: { value: number; color: string }[];
+  value: string;
+  series: number[] | null;
+  trend: Trend | null;
+  noTrend: string;
+  newLabel: string;
+  vsLabel: string;
 }) {
+  const [from, to] = TONE_STROKE[tone];
   return (
-    <div className={styles.kpi} data-tone={tone}>
+    <article className={styles.kpi} data-tone={tone}>
       <span className={styles.kpiBloom} aria-hidden="true" />
-      <span className={styles.kpiRail} aria-hidden="true" />
-      <div className={styles.kpiTop}>
+      <div className={styles.kpiHead}>
         <span className={styles.kpiIcon}>{icon}</span>
-        <div className={styles.kpiHeading}>
+        <div className={styles.kpiTitles}>
           <span className={styles.kpiLabel}>{label}</span>
           <span className={styles.kpiCaption}>{caption}</span>
         </div>
-        {chip ? <span className={styles.kpiChip}>{chip}</span> : null}
       </div>
-      <div className={styles.kpiFoot}>
-        <strong className={styles.kpiValue}>{value}</strong>
-        {segments ? <ProportionBar segments={segments} /> : null}
-      </div>
-    </div>
+      <div className={styles.kpiValue}>{value}</div>
+      <Delta trend={trend} noTrend={noTrend} newLabel={newLabel} vsLabel={vsLabel} />
+      {series && series.some((point) => point > 0) ? (
+        <Sparkline values={series} from={from} to={to} />
+      ) : (
+        <div className={styles.sparkPlaceholder} aria-hidden="true" />
+      )}
+    </article>
   );
 }
 
-/**
- * Real activity volume per day, built from the `created_at` timestamps the
- * dashboard-summary endpoint already returns. There is no trend endpoint on
- * the API and the backend is out of scope for this task, so this plots data
- * that genuinely exists rather than a decorative curve.
- */
-function buildActivitySeries(entries: RecentActivityEntry[] | null | undefined) {
-  if (!entries || entries.length === 0) return null;
-  const byDay = new Map<string, number>();
-  for (const entry of entries) {
-    const parsed = new Date(entry.created_at);
-    if (Number.isNaN(parsed.getTime())) continue;
-    const key = parsed.toISOString().slice(0, 10);
-    byDay.set(key, (byDay.get(key) ?? 0) + 1);
-  }
-  const days = [...byDay.keys()].sort();
-  if (days.length < 2) return null;
-
-  // Fill the gaps so a quiet day reads as zero rather than being skipped.
-  const points: { key: string; value: number }[] = [];
-  const cursor = new Date(`${days[0]}T00:00:00Z`);
-  const last = new Date(`${days[days.length - 1]}T00:00:00Z`);
-  while (cursor <= last && points.length < 90) {
-    const key = cursor.toISOString().slice(0, 10);
-    points.push({ key, value: byDay.get(key) ?? 0 });
-    cursor.setUTCDate(cursor.getUTCDate() + 1);
-  }
-  return points;
-}
-
-const CHART = { x0: 42, x1: 610, y0: 16, y1: 190 };
-
-function ActivityChart({ points, locale }: { points: { key: string; value: number }[]; locale: string }) {
-  const max = Math.max(...points.map((p) => p.value), 1);
-  const sx = (i: number) => CHART.x0 + (i / (points.length - 1)) * (CHART.x1 - CHART.x0);
-  const sy = (v: number) => CHART.y1 - (v / max) * (CHART.y1 - CHART.y0);
-
-  // Smooth through the daily buckets with midpoint quadratics.
-  let line = `M ${sx(0)} ${sy(points[0].value)}`;
-  for (let i = 1; i < points.length; i += 1) {
-    const px = sx(i - 1);
-    const py = sy(points[i - 1].value);
-    const cx = sx(i);
-    const cy = sy(points[i].value);
-    line += ` Q ${px + (cx - px) / 2} ${py} ${(px + cx) / 2} ${(py + cy) / 2}`;
-    line += ` Q ${px + (cx - px) / 2} ${cy} ${cx} ${cy}`;
-  }
-  const area = `${line} L ${sx(points.length - 1)} ${CHART.y1} L ${sx(0)} ${CHART.y1} Z`;
-
-  const peakIndex = points.reduce((best, p, i) => (p.value > points[best].value ? i : best), 0);
-  const ticks = [max, Math.round(max * 0.75), Math.round(max * 0.5), Math.round(max * 0.25), 0];
-  const dayLabel = (key: string) =>
-    new Intl.DateTimeFormat(locale, { day: "2-digit", month: "short" }).format(new Date(`${key}T00:00:00Z`));
-
+function StatusRow({ label, state, detail }: { label: string; state: "ok" | "warn" | "off"; detail: string }) {
   return (
-    <>
-      <div className={styles.chart}>
-        <svg viewBox="0 0 620 220" preserveAspectRatio="none" role="img" aria-label="Activity volume per day">
-          <defs>
-            <linearGradient id="uaeAreaFill" x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0" stopColor="#6f7bff" stopOpacity="0.44" />
-              <stop offset="0.55" stopColor="#6f7bff" stopOpacity="0.12" />
-              <stop offset="1" stopColor="#6f7bff" stopOpacity="0" />
-            </linearGradient>
-            <linearGradient id="uaeLineStroke" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0" stopColor="#35d9f2" />
-              <stop offset="0.55" stopColor="#6f7bff" />
-              <stop offset="1" stopColor="#e05ad0" />
-            </linearGradient>
-            <filter id="uaeLineGlow" x="-10%" y="-45%" width="120%" height="210%">
-              <feGaussianBlur stdDeviation="4.5" result="b" />
-              <feMerge>
-                <feMergeNode in="b" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
-          <g stroke="rgba(126,166,236,0.12)" strokeWidth="1" strokeDasharray="3 6">
-            {ticks.slice(0, 4).map((_, i) => (
-              <line key={i} x1={CHART.x0} y1={CHART.y0 + i * 43.5} x2="620" y2={CHART.y0 + i * 43.5} />
-            ))}
-          </g>
-          <line x1={CHART.x0} y1={CHART.y1} x2="620" y2={CHART.y1} stroke="rgba(126,166,236,0.22)" />
-          <g fill="#4e5d79" fontSize="10" fontFamily="IBM Plex Mono, monospace">
-            {ticks.map((tick, i) => (
-              <text key={i} x="34" y={CHART.y0 + i * 43.5 + 4} textAnchor="end">
-                {tick}
-              </text>
-            ))}
-          </g>
-          <path d={area} fill="url(#uaeAreaFill)" />
-          <path
-            d={line}
-            fill="none"
-            stroke="url(#uaeLineStroke)"
-            strokeWidth="2.6"
-            strokeLinecap="round"
-            filter="url(#uaeLineGlow)"
-          />
-          <line
-            x1={sx(peakIndex)}
-            y1={sy(points[peakIndex].value)}
-            x2={sx(peakIndex)}
-            y2={CHART.y1}
-            stroke="rgba(126,166,236,0.3)"
-            strokeDasharray="3 5"
-          />
-          <circle cx={sx(peakIndex)} cy={sy(points[peakIndex].value)} r="10" fill="rgba(111,123,255,0.24)" />
-          <circle
-            cx={sx(peakIndex)}
-            cy={sy(points[peakIndex].value)}
-            r="4.2"
-            fill="#fff"
-            stroke="#6f7bff"
-            strokeWidth="2.6"
-          />
-        </svg>
-      </div>
-      <div className={styles.chartLabels}>
-        <span>{dayLabel(points[0].key)}</span>
-        {points.length > 2 ? <span>{dayLabel(points[Math.floor(points.length / 2)].key)}</span> : null}
-        <span>{dayLabel(points[points.length - 1].key)}</span>
-      </div>
-    </>
+    <li className={styles.statusRow} data-state={state}>
+      <i />
+      <span>{label}</span>
+      <strong>{detail}</strong>
+    </li>
   );
 }
+
+// --- the dashboard -------------------------------------------------------
 
 export function DashboardOverview({
-  summary,
+  data,
   brief,
-  summaryLoading,
+  loading,
   canRegenerate,
   regenerating,
   onRegenerate,
 }: {
-  summary: DashboardSummaryResponse | null;
+  data: DashboardData;
   brief: DailyBriefPublic | null;
-  summaryLoading: boolean;
+  loading: boolean;
   canRegenerate: boolean;
   regenerating: boolean;
   onRegenerate: () => void;
@@ -227,328 +214,751 @@ export function DashboardOverview({
   const { user } = useAuth();
   const { t, locale } = useTranslation();
 
-  // Derivations unchanged from the previous implementation -- this task is a
-  // visual reconstruction, so no KPI's meaning or arithmetic was altered.
-  const projects = summary ? total(summary.project_status_counts) : 0;
-  const documents = summary ? total(summary.document_status_counts) : 0;
-  const openTasks = summary?.my_tasks.my_open_tasks ?? 0;
-  const completedTasks = summary ? Math.max(0, projects - openTasks) : 0;
-  const messages = summary?.unread_notifications ?? 0;
-  const reports = summary?.latest_brief?.item_count ?? 0;
-  const overdue = summary?.my_tasks.overdue ?? 0;
-  const activeProjects = summary?.project_status_counts.active ?? 0;
-  const highPriority = summary?.my_tasks.high_priority_open ?? 0;
-  const processedDocs = summary?.document_status_counts.processed ?? 0;
+  const { summary, projects, notifications, briefs, briefsCapped, tickets } = data;
+  const tasks = taskMetrics(data.tasks);
 
-  const projectValues = summary
-    ? [
-        summary.project_status_counts.completed ?? 0,
-        summary.project_status_counts.active ?? 0,
-        (summary.project_status_counts.planning ?? 0) + (summary.project_status_counts.on_hold ?? 0),
-      ]
-    : [0, 0, 0];
-  const taskValues = summary ? [completedTasks, openTasks, summary.my_tasks.overdue] : [0, 0, 0];
-  const priorityValues = [highPriority, Math.max(0, openTasks - highPriority), 0];
+  // --- portfolio ---------------------------------------------------------
+  const projectCounts = summary?.project_status_counts ?? null;
+  const totalProjects = countsTotal(projectCounts);
+  const projectCompleted = projectCounts?.completed ?? 0;
+  const projectActive = projectCounts?.active ?? 0;
+  const projectPending = (projectCounts?.planning ?? 0) + (projectCounts?.on_hold ?? 0);
+  const projectProgress = percent(projectCompleted, totalProjects);
 
-  const firstName = user?.full_name?.split(" ")[0] || user?.email || "there";
-  const series = buildActivitySeries(summary?.recent_activity);
-  const processedShare = documents > 0 ? Math.round((processedDocs / documents) * 100) : 0;
-  const briefDate = summary?.latest_brief?.brief_date
-    ? new Intl.DateTimeFormat(locale, { day: "2-digit", month: "short" }).format(
-        new Date(summary.latest_brief.brief_date),
-      )
-    : null;
+  // --- documents ---------------------------------------------------------
+  const documentCounts = summary?.document_status_counts ?? null;
+  const totalDocuments = countsTotal(documentCounts);
+  const processedDocuments = documentCounts?.processed ?? 0;
+  const failedDocuments = documentCounts?.failed ?? 0;
+  const pendingDocuments = (documentCounts?.uploaded ?? 0) + (documentCounts?.processing ?? 0);
+  const documentRate = totalDocuments > 0 ? percent(processedDocuments, totalDocuments) : null;
+
+  // --- trends ------------------------------------------------------------
+  const projectTrendSeries = projects ? dailyCounts(projects.map((project) => project.created_at)) : null;
+  const notificationSeries = notifications ? dailyCounts(notifications.map((entry) => entry.created_at)) : null;
+  const briefSeries = briefs ? dailyCounts(briefs.map((entry) => entry.brief_date)) : null;
+
+  // --- performance -------------------------------------------------------
+  const response = responseTime(tickets);
+  const overdueShare = tasks && tasks.open > 0 ? percent(tasks.overdue, tasks.open) : tasks ? 0 : null;
+  const taskCompletionRate = tasks && tasks.total > 0 ? percent(tasks.completed, tasks.total) : null;
+  const health = healthScore({
+    taskCompletionRate,
+    onTimeRate: tasks?.onTimeRate ?? null,
+    overdueShare,
+    documentProcessedRate: documentRate,
+    projectDeliveryRate: totalProjects > 0 ? projectProgress : null,
+  });
+
+  // --- recommendation ----------------------------------------------------
+  const recommendation = pickRecommendation();
+
+  function pickRecommendation(): { text: string; href: string; tone: string } | null {
+    if (tasks && tasks.overdue > 0)
+      return { text: t("dashboard.v2.rec.overdue", { count: tasks.overdue }), href: "/tasks", tone: "rose" };
+    if (failedDocuments > 0)
+      return { text: t("dashboard.v2.rec.failedDocs", { count: failedDocuments }), href: "/documents", tone: "rose" };
+    if (tasks && tasks.blocked > 0)
+      return { text: t("dashboard.v2.rec.blocked", { count: tasks.blocked }), href: "/tasks", tone: "amber" };
+    if (summary && summary.my_tasks.high_priority_open > 0)
+      return {
+        text: t("dashboard.v2.rec.highPriority", { count: summary.my_tasks.high_priority_open }),
+        href: "/tasks",
+        tone: "amber",
+      };
+    if (summary && !summary.latest_brief)
+      return { text: t("dashboard.v2.rec.brief"), href: "/brief", tone: "violet" };
+    if (pendingDocuments > 0)
+      return { text: t("dashboard.v2.rec.pendingDocs", { count: pendingDocuments }), href: "/documents", tone: "blue" };
+    if (summary && summary.unread_notifications > 0)
+      return {
+        text: t("dashboard.v2.rec.notifications", { count: summary.unread_notifications }),
+        href: "/messages/notifications",
+        tone: "magenta",
+      };
+    if (projectCounts && (projectCounts.planning ?? 0) > 0)
+      return { text: t("dashboard.v2.rec.planning", { count: projectCounts.planning }), href: "/projects", tone: "cyan" };
+    if (summary) return { text: t("dashboard.v2.rec.clear"), href: "/projects", tone: "green" };
+    return null;
+  }
+
+  const firstName = user?.full_name?.split(" ")[0] || user?.email || "";
+  const hour = new Date().getHours();
+  const greetingKey: TranslationKey =
+    hour < 12
+      ? "dashboard.v2.greetingMorning"
+      : hour < 18
+        ? "dashboard.v2.greetingAfternoon"
+        : "dashboard.v2.greetingEvening";
+
+  const dayLabels = buildDayLabels(locale);
+  const activity = summary?.recent_activity ?? null;
 
   return (
     <div className={styles.overview}>
-      <DubaiSkyline variant="panorama" className={styles.skyline} />
-
-      <div className={styles.greeting}>
-        <div>
-          <span className={styles.eyebrow}>Workspace pulse</span>
-          <h1>Good morning, {firstName}!</h1>
-          <p>{t("dashboard.subtitle")}</p>
-          <span className={styles.pulseChip} data-loading={summaryLoading ? "true" : undefined}>
-            <i className={styles.pulseDot} />
-            {summaryLoading ? t("common.loading") : "LIVE"}
-          </span>
-        </div>
+      <div className={styles.atmosphere} aria-hidden="true">
+        <DubaiSkyline className={styles.skyline} />
       </div>
+
+      <header className={styles.hero}>
+        <div className={styles.heroText}>
+          <span className={styles.eyebrow}>{t("dashboard.v2.eyebrow")}</span>
+          <h1>{t(greetingKey, { name: firstName })}</h1>
+          <p>{t("dashboard.subtitle")}</p>
+        </div>
+        <div className={styles.heroSide}>
+          <span className={styles.pulse} data-loading={loading ? "true" : undefined}>
+            <i />
+            {loading ? t("dashboard.v2.syncing") : t("dashboard.v2.live")}
+          </span>
+          <div className={styles.briefBar}>
+            <span>
+              {brief ? t("dashboard.todaysBrief") : loading ? t("dashboard.loadingBrief") : t("dashboard.noBriefMember")}
+            </span>
+            {canRegenerate ? (
+              <button type="button" onClick={onRegenerate} disabled={regenerating}>
+                <SparkIcon width={14} height={14} />
+                {regenerating
+                  ? t("dashboard.generating")
+                  : brief
+                    ? t("dashboard.regenerate")
+                    : t("dashboard.generateBrief")}
+              </button>
+            ) : null}
+          </div>
+        </div>
+      </header>
 
       <div className={styles.kpiGrid}>
         <KpiCard
           tone="blue"
           icon={<ProjectsIcon />}
-          label="Total Projects"
-          caption="All statuses"
-          value={projects}
-          chip={`${activeProjects} active`}
-          segments={[
-            { value: projectValues[0], color: "#2fd48a" },
-            { value: projectValues[1], color: "#4d8dff" },
-            { value: projectValues[2], color: "#ffa43d" },
-          ]}
+          label={t("dashboard.v2.kpi.projects")}
+          caption={t("dashboard.v2.kpi.projectsCaption")}
+          value={summary ? String(totalProjects) : EM_DASH}
+          series={projectTrendSeries}
+          trend={projectTrendSeries ? trendOf(projectTrendSeries) : null}
+          noTrend={t("dashboard.v2.kpi.noTrend")}
+          newLabel={t("dashboard.v2.kpi.newLabel")}
+          vsLabel={t("dashboard.v2.kpi.vsPrevious")}
         />
         <KpiCard
           tone="green"
           icon={<TasksIcon />}
-          label="Tasks Completed"
-          caption="Your workload"
-          value={completedTasks}
-          chip={`${openTasks} open`}
-          segments={[
-            { value: taskValues[0], color: "#2fd48a" },
-            { value: taskValues[1], color: "#4d8dff" },
-            { value: taskValues[2], color: "#ff5470" },
-          ]}
+          label={t("dashboard.v2.kpi.tasksCompleted")}
+          caption={t("dashboard.v2.kpi.tasksCompletedCaption")}
+          value={tasks ? String(tasks.completed) : EM_DASH}
+          series={tasks?.completedSeries ?? null}
+          trend={tasks ? trendOf(tasks.completedSeries) : null}
+          noTrend={t("dashboard.v2.kpi.noTrend")}
+          newLabel={t("dashboard.v2.kpi.newLabel")}
+          vsLabel={t("dashboard.v2.kpi.vsPrevious")}
         />
         <KpiCard
           tone="magenta"
           icon={<AskIcon />}
-          label="Messages"
-          caption="Notifications"
-          value={messages}
-          chip="unread"
+          label={t("dashboard.v2.kpi.messages")}
+          caption={t("dashboard.v2.kpi.messagesCaption")}
+          value={summary ? String(summary.unread_notifications) : EM_DASH}
+          series={notificationSeries}
+          trend={notificationSeries ? trendOf(notificationSeries) : null}
+          noTrend={t("dashboard.v2.kpi.noTrend")}
+          newLabel={t("dashboard.v2.kpi.newLabel")}
+          vsLabel={t("dashboard.v2.kpi.vsPrevious")}
         />
         <KpiCard
           tone="orange"
           icon={<ReportsIcon />}
-          label="Reports Generated"
-          caption="Latest brief"
-          value={reports}
-          chip={briefDate}
+          label={t("dashboard.v2.kpi.reports")}
+          caption={t("dashboard.v2.kpi.reportsCaption")}
+          value={briefs ? `${briefs.length}${briefsCapped ? "+" : ""}` : EM_DASH}
+          series={briefSeries}
+          trend={briefSeries ? trendOf(briefSeries) : null}
+          noTrend={t("dashboard.v2.kpi.noTrend")}
+          newLabel={t("dashboard.v2.kpi.newLabel")}
+          vsLabel={t("dashboard.v2.kpi.vsPrevious")}
         />
       </div>
 
-      <div className={styles.briefBar}>
-        <span>
-          {brief
-            ? t("dashboard.todaysBrief")
-            : summaryLoading
-              ? t("dashboard.loadingBrief")
-              : t("dashboard.noBriefMember")}
-        </span>
-        {canRegenerate ? (
-          <button type="button" onClick={onRegenerate} disabled={regenerating}>
-            {regenerating ? t("dashboard.generating") : brief ? t("dashboard.regenerate") : t("dashboard.generateBrief")}
-          </button>
-        ) : null}
-      </div>
+      <div className={styles.layout}>
+        <div className={styles.mainCol}>
+          {/* A. Project Progress */}
+          <Panel
+            className={styles.spanFour}
+            kicker={t("dashboard.v2.projectProgress.kicker")}
+            title={t("dashboard.v2.projectProgress.title")}
+            action={<Link href="/projects" className={styles.panelLink}>{t("dashboard.exec.viewAll")}</Link>}
+          >
+            {summary && totalProjects > 0 ? (
+              <div className={styles.ringRow}>
+                <ProgressRing
+                  size={152}
+                  segments={[
+                    { value: projectCompleted, from: "#2fd48a", to: "#7ef0b6" },
+                    { value: projectActive, from: "#35d9f2", to: "#4d8dff" },
+                    { value: projectPending, from: "#8b6bff", to: "#e05ad0" },
+                  ]}
+                  centerValue={`${projectProgress}%`}
+                  centerLabel={t("dashboard.v2.projectProgress.center")}
+                />
+                <Legend
+                  rows={[
+                    {
+                      color: "#2fd48a",
+                      label: t("dashboard.v2.projectProgress.completed"),
+                      value: String(projectCompleted),
+                      share: `${percent(projectCompleted, totalProjects)}%`,
+                    },
+                    {
+                      color: "#4d8dff",
+                      label: t("dashboard.v2.projectProgress.inProgress"),
+                      value: String(projectActive),
+                      share: `${percent(projectActive, totalProjects)}%`,
+                    },
+                    {
+                      color: "#8b6bff",
+                      label: t("dashboard.v2.projectProgress.pending"),
+                      value: String(projectPending),
+                      share: `${percent(projectPending, totalProjects)}%`,
+                    },
+                  ]}
+                />
+              </div>
+            ) : (
+              <p className={styles.empty}>{t("dashboard.v2.projectsByStatus.empty")}</p>
+            )}
+          </Panel>
 
-      <div className={styles.mainGrid}>
-        <section className={`${styles.panel} ${styles.portfolio}`}>
-          <div className={styles.panelHeader}>
-            <div>
-              <span className={styles.panelKicker}>Portfolio</span>
-              <h2>Project Progress Overview</h2>
-            </div>
-            <Link href="/projects">{t("dashboard.exec.viewAll")}</Link>
-          </div>
-          <div className={styles.donutRow}>
-            <div className={styles.donutWrap}>
-              <Donut values={projectValues} colors={["#2fd48a", "#4d8dff", "#8b6bff"]} />
-              <div className={styles.donutCore}>Projects</div>
-            </div>
-            <div className={styles.legend}>
-              <div>
-                <i className={styles.dotGreen} />
-                <span>Completed</span>
-                <strong>{projectValues[0]}</strong>
+          {/* B. Tasks Overview */}
+          <Panel
+            className={styles.spanFour}
+            kicker={t("dashboard.v2.tasksOverview.kicker")}
+            title={t("dashboard.v2.tasksOverview.title")}
+            action={<Link href="/tasks" className={styles.panelLink}>{t("dashboard.exec.viewAll")}</Link>}
+          >
+            {tasks && tasks.total > 0 ? (
+              <div className={styles.ringRow}>
+                <ProgressRing
+                  size={152}
+                  segments={[
+                    { value: tasks.completed, from: "#2fd48a", to: "#7ef0b6" },
+                    { value: tasks.open - tasks.overdue, from: "#35d9f2", to: "#4d8dff" },
+                    { value: tasks.overdue, from: "#ff5470", to: "#ff8ea3" },
+                    { value: tasks.cancelled, from: "#3d4a67", to: "#55648a" },
+                  ]}
+                  centerValue={String(tasks.total)}
+                  centerLabel={t("dashboard.v2.tasksOverview.center")}
+                />
+                <Legend
+                  rows={[
+                    {
+                      color: "#2fd48a",
+                      label: t("dashboard.v2.tasksOverview.completed"),
+                      value: String(tasks.completed),
+                      share: `${percent(tasks.completed, tasks.total)}%`,
+                    },
+                    {
+                      color: "#4d8dff",
+                      label: t("dashboard.v2.tasksOverview.inProgress"),
+                      value: String(tasks.open - tasks.overdue),
+                      share: `${percent(tasks.open - tasks.overdue, tasks.total)}%`,
+                    },
+                    {
+                      color: "#ff5470",
+                      label: t("dashboard.v2.tasksOverview.overdue"),
+                      value: String(tasks.overdue),
+                      share: `${percent(tasks.overdue, tasks.total)}%`,
+                    },
+                  ]}
+                />
               </div>
-              <div>
-                <i className={styles.dotBlue} />
-                <span>In Progress</span>
-                <strong>{projectValues[1]}</strong>
-              </div>
-              <div>
-                <i className={styles.dotViolet} />
-                <span>Pending</span>
-                <strong>{projectValues[2]}</strong>
-              </div>
-            </div>
-          </div>
-        </section>
+            ) : (
+              <p className={styles.empty}>{t("dashboard.v2.topTasks.empty")}</p>
+            )}
+          </Panel>
 
-        <section className={`${styles.panel} ${styles.execution}`}>
-          <div className={styles.panelHeader}>
-            <div>
-              <span className={styles.panelKicker}>Execution</span>
-              <h2>Tasks Overview</h2>
-            </div>
-            <Link href="/tasks">{t("dashboard.exec.viewAll")}</Link>
-          </div>
-          <div className={styles.donutRow}>
-            <div className={styles.donutWrap}>
-              <Donut values={taskValues} colors={["#2fd48a", "#4d8dff", "#ff5470"]} />
-              <div className={styles.donutCore}>Tasks</div>
-            </div>
-            <div className={styles.legend}>
-              <div>
-                <i className={styles.dotGreen} />
-                <span>Completed</span>
-                <strong>{taskValues[0]}</strong>
-              </div>
-              <div>
-                <i className={styles.dotBlue} />
-                <span>In Progress</span>
-                <strong>{taskValues[1]}</strong>
-              </div>
-              <div>
-                <i className={styles.dotRose} />
-                <span>Overdue</span>
-                <strong>{taskValues[2]}</strong>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className={`${styles.panel} ${styles.activity}`}>
-          <div className={styles.panelHeader}>
-            <div>
-              <span className={styles.panelKicker}>Recent signals</span>
-              <h2>Activity Timeline</h2>
-            </div>
-          </div>
-          {summary?.recent_activity?.length ? (
-            <div className={styles.timeline}>
-              {summary.recent_activity.slice(0, 4).map((entry, index) => (
-                <div className={styles.timelineItem} key={`${entry.created_at}-${index}`}>
-                  <span className={styles.activityIcon}>{index % 2 ? <DocumentsIcon /> : <TasksIcon />}</span>
-                  <div>
-                    <strong>{entry.action}</strong>
-                    <span>
-                      <b>{entry.actor}</b> · {formatDateTime(locale, entry.created_at)}
-                    </span>
-                  </div>
+          {/* C. Performance Summary */}
+          <Panel
+            className={styles.spanFour}
+            kicker={t("dashboard.v2.performance.kicker")}
+            title={t("dashboard.v2.performance.title")}
+          >
+            <ul className={styles.perfList}>
+              <li>
+                <div className={styles.perfHead}>
+                  <span>{t("dashboard.v2.performance.onTime")}</span>
+                  <strong>{tasks && tasks.onTimeRate !== null ? `${tasks.onTimeRate}%` : EM_DASH}</strong>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <p className={styles.empty}>{t("dashboard.exec.noActivityDescription")}</p>
-          )}
-          <Link href="/settings/audit-log" className={styles.ghostLink}>
-            {t("dashboard.exec.viewAll")}
-          </Link>
-        </section>
-
-        <section className={`${styles.panel} ${styles.analytics}`}>
-          <div className={styles.panelHeader}>
-            <div>
-              <span className={styles.panelKicker}>Signal tracking</span>
-              <h2>Performance Analytics</h2>
-            </div>
-            <span className={styles.chartLegend}>
-              <i />
-              Activity volume
-            </span>
-          </div>
-          {series ? (
-            <ActivityChart points={series} locale={locale} />
-          ) : (
-            <p className={styles.empty}>{t("dashboard.exec.noActivityDescription")}</p>
-          )}
-        </section>
-
-        <section className={`${styles.panel} ${styles.priority}`}>
-          <div className={styles.panelHeader}>
-            <div>
-              <span className={styles.panelKicker}>Workload</span>
-              <h2>Tasks by Priority</h2>
-            </div>
-          </div>
-          <div className={styles.priorityRow}>
-            <div
-              className={styles.priorityRings}
-              role="img"
-              aria-label={`${priorityValues[0]} high priority, ${priorityValues[1]} medium priority, ${priorityValues[2]} low priority`}
-            >
-              <span />
-              <span />
-              <span />
-              <b>{openTasks}</b>
-            </div>
-            <div className={styles.legend}>
-              <div>
-                <i className={styles.dotRose} />
-                <span>High Priority</span>
-                <strong>{priorityValues[0]}</strong>
+                {tasks && tasks.onTimeRate !== null ? (
+                  <>
+                    <Meter value={tasks.onTimeRate ?? 0} from="#2fd48a" to="#7ef0b6" />
+                    <span className={styles.perfNote}>
+                      {t("dashboard.v2.performance.sample", { count: tasks.onTimeSample })}
+                    </span>
+                  </>
+                ) : (
+                  <span className={styles.perfNote}>{t("dashboard.v2.noSource")}</span>
+                )}
+              </li>
+              <li>
+                <div className={styles.perfHead}>
+                  <span>{t("dashboard.v2.performance.responseTime")}</span>
+                  <strong>
+                    {response
+                      ? response.hours >= 48
+                        ? t("dashboard.v2.performance.days", { value: Math.round(response.hours / 24) })
+                        : t("dashboard.v2.performance.hours", { value: response.hours })
+                      : EM_DASH}
+                  </strong>
+                </div>
+                {response ? (
+                  <span className={styles.perfNote}>
+                    {t("dashboard.v2.performance.sample", { count: response.sample })}
+                  </span>
+                ) : (
+                  <span className={styles.perfNote}>{t("dashboard.v2.noSource")}</span>
+                )}
+              </li>
+              <li>
+                <div className={styles.perfHead}>
+                  <span>{t("dashboard.v2.performance.quality")}</span>
+                  <strong>{EM_DASH}</strong>
+                </div>
+                <span className={styles.perfNote}>{t("dashboard.v2.noSource")}</span>
+              </li>
+              <li>
+                <div className={styles.perfHead}>
+                  <span>{t("dashboard.v2.performance.satisfaction")}</span>
+                  <strong>{EM_DASH}</strong>
+                </div>
+                <span className={styles.perfNote}>{t("dashboard.v2.noSource")}</span>
+              </li>
+            </ul>
+            {tasks && tasks.completedSeries.some((point) => point > 0) ? (
+              <div className={styles.perfTrend}>
+                <Sparkline values={tasks.completedSeries} from="#35d9f2" to="#8b6bff" height={34} />
               </div>
-              <div>
-                <i className={styles.dotOrange} />
-                <span>Medium Priority</span>
-                <strong>{priorityValues[1]}</strong>
-              </div>
-              <div>
-                <i className={styles.dotBlue} />
-                <span>Low Priority</span>
-                <strong>{priorityValues[2]}</strong>
-              </div>
-              <div>
-                <i className={styles.dotMuted} />
-                <span>{t("dashboard.exec.overdue")}</span>
-                <strong>{overdue}</strong>
-              </div>
-            </div>
-          </div>
-        </section>
+            ) : null}
+          </Panel>
 
-        <section className={`${styles.panel} ${styles.actions}`}>
-          <div className={styles.panelHeader}>
-            <div>
-              <span className={styles.panelKicker}>Shortcuts</span>
-              <h2>Quick Actions</h2>
-            </div>
-          </div>
-          <div className={styles.actionGrid}>
-            <Link href="/projects" data-accent="magenta">
-              <span className={styles.actionIcon}>
-                <ProjectsIcon />
-              </span>
-              <span>New Project</span>
-            </Link>
-            <Link href="/documents?upload=1" data-accent="blue">
-              <span className={styles.actionIcon}>
-                <DocumentsIcon />
-              </span>
-              <span>{t("dashboard.uploadDocument")}</span>
-            </Link>
-            <Link href="/tasks" data-accent="green">
-              <span className={styles.actionIcon}>
-                <TasksIcon />
-              </span>
-              <span>Assign Task</span>
-            </Link>
-            <Link href="/reports" data-accent="orange">
-              <span className={styles.actionIcon}>
-                <ReportsIcon />
-              </span>
-              <span>Generate Report</span>
-            </Link>
-          </div>
-        </section>
+          {/* Performance Analytics */}
+          <Panel
+            className={styles.spanEight}
+            kicker={t("dashboard.v2.analytics.kicker")}
+            title={t("dashboard.v2.analytics.title")}
+            action={
+              <div className={styles.chartLegendRow}>
+                <span data-series="created">
+                  <i />
+                  {t("dashboard.v2.analytics.created")}
+                </span>
+                <span data-series="completed">
+                  <i />
+                  {t("dashboard.v2.analytics.completed")}
+                </span>
+              </div>
+            }
+          >
+            {tasks && (tasks.createdSeries.some((p) => p > 0) || tasks.completedSeries.some((p) => p > 0)) ? (
+              <AreaChart
+                labels={dayLabels}
+                series={[
+                  {
+                    values: tasks.createdSeries,
+                    from: "#35d9f2",
+                    to: "#8b6bff",
+                    label: t("dashboard.v2.analytics.created"),
+                  },
+                  {
+                    values: tasks.completedSeries,
+                    from: "#2fd48a",
+                    to: "#7ef0b6",
+                    label: t("dashboard.v2.analytics.completed"),
+                  },
+                ]}
+              />
+            ) : (
+              <p className={styles.empty}>{t("dashboard.v2.analytics.empty")}</p>
+            )}
+          </Panel>
 
-        <section className={`${styles.panel} ${styles.growth}`}>
-          <span className={styles.growthIcon}>
-            <ReportsIcon />
-          </span>
-          <div className={styles.growthBody}>
-            <span className={styles.panelKicker}>Momentum</span>
-            <h2>Business Growth</h2>
-            <div className={styles.growthValue}>{processedShare}%</div>
-            <div className={styles.growthMeta}>
-              {documents} active intelligence assets · {processedDocs} processed
+          {/* Projects by Status */}
+          <Panel
+            className={styles.spanFour}
+            kicker={t("dashboard.v2.projectsByStatus.kicker")}
+            title={t("dashboard.v2.projectsByStatus.title")}
+            action={<Link href="/projects" className={styles.panelLink}>{t("dashboard.exec.viewAll")}</Link>}
+          >
+            {projectCounts && totalProjects > 0 ? (
+              <ul className={styles.statusList}>
+                {(Object.keys(STATUS_COLOR) as ProjectStatus[])
+                  .filter((status) => (projectCounts[status] ?? 0) > 0)
+                  .map((status) => {
+                    const count = projectCounts[status] ?? 0;
+                    const [from, to] = STATUS_COLOR[status];
+                    return (
+                      <li key={status}>
+                        <div className={styles.statusHead}>
+                          <span>
+                            <i style={{ background: from }} />
+                            {t(PROJECT_STATUS_KEYS[status])}
+                          </span>
+                          <strong>
+                            {count}
+                            <em>{percent(count, totalProjects)}%</em>
+                          </strong>
+                        </div>
+                        <Meter value={percent(count, totalProjects)} from={from} to={to} />
+                      </li>
+                    );
+                  })}
+              </ul>
+            ) : (
+              <p className={styles.empty}>{t("dashboard.v2.projectsByStatus.empty")}</p>
+            )}
+          </Panel>
+
+          {/* Top Priority Tasks */}
+          <Panel
+            className={styles.spanSix}
+            kicker={t("dashboard.v2.topTasks.kicker")}
+            title={t("dashboard.v2.topTasks.title")}
+            action={<Link href="/tasks" className={styles.panelLink}>{t("dashboard.exec.viewAll")}</Link>}
+          >
+            {tasks && tasks.topPriority.length > 0 ? (
+              <ul className={styles.taskList}>
+                {tasks.topPriority.map((task) => (
+                  <li key={task.id}>
+                    <Link href={`/tasks/${task.id}`}>
+                      <span className={styles.taskDot} style={{ background: PRIORITY_COLOR[task.priority] }} />
+                      <span className={styles.taskBody}>
+                        <strong>{task.title}</strong>
+                        <span>
+                          {task.assignee_name || t("dashboard.v2.topTasks.unassigned")}
+                          {task.project_name ? ` · ${task.project_name}` : ""}
+                        </span>
+                      </span>
+                      <span className={styles.taskMeta}>
+                        <em data-priority={task.priority}>{t(TASK_PRIORITY_KEYS[task.priority])}</em>
+                        <b data-overdue={isOverdue(task) ? "true" : undefined}>{dueLabel(task, locale, t)}</b>
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className={styles.empty}>{t("dashboard.v2.topTasks.empty")}</p>
+            )}
+          </Panel>
+
+          {/* Workload Distribution */}
+          <Panel
+            className={styles.spanSix}
+            kicker={t("dashboard.v2.workload.kicker")}
+            title={t("dashboard.v2.workload.title")}
+            action={<Link href="/tasks/team" className={styles.panelLink}>{t("dashboard.exec.viewAll")}</Link>}
+          >
+            {tasks && tasks.byAssignee.length > 0 ? (
+              <ul className={styles.statusList}>
+                {tasks.byAssignee.slice(0, 6).map((row, index) => {
+                  const max = tasks.byAssignee[0].count || 1;
+                  const palette: [string, string][] = [
+                    ["#35d9f2", "#4d8dff"],
+                    ["#8b6bff", "#e05ad0"],
+                    ["#2fd48a", "#7ef0b6"],
+                    ["#ffa43d", "#ffcb7d"],
+                    ["#ff5470", "#ff8ea3"],
+                    ["#4d8dff", "#8b6bff"],
+                  ];
+                  const [from, to] = palette[index % palette.length];
+                  return (
+                    <li key={row.name ?? "unassigned"}>
+                      <div className={styles.statusHead}>
+                        <span>
+                          <i style={{ background: from }} />
+                          {row.name || t("dashboard.v2.workload.unassigned")}
+                        </span>
+                        <strong>{t("dashboard.v2.workload.openTasks", { count: row.count })}</strong>
+                      </div>
+                      <Meter value={percent(row.count, max)} from={from} to={to} />
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <p className={styles.empty}>{t("dashboard.v2.workload.empty")}</p>
+            )}
+          </Panel>
+
+          {/* Quick Actions */}
+          <Panel
+            className={styles.spanSeven}
+            kicker={t("dashboard.v2.actions.kicker")}
+            title={t("dashboard.v2.actions.title")}
+          >
+            <div className={styles.actionGrid}>
+              <Link href="/projects" data-accent="magenta">
+                <span className={styles.actionIcon}><ProjectsIcon /></span>
+                {t("dashboard.v2.actions.newProject")}
+              </Link>
+              <Link href="/documents" data-accent="blue">
+                <span className={styles.actionIcon}><UploadIcon /></span>
+                {t("dashboard.uploadDocument")}
+              </Link>
+              <Link href="/tasks" data-accent="green">
+                <span className={styles.actionIcon}><TasksIcon /></span>
+                {t("dashboard.v2.actions.assignTask")}
+              </Link>
+              <Link href="/reports" data-accent="orange">
+                <span className={styles.actionIcon}><ReportsIcon /></span>
+                {t("dashboard.v2.actions.generateReport")}
+              </Link>
+              <Link href="/ask" data-accent="cyan">
+                <span className={styles.actionIcon}><AskIcon /></span>
+                {t("nav.ask")}
+              </Link>
+              <Link href="/brief" data-accent="violet">
+                <span className={styles.actionIcon}><BriefIcon /></span>
+                {t("nav.brief")}
+              </Link>
             </div>
-          </div>
-          <div className={styles.growthBar}>
-            <ProportionBar
-              segments={[
-                { value: processedDocs, color: "#35d9f2" },
-                { value: Math.max(0, documents - processedDocs), color: "rgba(126,166,236,0.18)" },
-              ]}
-            />
-          </div>
-        </section>
+          </Panel>
+
+          {/* Business Growth */}
+          <Panel
+            className={styles.spanFive}
+            kicker={t("dashboard.v2.growth.kicker")}
+            title={t("dashboard.v2.growth.title")}
+            icon={<GrowthIcon />}
+          >
+            {summary || tasks ? (
+              <ul className={styles.statusList}>
+                <li>
+                  <div className={styles.statusHead}>
+                    <span>
+                      <i style={{ background: "#35d9f2" }} />
+                      {t("dashboard.v2.growth.documents")}
+                    </span>
+                    <strong>{documentRate !== null ? `${documentRate}%` : EM_DASH}</strong>
+                  </div>
+                  <Meter value={documentRate ?? 0} from="#35d9f2" to="#4d8dff" />
+                </li>
+                <li>
+                  <div className={styles.statusHead}>
+                    <span>
+                      <i style={{ background: "#2fd48a" }} />
+                      {t("dashboard.v2.growth.projectsDelivered")}
+                    </span>
+                    <strong>{totalProjects > 0 ? `${projectProgress}%` : EM_DASH}</strong>
+                  </div>
+                  <Meter value={totalProjects > 0 ? projectProgress : 0} from="#2fd48a" to="#7ef0b6" />
+                </li>
+                <li>
+                  <div className={styles.statusHead}>
+                    <span>
+                      <i style={{ background: "#8b6bff" }} />
+                      {t("dashboard.v2.growth.tasksDelivered")}
+                    </span>
+                    <strong>{taskCompletionRate !== null ? `${taskCompletionRate}%` : EM_DASH}</strong>
+                  </div>
+                  <Meter value={taskCompletionRate ?? 0} from="#8b6bff" to="#e05ad0" />
+                </li>
+              </ul>
+            ) : (
+              <p className={styles.empty}>{t("dashboard.v2.growth.empty")}</p>
+            )}
+          </Panel>
+        </div>
+
+        {/* Right intelligence column */}
+        <aside className={styles.intel}>
+          <section className={`${styles.panel} ${styles.scorePanel}`}>
+            <header className={styles.panelHead}>
+              <span className={styles.panelIcon} data-accent="violet"><InsightIcon /></span>
+              <div className={styles.panelTitles}>
+                <span className={styles.kicker}>{t("dashboard.v2.intel.kicker")}</span>
+                <h2>{t("dashboard.v2.intel.insights")}</h2>
+              </div>
+            </header>
+            {health ? (
+              <>
+                <div className={styles.scoreRow}>
+                  <ProgressRing
+                    size={132}
+                    segments={[
+                      { value: health.score, from: "#35d9f2", to: "#8b6bff" },
+                      { value: 100 - health.score, from: "rgba(126,166,236,0.16)", to: "rgba(126,166,236,0.16)" },
+                    ]}
+                    centerValue={String(health.score)}
+                    centerLabel={t("dashboard.v2.intel.score")}
+                  />
+                </div>
+                <span className={styles.scoreCaption}>{t("dashboard.v2.intel.factors")}</span>
+                <ul className={styles.factorList}>
+                  {health.factors.map((factor) => (
+                    <li key={factor.key}>
+                      <span>{factorLabel(factor.key, t)}</span>
+                      <strong>{Math.round(factor.value)}%</strong>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ) : (
+              <p className={styles.empty}>{t("dashboard.v2.intel.scoreEmpty")}</p>
+            )}
+          </section>
+
+          <section className={`${styles.panel} ${styles.recPanel}`}>
+            <header className={styles.panelHead}>
+              <span className={styles.panelIcon} data-accent="cyan"><PulseIcon /></span>
+              <div className={styles.panelTitles}>
+                <span className={styles.kicker}>{t("dashboard.v2.intel.kicker")}</span>
+                <h2>{t("dashboard.v2.intel.recommendation")}</h2>
+              </div>
+            </header>
+            {recommendation ? (
+              <Link href={recommendation.href} className={styles.recCard} data-tone={recommendation.tone}>
+                <span>{recommendation.text}</span>
+                <em>{t("dashboard.exec.viewAll")}</em>
+              </Link>
+            ) : (
+              <p className={styles.empty}>{t("dashboard.v2.intel.recommendationEmpty")}</p>
+            )}
+          </section>
+
+          <section className={`${styles.panel} ${styles.activityPanel}`}>
+            <header className={styles.panelHead}>
+              <span className={styles.panelIcon} data-accent="blue"><AuditIcon /></span>
+              <div className={styles.panelTitles}>
+                <span className={styles.kicker}>{t("dashboard.v2.intel.kicker")}</span>
+                <h2>{t("dashboard.v2.intel.activity")}</h2>
+              </div>
+            </header>
+            {activity && activity.length > 0 ? (
+              <ul className={styles.timeline}>
+                {activity.slice(0, 5).map((entry, index) => (
+                  <li key={`${entry.created_at}-${index}`}>
+                    <span className={styles.timelineIcon}>
+                      {entry.resource_type === "document" ? <DocumentsIcon /> : <TasksIcon />}
+                    </span>
+                    <div>
+                      <strong>{entry.action}</strong>
+                      <span>
+                        {entry.actor} · {formatDateTime(locale, entry.created_at)}
+                      </span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : notifications && notifications.length > 0 ? (
+              <ul className={styles.timeline}>
+                {notifications.slice(0, 5).map((entry) => (
+                  <li key={entry.id}>
+                    <span className={styles.timelineIcon} data-unread={entry.read_at ? undefined : "true"}>
+                      <AskIcon />
+                    </span>
+                    <div>
+                      <strong>{entry.title}</strong>
+                      <span>{formatDateTime(locale, entry.created_at)}</span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className={styles.empty}>{t("dashboard.v2.intel.activityEmpty")}</p>
+            )}
+            <Link href="/settings/audit-log" className={styles.ghostLink}>
+              {t("dashboard.exec.viewAll")}
+            </Link>
+          </section>
+
+          <section className={`${styles.panel} ${styles.systemPanel}`}>
+            <header className={styles.panelHead}>
+              <span className={styles.panelIcon} data-accent="green"><ShieldIcon /></span>
+              <div className={styles.panelTitles}>
+                <span className={styles.kicker}>{t("dashboard.v2.intel.kicker")}</span>
+                <h2>{t("dashboard.v2.intel.status")}</h2>
+              </div>
+            </header>
+            <ul className={styles.statusFeed}>
+              <StatusRow
+                label={t("dashboard.v2.intel.statusData")}
+                state={summary ? "ok" : "off"}
+                detail={summary ? t("dashboard.v2.intel.operational") : t("dashboard.v2.intel.unavailable")}
+              />
+              <StatusRow
+                label={t("dashboard.v2.intel.statusDocs")}
+                state={!documentCounts ? "off" : failedDocuments > 0 ? "warn" : "ok"}
+                detail={
+                  !documentCounts
+                    ? t("dashboard.v2.intel.unavailable")
+                    : failedDocuments > 0
+                      ? t("dashboard.v2.intel.attention")
+                      : t("dashboard.v2.intel.operational")
+                }
+              />
+              <StatusRow
+                label={t("dashboard.v2.intel.statusBrief")}
+                state={summary?.latest_brief ? "ok" : "warn"}
+                detail={
+                  summary?.latest_brief
+                    ? briefFreshness(summary.latest_brief.brief_date, t)
+                    : t("dashboard.v2.intel.never")
+                }
+              />
+              <StatusRow
+                label={t("dashboard.v2.intel.statusRealtime")}
+                state={notifications ? "ok" : "off"}
+                detail={
+                  notifications
+                    ? notifications.length > 0
+                      ? t("dashboard.v2.intel.operational")
+                      : t("dashboard.v2.intel.quiet")
+                    : t("dashboard.v2.intel.unavailable")
+                }
+              />
+            </ul>
+          </section>
+        </aside>
       </div>
     </div>
   );
+}
+
+// --- helpers -------------------------------------------------------------
+
+function buildDayLabels(locale: string): string[] {
+  const format = new Intl.DateTimeFormat(locale, { day: "2-digit", month: "short" });
+  const now = Date.now();
+  const day = 86_400_000;
+  return [
+    format.format(new Date(now - (TREND_DAYS - 1) * day)),
+    format.format(new Date(now - Math.floor(TREND_DAYS / 2) * day)),
+    format.format(new Date(now)),
+  ];
+}
+
+type Translate = (key: TranslationKey, params?: Record<string, string | number>) => string;
+
+function dueLabel(task: TaskPublic, locale: string, t: Translate): string {
+  if (!task.due_date) return t("dashboard.v2.topTasks.noDue");
+  if (isOverdue(task)) return t("dashboard.v2.topTasks.overdue");
+  return new Intl.DateTimeFormat(locale, { day: "2-digit", month: "short" }).format(new Date(task.due_date));
+}
+
+function factorLabel(key: string, t: Translate): string {
+  switch (key) {
+    case "tasks": return t("dashboard.v2.growth.tasksDelivered");
+    case "onTime": return t("dashboard.v2.performance.onTime");
+    case "overdue": return t("dashboard.v2.tasksOverview.overdue");
+    case "documents": return t("dashboard.v2.growth.documents");
+    default: return t("dashboard.v2.growth.projectsDelivered");
+  }
+}
+
+function briefFreshness(briefDate: string, t: Translate): string {
+  const parsed = new Date(briefDate);
+  if (Number.isNaN(parsed.getTime())) return t("dashboard.v2.intel.upToDate");
+  const days = Math.floor((Date.now() - parsed.getTime()) / 86_400_000);
+  return days <= 1 ? t("dashboard.v2.intel.upToDate") : t("dashboard.v2.intel.attention");
 }

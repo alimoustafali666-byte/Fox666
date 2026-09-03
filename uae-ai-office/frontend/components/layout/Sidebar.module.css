@@ -26,20 +26,6 @@
   z-index: 0;
 }
 
-/* Skyline fills the lower sidebar, which otherwise read as dead space. */
-.skyline {
-  position: absolute;
-  inset-inline: 0;
-  bottom: 0;
-  width: 100%;
-  height: 340px;
-  z-index: 0;
-  opacity: 0.62;
-  pointer-events: none;
-  -webkit-mask-image: linear-gradient(180deg, transparent, #000 38%);
-  mask-image: linear-gradient(180deg, transparent, #000 38%);
-}
-
 @media print {
   .sidebar, .overlay { display: none !important; }
 }
@@ -121,7 +107,7 @@
   display: flex;
   align-items: center;
   gap: 11px;
-  padding: 8px 11px;
+  padding: 9px 11px;
   border-radius: var(--ai-r-md);
   border: 1px solid transparent;
   font-size: 13.5px;
@@ -140,14 +126,22 @@
 
 .navItemActive {
   color: #ffffff;
-  border-color: rgba(122, 152, 255, 0.36);
+  border-color: rgba(122, 152, 255, 0.46);
   background: linear-gradient(
     90deg,
-    rgba(58, 96, 238, 0.46) 0%,
-    rgba(98, 64, 214, 0.24) 58%,
-    rgba(98, 64, 214, 0) 100%
+    rgba(58, 96, 238, 0.54) 0%,
+    rgba(98, 64, 214, 0.3) 58%,
+    rgba(98, 64, 214, 0.04) 100%
   );
-  box-shadow: 0 12px 30px rgba(36, 56, 190, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.09);
+  box-shadow: 0 14px 32px rgba(36, 56, 190, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.navLabel {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .activeBar {
@@ -168,8 +162,8 @@
 .navItemActive .activeBar { opacity: 1; }
 
 .icon {
-  width: 29px;
-  height: 29px;
+  width: 30px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -233,8 +227,9 @@
   position: relative;
   z-index: 2;
   margin-top: auto;
-  padding: 22px 12px 12px;
+  padding: 16px 12px 14px;
   flex-shrink: 0;
+  border-top: 1px solid var(--ai-hairline);
 }
 
 .profile {
@@ -246,7 +241,19 @@
   border-radius: var(--ai-r-md);
   background: linear-gradient(160deg, rgba(30, 44, 80, 0.9), rgba(8, 13, 28, 0.96));
   box-shadow: 0 14px 34px rgba(0, 3, 14, 0.55);
+  color: inherit;
+  transition: border-color var(--transition-fast), transform var(--transition-fast);
 }
+
+.profile:hover {
+  border-color: rgba(122, 152, 255, 0.44);
+  transform: translateY(-1px);
+}
+
+.profileChevron { flex-shrink: 0; color: var(--ai-faint); }
+
+/* The chevron points along the reading direction in both scripts. */
+[dir="rtl"] .profileChevron { transform: scaleX(-1); }
 
 .profileAvatar {
   width: 36px;
@@ -263,7 +270,7 @@
   box-shadow: 0 6px 18px rgba(90, 80, 255, 0.42);
 }
 
-.profileInfo { min-width: 0; flex: 1; }
+.profileInfo { min-width: 0; flex: 1; display: flex; flex-direction: column; }
 
 .profileName {
   overflow: hidden;
@@ -283,15 +290,6 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--ai-muted);
-}
-
-.status {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--ai-green);
-  box-shadow: 0 0 0 3px rgba(47, 212, 138, 0.16), 0 0 12px rgba(47, 212, 138, 0.85);
-  flex-shrink: 0;
 }
 
 .overlay { display: none; }

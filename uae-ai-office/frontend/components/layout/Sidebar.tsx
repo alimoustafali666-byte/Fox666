@@ -2,58 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useTranslation, type TranslationKey } from "@/lib/i18n";
+import { useTranslation } from "@/lib/i18n";
 import { useAuth } from "@/lib/auth-context";
 import { useMessagesUnreadBadge } from "@/lib/use-messages-badge";
 import clsx from "../ui/clsx";
 import { BrandMark } from "./BrandMark";
-import { DubaiSkyline } from "./DubaiSkyline";
+import { NAV_GROUPS } from "./navItems";
 import { ROLE_LABEL_KEYS } from "./roles";
-import {
-  AskIcon,
-  BriefIcon,
-  DashboardIcon,
-  DocumentsIcon,
-  HelpIcon,
-  MessagesIcon,
-  ProjectsIcon,
-  ReportsIcon,
-  SettingsIcon,
-  TasksIcon,
-} from "./icons";
+import { ChevronRightIcon } from "./icons";
 import styles from "./Sidebar.module.css";
-
-type NavItem = { href: string; labelKey: TranslationKey; icon: typeof DashboardIcon; accent: string };
-
-// Same ten destinations and the same order as before -- the approved design
-// only groups them under section labels, it adds and removes nothing.
-const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
-  {
-    label: "Workspace",
-    items: [
-      { href: "/dashboard", labelKey: "nav.dashboard", icon: DashboardIcon, accent: "blue" },
-      { href: "/ask", labelKey: "nav.ask", icon: AskIcon, accent: "cyan" },
-      { href: "/messages", labelKey: "nav.messages", icon: MessagesIcon, accent: "magenta" },
-      { href: "/documents", labelKey: "nav.documents", icon: DocumentsIcon, accent: "amber" },
-    ],
-  },
-  {
-    label: "Delivery",
-    items: [
-      { href: "/projects", labelKey: "nav.projects", icon: ProjectsIcon, accent: "green" },
-      { href: "/tasks", labelKey: "nav.tasks", icon: TasksIcon, accent: "rose" },
-      { href: "/brief", labelKey: "nav.brief", icon: BriefIcon, accent: "sky" },
-      { href: "/reports", labelKey: "nav.reports", icon: ReportsIcon, accent: "violet" },
-    ],
-  },
-  {
-    label: "Account",
-    items: [
-      { href: "/support", labelKey: "nav.help", icon: HelpIcon, accent: "orange" },
-      { href: "/settings", labelKey: "nav.settings", icon: SettingsIcon, accent: "teal" },
-    ],
-  },
-];
 
 function initials(name: string | null, email: string): string {
   const source = name?.trim() || email;
@@ -74,7 +31,7 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
       <aside className={clsx(styles.sidebar, open && styles.sidebarOpen)}>
         <div className={styles.glow} aria-hidden="true" />
         <div className={styles.brand}>
-          <BrandMark size={32} />
+          <BrandMark size={30} />
           <div>
             <div className={styles.brandName}>{t("common.appName")}</div>
             <div className={styles.brandSub}>{t("common.tagline")}</div>
@@ -83,7 +40,7 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
         <div className={styles.navScroll}>
           {NAV_GROUPS.map((group) => (
             <div className={styles.navGroup} key={group.label}>
-              <span className={styles.groupLabel}>{group.label}</span>
+              <span className={styles.groupLabel}>{t(group.label)}</span>
               <nav className={styles.nav}>
                 {group.items.map((item) => {
                   const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -99,7 +56,7 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
                       <span className={styles.icon}>
                         <Icon />
                       </span>
-                      {t(item.labelKey)}
+                      <span className={styles.navLabel}>{t(item.labelKey)}</span>
                       {item.href === "/messages" && unreadMessages > 0 ? (
                         <span className={styles.navBadge}>{unreadMessages > 99 ? "99+" : unreadMessages}</span>
                       ) : null}
@@ -110,19 +67,17 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
             </div>
           ))}
         </div>
-        <DubaiSkyline variant="sidebar" className={styles.skyline} />
         <div className={styles.dock}>
-          <div className={styles.profile}>
-            <div className={styles.profileAvatar}>{user ? initials(user.full_name, user.email) : ""}</div>
-            <div className={styles.profileInfo}>
-              <div className={styles.profileName}>{user?.full_name || user?.email}</div>
-              {role ? <div className={styles.profileRole}>{t(ROLE_LABEL_KEYS[role])}</div> : null}
-            </div>
-            <span className={styles.status} aria-label="Online" />
-          </div>
+          <Link href="/settings" className={styles.profile}>
+            <span className={styles.profileAvatar}>{user ? initials(user.full_name, user.email) : ""}</span>
+            <span className={styles.profileInfo}>
+              <span className={styles.profileName}>{user?.full_name || user?.email}</span>
+              {role ? <span className={styles.profileRole}>{t(ROLE_LABEL_KEYS[role])}</span> : null}
+            </span>
+            <ChevronRightIcon width={15} height={15} className={styles.profileChevron} />
+          </Link>
         </div>
       </aside>
     </>
   );
 }
-

@@ -187,3 +187,85 @@ export function TicketIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+
+export function SearchIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Base {...props}>
+      <circle cx="8.2" cy="8.2" r="5.2" />
+      <path d="m12.2 12.2 3 3" />
+    </Base>
+  );
+}
+
+export function BellIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Base {...props}>
+      <path d="M4.6 12.4V8.2a4.4 4.4 0 0 1 8.8 0v4.2l1.1 1.6H3.5z" />
+      <path d="M7.3 15.2a1.8 1.8 0 0 0 3.4 0" />
+    </Base>
+  );
+}
+
+export function TrendUpIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Base {...props} strokeWidth="1.7">
+      <path d="M3 12.2 7 8l2.6 2.6L15 5.2" />
+      <path d="M11.4 5.2H15v3.6" />
+    </Base>
+  );
+}
+
+export function TrendDownIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Base {...props} strokeWidth="1.7">
+      <path d="M3 5.8 7 10l2.6-2.6L15 12.8" />
+      <path d="M11.4 12.8H15V9.2" />
+    </Base>
+  );
+}
+
+export function InsightIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Base {...props}>
+      <path d="M6.6 13.2a4.8 4.8 0 1 1 4.8 0v1.1H6.6z" />
+      <path d="M7.2 15.9h3.6" />
+    </Base>
+  );
+}
+
+export function PulseIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Base {...props}>
+      <path d="M2.5 9h3l1.8-4.4 2.6 9L11.8 9h3.7" />
+    </Base>
+  );
+}
+
+export function ShieldIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Base {...props}>
+      <path d="M9 2.4 14.6 4.6v4.2c0 3.3-2.3 5.8-5.6 6.8-3.3-1-5.6-3.5-5.6-6.8V4.6z" />
+      <path d="m6.7 8.9 1.7 1.7 3-3.2" />
+    </Base>
+  );
+}
+
+export function GrowthIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Base {...props}>
+      <path d="M2.8 15.2h12.4" />
+      <rect x="4" y="9.4" width="2.8" height="5.8" rx="0.8" />
+      <rect x="8.1" y="6.2" width="2.8" height="9" rx="0.8" />
+      <rect x="12.2" y="3.4" width="2.8" height="11.8" rx="0.8" />
+    </Base>
+  );
+}
+
+export function ClockIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Base {...props}>
+      <circle cx="9" cy="9" r="6.6" />
+      <path d="M9 5.2V9l2.6 1.6" />
+    </Base>
+  );
+}
