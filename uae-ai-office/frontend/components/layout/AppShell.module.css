@@ -4,13 +4,15 @@
   display: flex;
   flex-direction: column;
   transition: margin-inline-start var(--transition-base);
-  background:
-    linear-gradient(180deg, rgba(8, 15, 30, 0.78), rgba(6, 11, 22, 0.94)),
+  /* Was an invalid declaration (trailing comma, no final layer) so the whole
+     background was dropped by the parser. Restored as the approved canvas. */
+  background: linear-gradient(180deg, rgba(8, 15, 30, 0.72), rgba(5, 9, 20, 0.92));
 }
 
 .content {
+  position: relative;
   flex: 1;
-  padding: 24px 22px 32px;
+  padding: 24px 28px 38px;
   max-width: var(--content-max-width);
   width: 100%;
   margin: 0 auto;
