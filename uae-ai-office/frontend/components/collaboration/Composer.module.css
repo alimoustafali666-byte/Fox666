@@ -1,7 +1,7 @@
 .composer {
-  border-top: 1px solid var(--color-border);
+  border-top: 1px solid var(--ai-hairline);
   padding: var(--space-4) var(--space-5);
-  background: var(--color-surface);
+  background: linear-gradient(0deg, var(--ai-panel-top), transparent);
   flex-shrink: 0;
 }
 
@@ -43,9 +43,11 @@
   flex-shrink: 0;
   width: 36px;
   height: 36px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
+  border-radius: var(--ai-r-sm);
+  border: 1px solid var(--ai-line);
+  background: var(--control-bg);
+  color: var(--ai-text-2);
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
   cursor: pointer;
   font-size: 16px;
   display: flex;
@@ -70,9 +72,11 @@
 .recordingIndicator {
   padding: 8px 12px;
   font-size: var(--font-size-sm);
-  color: var(--color-danger);
-  font-weight: 600;
+  color: #e0455f;
+  font-weight: 700;
 }
+
+:root:not([data-theme="light"]) .recordingIndicator { color: #ff8ea3; }
 
 .hint {
   font-size: var(--font-size-xs);
@@ -80,3 +84,11 @@
   margin-top: 6px;
 }
 
+
+/* User-generated strings (names, titles, previews) can be in either script.
+   `plaintext` resolves each one's direction from its own first strong
+   character, so an English title inside the Arabic RTL layout still
+   truncates at its own end instead of losing its first characters. */
+.replyBanner span {
+  unicode-bidi: plaintext;
+}

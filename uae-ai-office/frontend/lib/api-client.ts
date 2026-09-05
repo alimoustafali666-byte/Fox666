@@ -214,22 +214,6 @@ async function rawRequest(path: string, options: RequestOptions): Promise<Respon
     body,
     credentials: "include",
   });
-  if (path === "/auth/login") {
-    void response
-      .clone()
-      .text()
-      .then((responseBody) => {
-        console.error("UAE AI Office login diagnostic", {
-          url,
-          method: options.method ?? "GET",
-          status: response.status,
-          responseBody,
-        });
-      })
-      .catch((error: unknown) => {
-        console.error("UAE AI Office login diagnostic network error", { url, error });
-      });
-  }
   return response;
 }
 

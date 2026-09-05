@@ -1,47 +1,54 @@
+/* Messages is a full-bleed workspace: it cancels the shell's content padding
+   exactly (via the shared tokens) so the conversation rail meets the chrome. */
 .wrap {
   display: flex;
   height: calc(100vh - var(--header-height));
-  margin: calc(var(--space-8) * -1);
+  height: calc(100dvh - var(--header-height));
+  margin: calc(var(--shell-pad-top) * -1) calc(var(--shell-pad-x) * -1) calc(var(--shell-pad-bottom) * -1);
+  overflow: hidden;
 }
 
 .sidebar {
-  width: 300px;
-  flex-shrink: 0;
-  border-inline-end: 1px solid var(--color-border);
-  background: var(--color-surface);
   display: flex;
   flex-direction: column;
+  width: 296px;
+  flex-shrink: 0;
+  min-width: 0;
+  border-inline-end: 1px solid var(--ai-line);
+  background: linear-gradient(180deg, var(--ai-panel-top), var(--ai-panel-bot));
 }
 
 .sidebarHeader {
-  padding: var(--space-5) var(--space-5) var(--space-4);
-  border-bottom: 1px solid var(--color-border);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-2);
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--ai-hairline);
+  flex-shrink: 0;
 }
 
 .sidebarTitle {
+  font-family: var(--font-display);
   font-size: var(--font-size-md);
   font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--ai-text);
 }
 
-.newMenu {
-  position: relative;
-}
+.newMenu { position: relative; }
 
 .newMenuList {
   position: absolute;
   top: calc(100% + 6px);
   inset-inline-end: 0;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-lg);
   z-index: 20;
-  min-width: 200px;
+  min-width: 210px;
   overflow: hidden;
+  border: 1px solid var(--ai-line-strong);
+  border-radius: var(--ai-r-md);
+  background: var(--ai-panel-solid);
+  box-shadow: var(--ai-shadow);
 }
 
 .newMenuItem {
@@ -50,31 +57,105 @@
   text-align: start;
   padding: 10px 14px;
   font-size: var(--font-size-sm);
-  color: var(--color-text-primary);
+  color: var(--ai-text);
   background: none;
   border: none;
   cursor: pointer;
+  transition: background-color var(--transition-fast);
 }
 
-.newMenuItem:hover {
-  background: var(--color-surface-subtle);
+.newMenuItem:hover { background: var(--ai-inset-strong); }
+
+/* Thread count beside the rail title -- the loaded total, nothing derived. */
+.sidebarCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 18px;
+  margin-inline-start: 7px;
+  padding: 0 6px;
+  border-radius: var(--radius-full);
+  background: var(--ai-inset-strong);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ai-text-2);
 }
 
 .notificationsLink {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: var(--space-3) var(--space-5);
+  gap: var(--space-2);
+  padding: 10px var(--space-4);
   font-size: var(--font-size-sm);
   font-weight: 600;
-  color: var(--color-text-primary);
-  border-bottom: 1px solid var(--color-border);
+  color: var(--ai-text);
+  border-bottom: 1px solid var(--ai-hairline);
+  flex-shrink: 0;
+  transition: background-color var(--transition-fast);
 }
 
-.notificationsLink:hover {
-  background: var(--color-surface-subtle);
-  text-decoration: none;
+.notificationsLink:hover { background: var(--ai-inset); text-decoration: none; }
+.notificationsLabel { flex: 1; min-width: 0; }
+.notificationsLink svg { width: 15px; height: 15px; flex-shrink: 0; color: var(--ai-violet); }
+.notificationsLink svg:last-child { width: 13px; height: 13px; color: var(--ai-faint); }
+
+/* Filters the threads already in the rail. No request, no state beyond this
+   component -- a long list becomes findable without leaving the page. */
+.railSearch {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
+  margin: var(--space-3) var(--space-3) 0;
+  padding: 0 10px;
+  height: 32px;
+  border: 1px solid var(--ai-line);
+  border-radius: var(--ai-r-sm);
+  background: var(--control-bg);
+  transition: border-color var(--transition-fast);
 }
+
+.railSearch:focus-within { border-color: var(--color-primary-border); }
+.railSearch svg { width: 13px; height: 13px; flex-shrink: 0; color: var(--ai-faint); }
+
+.railSearch input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  font-size: 12.5px;
+  color: var(--ai-text);
+}
+
+.railSearch input::placeholder { color: var(--ai-faint); }
+
+.railEmpty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 9px;
+  padding: var(--space-8) var(--space-5);
+  text-align: center;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--ai-muted);
+}
+
+.railEmptyIcon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid var(--ai-line);
+  background: var(--ai-inset);
+  color: var(--ai-cyan);
+}
+
+.railEmptyIcon svg { width: 17px; height: 17px; }
 
 .list {
   flex: 1;
@@ -88,46 +169,42 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 8px;
-  padding: 10px 12px;
-  border-radius: var(--radius-md);
+  padding: 9px 12px;
   margin-bottom: 2px;
-  color: var(--color-text-primary);
-  transition: background-color var(--transition-fast);
+  border-radius: var(--ai-r-sm);
+  border: 1px solid transparent;
+  color: var(--ai-text);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast);
 }
 
-.item:hover {
-  background: var(--color-surface-subtle);
-  text-decoration: none;
-}
+.item:hover { background: var(--ai-inset); border-color: var(--ai-line); text-decoration: none; }
 
-.itemActive {
+.itemActive,
+.itemActive:hover {
   background: var(--color-primary-subtle);
+  border-color: var(--color-primary-border);
 }
 
+/* Leading rail on the active conversation. Sits inside the row (inset 0, not
+   -8px) so it can't escape the scroll container's padding box. */
 .itemActive::before {
   content: "";
   position: absolute;
-  inset-inline-start: -8px;
-  top: 8px;
-  bottom: 8px;
+  inset-inline-start: 0;
+  top: 9px;
+  bottom: 9px;
   width: 3px;
   border-radius: var(--radius-full);
-  background: var(--color-primary);
+  background: var(--ai-rail);
 }
 
-.itemActive:hover {
-  background: var(--color-primary-subtle);
-}
-
-.itemBody {
-  min-width: 0;
-  flex: 1;
-}
+.itemBody { min-width: 0; flex: 1; }
 
 .itemTitleRow {
   display: flex;
   align-items: center;
   gap: 6px;
+  min-width: 0;
 }
 
 .itemTitle {
@@ -139,9 +216,9 @@
 }
 
 .itemMeta {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-muted);
   margin-top: 2px;
+  font-size: 11px;
+  color: var(--ai-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -153,10 +230,11 @@
   height: 18px;
   padding: 0 5px;
   border-radius: var(--radius-full);
-  background: var(--color-primary);
+  background: linear-gradient(135deg, #ff5470, #e05ad0);
   color: #ffffff;
+  font-family: var(--font-mono);
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 18px;
   text-align: center;
 }
@@ -174,23 +252,25 @@
     flex-direction: column;
     height: auto;
     min-height: calc(100vh - var(--header-height));
+    min-height: calc(100dvh - var(--header-height));
+    overflow: visible;
   }
 
   .sidebar {
     width: 100%;
-    max-height: 260px;
+    max-height: 248px;
     border-inline-end: none;
-    border-bottom: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--ai-line);
   }
 
-  .main {
-    min-height: 480px;
-  }
+  .main { min-height: 60vh; }
 }
 
-@media (max-width: 640px) {
-  .wrap {
-    margin: calc(var(--space-4) * -1);
-  }
+/* User-generated strings (names, titles, previews) can be in either script.
+   `plaintext` resolves each one's direction from its own first strong
+   character, so an English title inside the Arabic RTL layout still
+   truncates at its own end instead of losing its first characters. */
+.itemTitle,
+.itemMeta {
+  unicode-bidi: plaintext;
 }
-

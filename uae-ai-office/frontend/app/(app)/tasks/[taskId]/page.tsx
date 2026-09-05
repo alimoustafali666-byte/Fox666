@@ -9,10 +9,26 @@ import { errorMessage } from "@/lib/auth-context";
 import { useTranslation, formatDate, formatDateTime, type TranslationKey } from "@/lib/i18n";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { FieldWrapper, Input, Select, Textarea } from "@/components/ui/Field";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
-import { LoadingBlock } from "@/components/ui/Spinner";
+import {
+  SkeletonRows,
+  WorkspaceColumn,
+  WorkspaceHero,
+  WorkspaceNote,
+  WorkspacePage,
+  WorkspacePanel,
+  WorkspaceSplit,
+  ZeroState,
+} from "@/components/ui/Workspace";
+import {
+  ClockIcon,
+  GaugeIcon,
+  MessagesIcon,
+  PulseIcon,
+  ShieldIcon,
+  TasksIcon,
+} from "@/components/layout/icons";
 import {
   TASK_PRIORITY_KEYS,
   TASK_PRIORITY_TONE,
@@ -184,200 +200,277 @@ export default function TaskDetailPage() {
     }
   }
 
-  if (loading) return <LoadingBlock label={t("tasks.detail.loading")} />;
-  if (!task) return <ErrorBanner message={error || t("tasks.detail.genericLoadError")} />;
+  if (loading) {
+    return (
+      <WorkspacePage module="tasks">
+        <Link href="/tasks" className={styles.backLink}>
+          {backArrow} {t("tasks.detail.backToTasks")}
+        </Link>
+        <WorkspacePanel accent="blue" icon={<TasksIcon />} title={t("tasks.detail.loading")}>
+          <SkeletonRows count={6} />
+        </WorkspacePanel>
+      </WorkspacePage>
+    );
+  }
+
+  if (!task) {
+    return (
+      <WorkspacePage module="tasks">
+        <Link href="/tasks" className={styles.backLink}>
+          {backArrow} {t("tasks.detail.backToTasks")}
+        </Link>
+        <ErrorBanner message={error || t("tasks.detail.genericLoadError")} />
+      </WorkspacePage>
+    );
+  }
 
   return (
-    <div>
+    <WorkspacePage module="tasks">
       <Link href="/tasks" className={styles.backLink}>
         {backArrow} {t("tasks.detail.backToTasks")}
       </Link>
 
-      <div className={styles.header}>
-        <div>
-          <h1 className={styles.title}>{task.title}</h1>
-          <div className={styles.badgeRow}>
+      {error ? <ErrorBanner message={error} /> : null}
+
+      <WorkspaceHero
+        accent="green"
+        badge={t("workspace.taskDetail.badge")}
+        icon={<TasksIcon />}
+        title={task.title}
+        description={task.project_name || undefined}
+        actions={
+          <>
             <Badge tone={TASK_STATUS_TONE[task.status]}>{t(TASK_STATUS_KEYS[task.status])}</Badge>
             <Badge tone={TASK_PRIORITY_TONE[task.priority]}>{t(TASK_PRIORITY_KEYS[task.priority])}</Badge>
-          </div>
-        </div>
-        {canEditAllFields && !editingFields ? (
-          <div style={{ display: "flex", gap: "var(--space-2)" }}>
-            <Button size="sm" variant="secondary" onClick={() => setEditingFields(true)}>{t("common.edit")}</Button>
-            <Button size="sm" variant="danger" onClick={handleArchive}>{task.status === "cancelled" ? t("tasks.detail.restore") : t("tasks.detail.archive")}</Button>
-          </div>
-        ) : null}
-      </div>
-
-      {error ? (
-        <div style={{ marginBottom: "var(--space-4)" }}>
-          <ErrorBanner message={error} />
-        </div>
-      ) : null}
-
-      <div className={styles.layout}>
-        <div className={styles.main}>
-          <Card>
-            <CardHeader title={t("tasks.detail.descriptionTitle")} />
-            <CardBody>
-              {editingFields ? (
-                <form onSubmit={handleSaveFields}>
-                  <FieldWrapper label={t("tasks.newTaskForm.titleLabel")} htmlFor="edit-title">
-                    <Input id="edit-title" value={draftTitle} onChange={(e) => setDraftTitle(e.target.value)} maxLength={300} required />
-                  </FieldWrapper>
-                  <FieldWrapper label={t("tasks.newTaskForm.descriptionLabel")} htmlFor="edit-description" optional>
-                    <Textarea id="edit-description" value={draftDescription} onChange={(e) => setDraftDescription(e.target.value)} rows={4} maxLength={8000} />
-                  </FieldWrapper>
-                  <FieldWrapper label={t("tasks.newTaskForm.priorityLabel")} htmlFor="edit-priority">
-                    <Select id="edit-priority" value={draftPriority} onChange={(e) => setDraftPriority(e.target.value as TaskPriority)}>
-                      {TASK_PRIORITIES.map((p) => (
-                        <option key={p} value={p}>
-                          {t(TASK_PRIORITY_KEYS[p])}
-                        </option>
-                      ))}
-                    </Select>
-                  </FieldWrapper>
-                  <FieldWrapper label={t("tasks.newTaskForm.assigneeLabel")} htmlFor="edit-assignee" optional>
-                    <Select id="edit-assignee" value={draftAssignee} onChange={(e) => setDraftAssignee(e.target.value)}>
-                      <option value="">{t("tasks.unassigned")}</option>
-                      {members.map((m) => (
-                        <option key={m.user_id} value={m.user_id}>
-                          {m.full_name || m.email}
-                        </option>
-                      ))}
-                    </Select>
-                  </FieldWrapper>
-                  <FieldWrapper label={t("tasks.newTaskForm.dueDateLabel")} htmlFor="edit-due-date" optional>
-                    <Input id="edit-due-date" type="date" value={draftDueDate} onChange={(e) => setDraftDueDate(e.target.value)} />
-                  </FieldWrapper>
-                  <div style={{ display: "flex", gap: "var(--space-3)", marginTop: "var(--space-4)" }}>
-                    <Button type="submit" loading={saving}>
-                      {t("tasks.detail.saveButton")}
-                    </Button>
-                    <Button type="button" variant="secondary" onClick={() => setEditingFields(false)}>
-                      {t("common.cancel")}
-                    </Button>
-                  </div>
-                </form>
-              ) : (
-                <p className={styles.description}>{task.description || t("tasks.detail.noDescription")}</p>
-              )}
-            </CardBody>
-          </Card>
-
-          <Card>
-            <CardHeader title={t("tasks.detail.commentsTitle")} />
-            <CardBody>
-              {comments.length === 0 ? (
-                <p className={styles.muted}>{t("tasks.detail.noComments")}</p>
-              ) : (
-                <div className={styles.commentList}>
-                  {comments.map((c) => (
-                    <div key={c.id} className={styles.comment}>
-                      <div className={styles.commentMeta}>
-                        <strong>{c.author_name || ""}</strong>
-                        <span className={styles.muted}>{formatDateTime(locale, c.created_at)}</span>
-                      </div>
-                      <div className={styles.commentBody}>{c.body}</div>
-                    </div>
-                  ))}
-                </div>
-              )}
-              <form onSubmit={handleAddComment} className={styles.commentForm}>
-                <Textarea
-                  placeholder={t("tasks.detail.commentPlaceholder")}
-                  value={commentBody}
-                  onChange={(e) => setCommentBody(e.target.value)}
-                  rows={2}
-                  maxLength={4000}
-                />
-                <Button type="submit" size="sm" loading={commentBusy} disabled={!commentBody.trim()}>
-                  {t("tasks.detail.addComment")}
+            {canEditAllFields && !editingFields ? (
+              <>
+                <Button size="md" variant="secondary" onClick={() => setEditingFields(true)}>
+                  {t("common.edit")}
                 </Button>
-              </form>
-            </CardBody>
-          </Card>
-        </div>
+                <Button size="md" variant="danger" onClick={handleArchive}>
+                  {task.status === "cancelled" ? t("tasks.detail.restore") : t("tasks.detail.archive")}
+                </Button>
+              </>
+            ) : null}
+          </>
+        }
+        metrics={[
+          {
+            label: t("workspace.taskDetail.metrics.statusLabel"),
+            value: <span style={{ fontSize: 15 }}>{t(TASK_STATUS_KEYS[task.status])}</span>,
+            hint: t("workspace.taskDetail.metrics.statusHint"),
+            icon: <PulseIcon />,
+          },
+          {
+            label: t("workspace.taskDetail.metrics.priorityLabel"),
+            value: <span style={{ fontSize: 15 }}>{t(TASK_PRIORITY_KEYS[task.priority])}</span>,
+            hint: t("workspace.taskDetail.metrics.priorityHint"),
+            icon: <GaugeIcon />,
+          },
+          {
+            label: t("workspace.taskDetail.metrics.dueLabel"),
+            value: (
+              <span style={{ fontSize: 15 }}>
+                {task.due_date
+                  ? formatDate(locale, task.due_date, { month: "short", day: "numeric", year: "numeric" })
+                  : t("common.emptyValue")}
+              </span>
+            ),
+            hint: t("workspace.taskDetail.metrics.dueHint"),
+            icon: <ClockIcon />,
+          },
+          {
+            label: t("workspace.taskDetail.metrics.commentsLabel"),
+            value: comments.length,
+            hint: t("workspace.taskDetail.metrics.commentsHint"),
+            icon: <MessagesIcon />,
+          },
+        ]}
+      />
 
-        <div className={styles.sidebar}>
-          <Card>
-            <CardHeader title={t("tasks.detail.detailsTitle")} />
-            <CardBody>
-              <dl className={styles.metaList}>
-                <dt>{t("tasks.columns.status")}</dt>
-                <dd>
-                  {canChangeStatus ? (
-                    <Select value={task.status} disabled={saving} onChange={(e) => handleStatusChange(e.target.value as TaskStatus)}>
-                      {TASK_STATUSES.map((s) => (
-                        <option key={s} value={s}>
-                          {t(TASK_STATUS_KEYS[s])}
-                        </option>
-                      ))}
-                    </Select>
-                  ) : (
-                    <Badge tone={TASK_STATUS_TONE[task.status]}>{t(TASK_STATUS_KEYS[task.status])}</Badge>
-                  )}
-                </dd>
-
-                <dt>{t("tasks.columns.assignee")}</dt>
-                <dd>{task.assignee_name || t("tasks.unassigned")}</dd>
-
-                <dt>{t("tasks.columns.project")}</dt>
-                <dd>{task.project_name || t("common.noProject")}</dd>
-
-                <dt>{t("tasks.columns.dueDate")}</dt>
-                <dd>{task.due_date ? formatDate(locale, task.due_date, { month: "short", day: "numeric", year: "numeric" }) : t("common.emptyValue")}</dd>
-
-                <dt>{t("tasks.detail.createdBy")}</dt>
-                <dd>{task.creator_name || ""}</dd>
-
-                <dt>{t("tasks.detail.source")}</dt>
-                <dd>
-                  {task.source_type === "manual" ? (
-                    t(TASK_SOURCE_KEYS.manual)
-                  ) : sourceHref ? (
-                    <Link href={sourceHref}>{t(TASK_SOURCE_KEYS[task.source_type])}</Link>
-                  ) : (
-                    t(TASK_SOURCE_KEYS[task.source_type])
-                  )}
-                </dd>
-
-                <dt>{t("tasks.detail.created")}</dt>
-                <dd>{formatDateTime(locale, task.created_at)}</dd>
-
-                {task.completed_at ? (
-                  <>
-                    <dt>{t("tasks.detail.completedAt")}</dt>
-                    <dd>{formatDateTime(locale, task.completed_at)}</dd>
-                  </>
-                ) : null}
-              </dl>
-            </CardBody>
-          </Card>
-
-          <Card>
-            <CardHeader title={t("tasks.detail.activityTitle")} />
-            <CardBody>
-              {activity.length === 0 ? (
-                <p className={styles.muted}>{t("tasks.detail.noActivity")}</p>
-              ) : (
-                <div className={styles.activityList}>
-                  {activity.map((a) => (
-                    <div key={a.id} className={styles.activityItem}>
-                      <div className={styles.activityLine}>
-                        <strong>{a.actor_name || t("tasks.detail.systemActor")}</strong>{" "}
-                        {t(ACTIVITY_LABEL_KEY[a.event_type] || "tasks.activity.status_changed")}
-                      </div>
-                      <div className={styles.muted}>{formatDateTime(locale, a.created_at)}</div>
-                    </div>
-                  ))}
+      <WorkspaceSplit>
+        <WorkspaceColumn>
+          <WorkspacePanel accent="blue" icon={<TasksIcon />} title={t("tasks.detail.descriptionTitle")}>
+            {editingFields ? (
+              <form onSubmit={handleSaveFields}>
+                <FieldWrapper label={t("tasks.newTaskForm.titleLabel")} htmlFor="edit-title">
+                  <Input
+                    id="edit-title"
+                    value={draftTitle}
+                    onChange={(e) => setDraftTitle(e.target.value)}
+                    maxLength={300}
+                    required
+                  />
+                </FieldWrapper>
+                <FieldWrapper label={t("tasks.newTaskForm.descriptionLabel")} htmlFor="edit-description" optional>
+                  <Textarea
+                    id="edit-description"
+                    value={draftDescription}
+                    onChange={(e) => setDraftDescription(e.target.value)}
+                    rows={4}
+                    maxLength={8000}
+                  />
+                </FieldWrapper>
+                <FieldWrapper label={t("tasks.newTaskForm.priorityLabel")} htmlFor="edit-priority">
+                  <Select
+                    id="edit-priority"
+                    value={draftPriority}
+                    onChange={(e) => setDraftPriority(e.target.value as TaskPriority)}
+                  >
+                    {TASK_PRIORITIES.map((p) => (
+                      <option key={p} value={p}>
+                        {t(TASK_PRIORITY_KEYS[p])}
+                      </option>
+                    ))}
+                  </Select>
+                </FieldWrapper>
+                <FieldWrapper label={t("tasks.newTaskForm.assigneeLabel")} htmlFor="edit-assignee" optional>
+                  <Select id="edit-assignee" value={draftAssignee} onChange={(e) => setDraftAssignee(e.target.value)}>
+                    <option value="">{t("tasks.unassigned")}</option>
+                    {members.map((m) => (
+                      <option key={m.user_id} value={m.user_id}>
+                        {m.full_name || m.email}
+                      </option>
+                    ))}
+                  </Select>
+                </FieldWrapper>
+                <FieldWrapper label={t("tasks.newTaskForm.dueDateLabel")} htmlFor="edit-due-date" optional>
+                  <Input
+                    id="edit-due-date"
+                    type="date"
+                    value={draftDueDate}
+                    onChange={(e) => setDraftDueDate(e.target.value)}
+                  />
+                </FieldWrapper>
+                <div style={{ display: "flex", gap: "var(--space-3)", marginTop: "var(--space-4)" }}>
+                  <Button type="submit" loading={saving}>
+                    {t("tasks.detail.saveButton")}
+                  </Button>
+                  <Button type="button" variant="secondary" onClick={() => setEditingFields(false)}>
+                    {t("common.cancel")}
+                  </Button>
                 </div>
-              )}
-            </CardBody>
-          </Card>
-        </div>
-      </div>
-    </div>
+              </form>
+            ) : (
+              <p className={styles.description}>{task.description || t("tasks.detail.noDescription")}</p>
+            )}
+          </WorkspacePanel>
+
+          <WorkspacePanel accent="cyan" icon={<MessagesIcon />} title={t("tasks.detail.commentsTitle")}>
+            {comments.length === 0 ? (
+              <ZeroState accent="cyan" icon={<MessagesIcon />} title={t("tasks.detail.noComments")} />
+            ) : (
+              <div className={styles.commentList}>
+                {comments.map((c) => (
+                  <div key={c.id} className={styles.comment}>
+                    <div className={styles.commentMeta}>
+                      <strong>{c.author_name || ""}</strong>
+                      <span className={styles.muted}>{formatDateTime(locale, c.created_at)}</span>
+                    </div>
+                    <div className={styles.commentBody}>{c.body}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <form onSubmit={handleAddComment} className={styles.commentForm}>
+              <Textarea
+                placeholder={t("tasks.detail.commentPlaceholder")}
+                value={commentBody}
+                onChange={(e) => setCommentBody(e.target.value)}
+                rows={2}
+                maxLength={4000}
+              />
+              <Button type="submit" size="sm" loading={commentBusy} disabled={!commentBody.trim()}>
+                {t("tasks.detail.addComment")}
+              </Button>
+            </form>
+          </WorkspacePanel>
+        </WorkspaceColumn>
+
+        <WorkspaceColumn>
+          <WorkspacePanel accent="violet" icon={<GaugeIcon />} title={t("tasks.detail.detailsTitle")}>
+            <dl className={styles.metaList}>
+              <dt>{t("tasks.columns.status")}</dt>
+              <dd>
+                {canChangeStatus ? (
+                  <Select
+                    value={task.status}
+                    disabled={saving}
+                    onChange={(e) => handleStatusChange(e.target.value as TaskStatus)}
+                  >
+                    {TASK_STATUSES.map((s) => (
+                      <option key={s} value={s}>
+                        {t(TASK_STATUS_KEYS[s])}
+                      </option>
+                    ))}
+                  </Select>
+                ) : (
+                  <Badge tone={TASK_STATUS_TONE[task.status]}>{t(TASK_STATUS_KEYS[task.status])}</Badge>
+                )}
+              </dd>
+
+              <dt>{t("tasks.columns.assignee")}</dt>
+              <dd>{task.assignee_name || t("tasks.unassigned")}</dd>
+
+              <dt>{t("tasks.columns.project")}</dt>
+              <dd>{task.project_name || t("common.noProject")}</dd>
+
+              <dt>{t("tasks.columns.dueDate")}</dt>
+              <dd>
+                {task.due_date
+                  ? formatDate(locale, task.due_date, { month: "short", day: "numeric", year: "numeric" })
+                  : t("common.emptyValue")}
+              </dd>
+
+              <dt>{t("tasks.detail.createdBy")}</dt>
+              <dd>{task.creator_name || ""}</dd>
+
+              <dt>{t("tasks.detail.source")}</dt>
+              <dd>
+                {task.source_type === "manual" ? (
+                  t(TASK_SOURCE_KEYS.manual)
+                ) : sourceHref ? (
+                  <Link href={sourceHref}>{t(TASK_SOURCE_KEYS[task.source_type])}</Link>
+                ) : (
+                  t(TASK_SOURCE_KEYS[task.source_type])
+                )}
+              </dd>
+
+              <dt>{t("tasks.detail.created")}</dt>
+              <dd>{formatDateTime(locale, task.created_at)}</dd>
+
+              {task.completed_at ? (
+                <>
+                  <dt>{t("tasks.detail.completedAt")}</dt>
+                  <dd>{formatDateTime(locale, task.completed_at)}</dd>
+                </>
+              ) : null}
+            </dl>
+          </WorkspacePanel>
+
+          <WorkspacePanel accent="green" icon={<PulseIcon />} title={t("tasks.detail.activityTitle")}>
+            {activity.length === 0 ? (
+              <ZeroState accent="green" icon={<PulseIcon />} title={t("tasks.detail.noActivity")} />
+            ) : (
+              <div className={styles.activityList}>
+                {activity.map((a) => (
+                  <div key={a.id} className={styles.activityItem}>
+                    <div className={styles.activityLine}>
+                      <strong>{a.actor_name || t("tasks.detail.systemActor")}</strong>{" "}
+                      {t(ACTIVITY_LABEL_KEY[a.event_type] || "tasks.activity.status_changed")}
+                    </div>
+                    <div className={styles.muted}>{formatDateTime(locale, a.created_at)}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </WorkspacePanel>
+
+          <WorkspaceNote accent="blue" icon={<ShieldIcon />}>
+            {t("workspace.taskDetail.note")}
+          </WorkspaceNote>
+        </WorkspaceColumn>
+      </WorkspaceSplit>
+    </WorkspacePage>
   );
 }
-

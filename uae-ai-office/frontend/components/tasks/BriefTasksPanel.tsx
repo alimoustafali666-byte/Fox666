@@ -5,8 +5,8 @@ import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { tasksApi } from "@/lib/api-client";
 import { useTranslation } from "@/lib/i18n";
-import { Card, CardBody, CardHeader } from "@/components/ui/Card";
-import { EmptyState } from "@/components/ui/EmptyState";
+import { WorkspacePanel, ZeroState } from "@/components/ui/Workspace";
+import { TargetIcon } from "@/components/layout/icons";
 import styles from "./BriefTasksPanel.module.css";
 
 interface Counts {
@@ -48,27 +48,29 @@ export function BriefTasksPanel() {
   const hasAny = counts && (counts.overdue > 0 || counts.dueToday > 0 || counts.blocked > 0);
 
   return (
-    <Card>
-      <CardHeader title={t("brief.tasksPanel.title")} />
-      <CardBody tight>
-        {!counts ? null : !hasAny ? (
-          <div style={{ padding: "var(--space-5)" }}>
-            <EmptyState title={t("brief.tasksPanel.emptyTitle")} description={t("brief.tasksPanel.emptyDescription")} />
-          </div>
-        ) : (
-          <div className={styles.list}>
-            {rows.map(({ key, labelKey, href }) =>
-              counts[key] > 0 ? (
-                <Link key={key} href={href} className={styles.row}>
-                  <span className={styles.count}>{counts[key]}</span>
-                  <span className={styles.label}>{t(labelKey)}</span>
-                </Link>
-              ) : null
-            )}
-          </div>
-        )}
-      </CardBody>
-    </Card>
+    <WorkspacePanel accent="amber" icon={<TargetIcon />} title={t("brief.tasksPanel.title")} tight>
+      {!counts ? (
+        <div className={styles.list} />
+      ) : !hasAny ? (
+        <ZeroState
+          accent="green"
+          icon={<TargetIcon />}
+          title={t("brief.tasksPanel.emptyTitle")}
+          text={t("brief.tasksPanel.emptyDescription")}
+        />
+      ) : (
+        <div className={styles.list}>
+          {rows.map(({ key, labelKey, href }) =>
+            counts[key] > 0 ? (
+              <Link key={key} href={href} className={styles.row} data-key={key}>
+                <span className={styles.count}>{counts[key]}</span>
+                <span className={styles.label}>{t(labelKey)}</span>
+              </Link>
+            ) : null
+          )}
+        </div>
+      )}
+    </WorkspacePanel>
   );
 }
 

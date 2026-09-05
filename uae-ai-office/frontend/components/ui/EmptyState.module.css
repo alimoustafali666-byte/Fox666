@@ -1,41 +1,63 @@
+/* The application-wide empty state, in the dashboard's language.
+
+   Structure mirrors what the master uses inside a panel: a soft spectrum
+   glyph, a plain statement of what is missing, the reason/next step, and an
+   optional CTA. The glyph is fixed decoration -- it never encodes a value,
+   so an empty state can't be mistaken for a measurement. */
+
 .wrap {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: var(--space-12) var(--space-6);
   gap: var(--space-2);
-  border: 1px dashed var(--color-border-strong);
-  border-radius: var(--radius-lg);
-  background: rgba(4, 11, 24, 0.24);
+  padding: var(--space-10) var(--space-6);
+  border: 1px dashed var(--ai-line-strong);
+  border-radius: var(--ai-r-lg);
+  background: var(--ai-inset);
 }
 
 .icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
   margin-bottom: var(--space-2);
-  border-radius: var(--radius-lg);
-  background: linear-gradient(135deg, var(--color-primary-subtle), var(--color-accent-subtle));
-  color: var(--color-primary);
+  border-radius: 50%;
+  border: 1px solid var(--ai-line);
+  background: radial-gradient(closest-side, rgba(139, 107, 255, 0.22), transparent 78%), var(--ai-inset-strong);
+  color: #7c5cf0;
+}
+
+:root:not([data-theme="light"]) .icon { color: #b8a3ff; }
+
+/* Faint orbit ring -- the same decorative motif as the dashboard's pulse orb. */
+.icon::after {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  border-radius: 50%;
+  border: 1px dashed var(--ai-track);
 }
 
 .title {
+  font-family: var(--font-display);
   font-size: var(--font-size-md);
   font-weight: 600;
-  color: var(--color-text-primary);
+  color: var(--ai-text);
 }
 
 .description {
   font-size: var(--font-size-sm);
-  color: var(--color-text-muted);
-  max-width: 420px;
+  line-height: 1.55;
+  color: var(--ai-muted);
+  max-width: 46ch;
 }
 
-.actions {
-  margin-top: var(--space-3);
-}
+.actions { margin-top: var(--space-3); }
 
+@media (max-width: 640px) {
+  .wrap { padding: var(--space-8) var(--space-4); }
+}

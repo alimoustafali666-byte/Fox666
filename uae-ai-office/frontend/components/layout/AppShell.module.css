@@ -3,19 +3,20 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  transition: margin-inline-start var(--transition-base);
-  /* Was an invalid declaration (trailing comma, no final layer) so the whole
-     background was dropped by the parser. Restored as the approved canvas. */
-  background: linear-gradient(180deg, rgba(8, 15, 30, 0.72), rgba(5, 9, 20, 0.92));
+  background: var(--app-canvas);
+  transition: margin-inline-start var(--transition-base), background var(--transition-base);
 }
 
 .content {
   position: relative;
   flex: 1;
-  padding: 18px 22px 28px;
-  max-width: var(--content-max-width);
   width: 100%;
+  max-width: var(--content-max-width);
   margin: 0 auto;
+  padding: var(--shell-pad-top) var(--shell-pad-x) var(--shell-pad-bottom);
+  /* A page must never make the shell scroll sideways; wide children scroll
+     inside their own container instead. */
+  min-width: 0;
 }
 
 .guardLoading {
@@ -23,20 +24,16 @@
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: #040b18;
+  background: var(--app-body);
 }
 
 @media (max-width: 900px) {
   .main { margin-inline-start: 0; }
 }
 
-@media (max-width: 640px) {
-  .content { padding: var(--space-4); }
-}
-
 @media (prefers-reduced-motion: reduce) { .main { transition: none; } }
+
 @media print {
-  .main { margin-inline-start: 0; }
+  .main { margin-inline-start: 0; background: none; }
   .content { padding: 0; max-width: none; }
 }
-

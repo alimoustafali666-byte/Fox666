@@ -6,7 +6,8 @@
 }
 
 .logoImage {
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--ai-line);
+  border-radius: var(--ai-r-sm);
 }
 
 .logoPlaceholder {
@@ -15,8 +16,8 @@
   justify-content: center;
   width: 64px;
   height: 64px;
-  border-radius: 6px;
-  border: 1px dashed var(--color-border);
+  border-radius: var(--ai-r-sm);
+  border: 1px dashed var(--ai-line-strong);
   color: var(--color-text-muted);
   font-size: var(--font-size-xs);
   text-align: center;
@@ -40,13 +41,16 @@
 
 .companyGrid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   gap: var(--space-4);
 }
 
 .metaLabel {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-muted);
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--ai-faint);
   margin-bottom: 2px;
 }
 

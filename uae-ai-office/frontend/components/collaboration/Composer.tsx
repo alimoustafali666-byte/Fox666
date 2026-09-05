@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/Field";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import type { ChatMessagePublic } from "@/lib/types";
 import styles from "./Composer.module.css";
+import { MicIcon, PaperclipIcon, StopIcon } from "@/components/layout/icons";
 
 const TYPING_DEBOUNCE_MS = 2500;
 
@@ -182,7 +183,7 @@ export function Composer({ conversationId, replyTo, onCancelReply, onSent, onAtt
           disabled={uploading || recording}
           title={t("messages.composer.attach")}
         >
-          📎
+          <PaperclipIcon />
         </button>
         <button
           type="button"
@@ -191,7 +192,7 @@ export function Composer({ conversationId, replyTo, onCancelReply, onSent, onAtt
           disabled={uploading}
           title={recording ? t("messages.composer.stopRecording") : t("messages.composer.recordVoice")}
         >
-          {recording ? "⏹" : "🎙"}
+          {recording ? <StopIcon /> : <MicIcon />}
         </button>
 
         <div className={styles.inputWrap}>

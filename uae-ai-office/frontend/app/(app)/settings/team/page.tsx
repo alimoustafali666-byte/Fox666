@@ -1,23 +1,41 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { ApiError, tenancyApi } from "@/lib/api-client";
 import { errorMessage } from "@/lib/auth-context";
 import { useTranslation, formatDate } from "@/lib/i18n";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { Card, CardBody } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
+import { Button, buttonClassName } from "@/components/ui/Button";
 import { FieldWrapper, Input, Select } from "@/components/ui/Field";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { LoadingBlock } from "@/components/ui/Spinner";
+import {
+  SkeletonRows,
+  StatusLegend,
+  WorkspaceColumn,
+  WorkspaceHero,
+  WorkspaceNote,
+  WorkspacePage,
+  WorkspacePanel,
+  WorkspaceSplit,
+  ZeroState,
+  type LegendItem,
+} from "@/components/ui/Workspace";
+import { AuditIcon, SettingsIcon, ShieldIcon, TeamIcon } from "@/components/layout/icons";
 import { ROLE_LABEL_KEYS, ROLE_TONE, ROLES } from "@/components/layout/roles";
 import type { CompanyMemberPublic, InvitationPublic, Role } from "@/lib/types";
 import tableStyles from "@/components/ui/Table.module.css";
 import styles from "../Settings.module.css";
+
+/** Colour per role, matched to the accent palette so the legend, the badges
+ *  and the rest of the workspace read as one system. */
+const ROLE_COLOR: Record<Role, string> = {
+  owner: "#e05ad0",
+  admin: "#8b6bff",
+  manager: "#4d8dff",
+  member: "#35d9f2",
+};
 
 export default function TeamPage() {
   const { user, role: actorRole } = useAuth();
@@ -58,6 +76,24 @@ export default function TeamPage() {
   }, []);
 
   const ownerCount = members.filter((m) => m.role === "owner").length;
+
+  // Every number below is a count of what actually loaded -- nothing is
+  // estimated, and an unloaded panel shows an em dash rather than a zero.
+  const pendingCount = useMemo(
+    () => invitations.filter((invitation) => invitation.status === "pending").length,
+    [invitations]
+  );
+  const adminCount = useMemo(
+    () => members.filter((m) => m.role === "owner" || m.role === "admin").length,
+    [members]
+  );
+
+  const roleLegend: LegendItem[] = ROLES.map((r) => ({
+    label: t(ROLE_LABEL_KEYS[r]),
+    description: t(`workspace.team.roleDescriptions.${r}` as never),
+    color: ROLE_COLOR[r],
+    count: loading ? undefined : members.filter((m) => m.role === r).length,
+  }));
 
   function canEditMember(member: CompanyMemberPublic): boolean {
     if (!canManage) return false;
@@ -141,31 +177,86 @@ export default function TeamPage() {
     }
   }
 
+  if (forbidden) {
+    return (
+      <WorkspacePage module="settings">
+        <Link href="/settings" className={styles.backLink}>
+          {backArrow} {t("settings.team.backToSettings")}
+        </Link>
+        <WorkspaceHero
+          accent="violet"
+          badge={t("workspace.team.badge")}
+          icon={<TeamIcon />}
+          title={t("settings.team.pageTitle")}
+          description={t("workspace.team.description")}
+        />
+        <WorkspacePanel accent="amber" icon={<ShieldIcon />} title={t("settings.team.forbiddenTitle")}>
+          <ZeroState
+            accent="amber"
+            icon={<ShieldIcon />}
+            title={t("settings.team.forbiddenTitle")}
+            text={t("settings.team.forbiddenDescription")}
+            actions={
+              <Link href="/settings" className={buttonClassName("secondary", "sm")}>
+                {t("settings.team.backToSettings")}
+              </Link>
+            }
+          />
+        </WorkspacePanel>
+      </WorkspacePage>
+    );
+  }
+
   return (
-    <div>
+    <WorkspacePage module="settings">
       <Link href="/settings" className={styles.backLink}>
         {backArrow} {t("settings.team.backToSettings")}
       </Link>
 
-      <PageHeader title={t("settings.team.pageTitle")} description={t("settings.team.pageDescription")} />
+      {error ? <ErrorBanner message={error} /> : null}
 
-      {forbidden ? (
-        <Card>
-          <EmptyState title={t("settings.team.forbiddenTitle")} description={t("settings.team.forbiddenDescription")} />
-        </Card>
-      ) : (
-        <>
-          {error ? (
-            <div style={{ marginBottom: "var(--space-4)" }}>
-              <ErrorBanner message={error} />
-            </div>
-          ) : null}
+      <WorkspaceHero
+        accent="violet"
+        badge={t("workspace.team.badge")}
+        icon={<TeamIcon />}
+        title={t("settings.team.pageTitle")}
+        description={t("workspace.team.description")}
+        metrics={[
+          {
+            label: t("workspace.team.metrics.membersLabel"),
+            value: loading ? "—" : members.length,
+            hint: t("workspace.team.metrics.membersHint"),
+            icon: <TeamIcon />,
+          },
+          {
+            label: t("workspace.team.metrics.pendingLabel"),
+            value: loading ? "—" : pendingCount,
+            hint: t("workspace.team.metrics.pendingHint"),
+            icon: <SettingsIcon />,
+          },
+          {
+            label: t("workspace.team.metrics.ownersLabel"),
+            value: loading ? "—" : adminCount,
+            hint: t("workspace.team.metrics.ownersHint"),
+            icon: <ShieldIcon />,
+          },
+        ]}
+      />
 
-          <Card>
+      <WorkspaceSplit>
+        <WorkspaceColumn>
+          <WorkspacePanel accent="violet" icon={<TeamIcon />} title={t("settings.team.pageTitle")} tight>
             {loading ? (
-              <LoadingBlock label={t("settings.team.loadingLabel")} />
+              <div style={{ padding: "var(--space-3)" }}>
+                <SkeletonRows count={4} />
+              </div>
             ) : members.length === 0 ? (
-              <EmptyState title={t("settings.team.noMembersTitle")} description={t("settings.team.noMembersDescription")} />
+              <ZeroState
+                accent="violet"
+                icon={<TeamIcon />}
+                title={t("workspace.team.membersEmptyTitle")}
+                text={t("workspace.team.membersEmptyText")}
+              />
             ) : (
               <div className={tableStyles.wrap}>
                 <table className={tableStyles.table}>
@@ -222,38 +313,125 @@ export default function TeamPage() {
                 </table>
               </div>
             )}
-          </Card>
-          <Card>
-            <CardBody>
-              <h2>{t("settings.team.inviteTitle")}</h2>
-              <form onSubmit={handleInvite} style={{ display: "flex", gap: 12, alignItems: "end", flexWrap: "wrap" }}>
+          </WorkspacePanel>
+
+          <WorkspacePanel accent="cyan" icon={<SettingsIcon />} title={t("settings.team.invitationsTitle")} tight>
+            {loading ? (
+              <div style={{ padding: "var(--space-3)" }}>
+                <SkeletonRows count={3} />
+              </div>
+            ) : invitations.length === 0 ? (
+              <ZeroState
+                accent="cyan"
+                icon={<SettingsIcon />}
+                title={t("workspace.team.invitationsEmptyTitle")}
+                text={t("workspace.team.invitationsEmptyText")}
+              />
+            ) : (
+              <div className={tableStyles.wrap}>
+                <table className={tableStyles.table}>
+                  <thead>
+                    <tr>
+                      <th>{t("settings.team.inviteEmail")}</th>
+                      <th>{t("settings.team.inviteRole")}</th>
+                      <th>{t("settings.team.invitationStatus")}</th>
+                      <th>{t("settings.team.invitationExpires")}</th>
+                      <th />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {invitations.map((invitation) => (
+                      <tr key={invitation.id}>
+                        <td>{invitation.email}</td>
+                        <td>
+                          <Badge tone={ROLE_TONE[invitation.role]}>{t(ROLE_LABEL_KEYS[invitation.role])}</Badge>
+                        </td>
+                        <td>{t(`settings.team.${invitation.status}` as never)}</td>
+                        <td className={tableStyles.muted}>{formatDate(locale, invitation.expires_at)}</td>
+                        <td>
+                          {invitation.status === "pending" ? (
+                            <span style={{ display: "inline-flex", gap: "var(--space-2)" }}>
+                              <Button
+                                size="sm"
+                                disabled={busyUserId === invitation.id}
+                                onClick={() => handleResend(invitation)}
+                              >
+                                {t("settings.team.resendButton")}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="danger"
+                                disabled={busyUserId === invitation.id}
+                                onClick={() => handleCancel(invitation)}
+                              >
+                                {t("settings.team.cancelButton")}
+                              </Button>
+                            </span>
+                          ) : null}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </WorkspacePanel>
+        </WorkspaceColumn>
+
+        <WorkspaceColumn>
+          {canManage ? (
+            <WorkspacePanel accent="blue" icon={<TeamIcon />} title={t("settings.team.inviteTitle")}>
+              <form onSubmit={handleInvite} style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
                 <FieldWrapper label={t("settings.team.inviteEmail")} htmlFor="invite-email">
-                  <Input id="invite-email" type="email" required value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} />
+                  <Input
+                    id="invite-email"
+                    type="email"
+                    required
+                    value={inviteEmail}
+                    onChange={(e) => setInviteEmail(e.target.value)}
+                  />
                 </FieldWrapper>
                 <FieldWrapper label={t("settings.team.inviteRole")} htmlFor="invite-role">
                   <Select id="invite-role" value={inviteRole} onChange={(e) => setInviteRole(e.target.value as Role)}>
-                    {ROLES.filter((r) => r !== "owner").map((r) => <option key={r} value={r}>{t(ROLE_LABEL_KEYS[r])}</option>)}
+                    {ROLES.filter((r) => r !== "owner").map((r) => (
+                      <option key={r} value={r}>
+                        {t(ROLE_LABEL_KEYS[r])}
+                      </option>
+                    ))}
                   </Select>
                 </FieldWrapper>
-                <Button type="submit" disabled={busyUserId === "invite"}>{t("settings.team.inviteButton")}</Button>
+                <Button type="submit" disabled={busyUserId === "invite"} block>
+                  {t("settings.team.inviteButton")}
+                </Button>
               </form>
-            </CardBody>
-          </Card>
-          <Card>
-            <CardBody>
-              <h2>{t("settings.team.invitationsTitle")}</h2>
-              {invitations.length === 0 ? <EmptyState title={t("settings.team.noInvitations")} /> : (
-                <div className={tableStyles.wrap}>
-                  <table className={tableStyles.table}><thead><tr><th>{t("settings.team.inviteEmail")}</th><th>{t("settings.team.inviteRole")}</th><th>{t("settings.team.invitationStatus")}</th><th>{t("settings.team.invitationExpires")}</th><th /></tr></thead>
-                    <tbody>{invitations.map((invitation) => <tr key={invitation.id}><td>{invitation.email}</td><td><Badge tone={ROLE_TONE[invitation.role]}>{t(ROLE_LABEL_KEYS[invitation.role])}</Badge></td><td>{t(`settings.team.${invitation.status}` as never)}</td><td className={tableStyles.muted}>{formatDate(locale, invitation.expires_at)}</td><td>{invitation.status === "pending" ? <><Button size="sm" disabled={busyUserId === invitation.id} onClick={() => handleResend(invitation)}>{t("settings.team.resendButton")}</Button> <Button size="sm" variant="danger" disabled={busyUserId === invitation.id} onClick={() => handleCancel(invitation)}>{t("settings.team.cancelButton")}</Button></> : null}</td></tr>)}</tbody>
-                  </table>
-                </div>
-              )}
-            </CardBody>
-          </Card>
-        </>
-      )}
-    </div>
+            </WorkspacePanel>
+          ) : null}
+
+          <WorkspacePanel
+            accent="magenta"
+            icon={<ShieldIcon />}
+            title={t("workspace.team.rolesTitle")}
+            subtitle={t("workspace.team.rolesSubtitle")}
+            tight
+          >
+            <StatusLegend items={roleLegend} total={members.length} />
+          </WorkspacePanel>
+
+          {canManage ? (
+            <WorkspacePanel accent="amber" icon={<AuditIcon />} title={t("settings.auditLog.pageTitle")} tight>
+              <div style={{ padding: "var(--space-3)" }}>
+                <Link href="/settings/audit-log" className={buttonClassName("secondary", "sm", true)}>
+                  {t("settings.auditLog.pageTitle")}
+                </Link>
+              </div>
+            </WorkspacePanel>
+          ) : null}
+
+          <WorkspaceNote accent="violet" icon={<ShieldIcon />}>
+            {t("workspace.team.note")}
+          </WorkspaceNote>
+        </WorkspaceColumn>
+      </WorkspaceSplit>
+    </WorkspacePage>
   );
 }
-

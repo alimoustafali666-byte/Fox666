@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/Field";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import type { AiAnswerResponse, AiInsightsResponse } from "@/lib/types";
 import styles from "./AiPanel.module.css";
+import { CloseIcon } from "@/components/layout/icons";
 
 type ActionKey = "summarize" | "summarizeUnread" | "decisions" | "actionItems" | "ask" | null;
 
@@ -66,7 +67,7 @@ export function AiPanel({ conversationId, onClose, onJumpToMessage }: { conversa
       <div className={styles.header}>
         <div className={styles.title}>{t("messages.ai.panelTitle")}</div>
         <button type="button" className={styles.closeButton} onClick={onClose}>
-          ✕
+          <CloseIcon width={14} height={14} />
         </button>
       </div>
       <div className={styles.hint}>{t("messages.ai.panelHint")}</div>

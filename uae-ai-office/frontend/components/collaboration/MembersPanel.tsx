@@ -10,6 +10,7 @@ import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { Spinner } from "@/components/ui/Spinner";
 import type { ChatConversationPublic, CompanyMemberPublic, ConversationMemberPublic, NotificationPref } from "@/lib/types";
 import styles from "./MembersPanel.module.css";
+import { CloseIcon } from "@/components/layout/icons";
 
 interface MembersPanelProps {
   conversation: ChatConversationPublic;
@@ -129,7 +130,7 @@ export function MembersPanel({ conversation, onClose, onRenamed, onLeft }: Membe
       <div className={styles.header}>
         <div className={styles.title}>{t("messages.members.title")}</div>
         <button type="button" className={styles.closeButton} onClick={onClose}>
-          ✕
+          <CloseIcon width={14} height={14} />
         </button>
       </div>
 

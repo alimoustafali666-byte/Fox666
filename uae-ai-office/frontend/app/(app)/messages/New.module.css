@@ -1,46 +1,58 @@
+/* Segmented tab pair (direct message / group) in the master's pill language. */
 .tabs {
   display: flex;
-  gap: var(--space-2);
+  gap: 7px;
   margin-bottom: var(--space-4);
+  flex-wrap: wrap;
 }
 
 .tab {
-  padding: 8px 14px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-sm);
-  font-weight: 600;
+  height: 32px;
+  padding: 0 15px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--ai-line);
+  background: var(--control-bg);
+  color: var(--ai-text-2);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
   cursor: pointer;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
 }
 
-.tab:hover {
-  background: var(--color-surface-subtle);
-}
+.tab:hover { border-color: var(--ai-line-strong); background: var(--control-bg-hover); color: var(--ai-text); }
 
-.tabActive {
-  background: var(--color-primary-subtle);
-  border-color: var(--color-primary-border);
-  color: var(--color-primary);
+.tabActive,
+.tabActive:hover {
+  background: linear-gradient(122deg, #4d8dff, #8b6bff);
+  border-color: transparent;
+  color: #ffffff;
+  box-shadow: 0 6px 16px rgba(77, 141, 255, 0.3);
 }
 
 .memberChecklist {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  max-height: 220px;
+  gap: 2px;
+  max-height: 240px;
   overflow-y: auto;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: var(--space-3);
+  padding: 6px;
+  border: 1px solid var(--ai-line);
+  border-radius: var(--ai-r-sm);
+  background: var(--ai-inset);
 }
 
 .memberCheckboxRow {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
   font-size: var(--font-size-sm);
-  color: var(--color-text-primary);
+  color: var(--ai-text);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
 }
 
+.memberCheckboxRow:hover { background: var(--ai-inset-strong); }
+
+.memberCheckboxRow input { accent-color: var(--color-primary); flex-shrink: 0; }

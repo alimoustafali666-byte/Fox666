@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { tasksApi } from "@/lib/api-client";
 import { useTranslation, type TranslationKey } from "@/lib/i18n";
 import type { TaskDashboardSummary } from "@/lib/types";
-import styles from "./TaskSummaryTiles.module.css";
+import type { BadgeTone } from "@/components/ui/Badge";
+import { StatTile, StatTileRow } from "@/components/ui/StatTile";
 
-const TILES: { key: keyof TaskDashboardSummary; href: string; tone: "primary" | "warning" | "danger" | "info"; labelKey: TranslationKey }[] = [
+const TILES: { key: keyof TaskDashboardSummary; href: string; tone: BadgeTone; labelKey: TranslationKey }[] = [
   { key: "my_open_tasks", href: "/tasks", tone: "primary", labelKey: "tasks.summaryTiles.my_open_tasks" },
   { key: "due_today", href: "/tasks?due=due_today", tone: "info", labelKey: "tasks.summaryTiles.due_today" },
   { key: "overdue", href: "/tasks?due=overdue", tone: "danger", labelKey: "tasks.summaryTiles.overdue" },
@@ -30,15 +30,10 @@ export function TaskSummaryTiles() {
   if (!summary) return null;
 
   return (
-    <div className={styles.row}>
+    <StatTileRow>
       {TILES.map(({ key, href, tone, labelKey }) => (
-        <Link key={key} href={href} className={styles.stat} data-tone={tone}>
-          <span className={styles.statBar} />
-          <span className={styles.statCount}>{summary[key]}</span>
-          <span className={styles.statLabel}>{t(labelKey)}</span>
-        </Link>
+        <StatTile key={key} href={href} tone={tone} count={summary[key]} label={t(labelKey)} />
       ))}
-    </div>
+    </StatTileRow>
   );
 }
-

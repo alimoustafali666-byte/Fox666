@@ -1,93 +1,16 @@
+/* ──────────────────────────────────────────────────────────────────────
+   UAE AI Office design tokens.
+
+   One token set, two themes. `:root` carries the DARK values (the product
+   default); `:root[data-theme="light"]` re-declares only the tokens whose
+   value actually changes. Every module reads these same names, so the whole
+   application follows the active theme without any duplicated markup.
+   ────────────────────────────────────────────────────────────────────── */
+
 :root {
-  --color-bg: #050d1d;
-  --color-surface: #0d1f38;
-  --color-surface-subtle: #11284a;
-  --color-surface-sunken: #060e1c;
-  --color-surface-glass: rgba(13, 25, 46, 0.78);
-  --color-border: rgba(130, 177, 255, 0.14);
-  --color-border-strong: rgba(159, 186, 255, 0.22);
+  color-scheme: dark;
 
-  --color-text-primary: #edf3ff;
-  --color-text-secondary: #b5c4d8;
-  --color-text-muted: #7f93b4;
-  --color-text-inverse: #ffffff;
-
-  --color-navy-950: #040b18;
-  --color-navy-900: #071225;
-  --color-navy-800: #0b1b35;
-  --color-navy-700: #10284a;
-  --color-navy-600: #173967;
-  --color-navy-border: rgba(255, 255, 255, 0.09);
-  --color-navy-text-muted: rgba(255, 255, 255, 0.68);
-
-  --color-primary: #5a7dff;
-  --color-primary-hover: #7e9bfd;
-  --color-primary-active: #3a65df;
-  --color-primary-subtle: rgba(90, 125, 255, 0.18);
-  --color-primary-border: rgba(128, 160, 255, 0.42);
-
-  --color-accent: #46d8f5;
-  --color-accent-strong: #32b9e8;
-  --color-accent-subtle: rgba(70, 216, 245, 0.12);
-  --color-accent-border: rgba(70, 216, 245, 0.44);
-
-  --color-violet: #bb77ff;
-  --color-violet-strong: #8f57e6;
-  --color-violet-subtle: rgba(187, 119, 255, 0.16);
-  --color-violet-border: rgba(187, 119, 255, 0.36);
-
-  --gradient-ai: linear-gradient(135deg, #3f66ff 0%, #2ad6f7 45%, #d56eff 100%);
-  --gradient-ai-violet: linear-gradient(135deg, #4d75ff 0%, #9060ff 48%, #26d8f1 100%);
-  --gradient-navy: linear-gradient(160deg, #101d39 0%, #070e1a 100%);
-  --gradient-navy-radial: radial-gradient(120% 140% at 12% -10%, #1d2d5d 0%, #101d39 42%, #060b18 100%);
-  --sidebar-background: radial-gradient(110% 100% at 12% 0%, rgba(80, 111, 255, 0.38) 0%, transparent 32%), linear-gradient(180deg, rgba(7, 18, 37, 0.96), rgba(5, 13, 29, 0.98));
-
-  --glow-accent: 0 0 0 1px rgba(70, 216, 245, 0.18), 0 12px 34px rgba(70, 216, 245, 0.18);
-  --glow-primary: 0 0 0 1px rgba(90, 125, 255, 0.25), 0 18px 32px rgba(90, 125, 255, 0.22);
-  --glow-focus: 0 0 0 3px rgba(70, 216, 245, 0.13), 0 0 20px rgba(70, 216, 245, 0.08);
-
-  --color-success: #48e2a2;
-  --color-success-subtle: rgba(72, 226, 162, 0.12);
-  --color-success-border: rgba(72, 226, 162, 0.28);
-
-  --color-warning: #ffb968;
-  --color-warning-subtle: rgba(255, 185, 104, 0.12);
-  --color-warning-border: rgba(255, 185, 104, 0.34);
-
-  --color-danger: #ff6f8c;
-  --color-danger-subtle: rgba(255, 111, 140, 0.14);
-  --color-danger-border: rgba(255, 111, 140, 0.34);
-
-  --color-info: #7eb8ff;
-  --color-info-subtle: rgba(126, 184, 255, 0.12);
-  --color-info-border: rgba(126, 184, 255, 0.34);
-
-  --color-neutral-subtle: rgba(148, 183, 224, 0.1);
-  --color-neutral-border: rgba(148, 183, 224, 0.2);
-  --color-neutral-text: #a9bad1;
-
-  /* ── Approved design master (UAE AI Office dashboard) ──
-     Additive: the tokens above are untouched so every other module
-     keeps rendering exactly as before. */
-  --font-ui: "Manrope", "Avenir Next", "Segoe UI", "Noto Sans Arabic", Tahoma, sans-serif;
-  --font-display: "Sora", "Avenir Next", "Segoe UI", "Noto Kufi Arabic", Tahoma, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
-
-  --ai-bg: #03060e;
-  --ai-shell: #060b17;
-  --ai-canvas: #050914;
-  --ai-panel-top: rgba(23, 36, 68, 0.72);
-  --ai-panel-bot: rgba(7, 12, 26, 0.94);
-
-  --ai-line: rgba(126, 166, 236, 0.14);
-  --ai-line-strong: rgba(142, 180, 255, 0.28);
-  --ai-hairline: rgba(255, 255, 255, 0.06);
-
-  --ai-text: #eaf1fe;
-  --ai-text-2: #a6b7d3;
-  --ai-muted: #6d7e9d;
-  --ai-faint: #4e5d79;
-
+  /* ── Accents: identical in both themes ── */
   --ai-blue: #4d8dff;
   --ai-cyan: #35d9f2;
   --ai-violet: #8b6bff;
@@ -100,14 +23,101 @@
   --ai-brand: linear-gradient(122deg, #4d8dff 0%, #8b6bff 52%, #e05ad0 100%);
   --ai-rail: linear-gradient(180deg, #35d9f2, #8b6bff);
 
-  --ai-r-lg: 18px;
-  --ai-r-md: 12px;
-  --ai-r-sm: 9px;
-  --ai-gap: 18px;
+  --color-primary: #5a7dff;
+  --color-primary-hover: #7e9bfd;
+  --color-primary-active: #3a65df;
+  --color-primary-subtle: rgba(90, 125, 255, 0.18);
+  --color-primary-border: rgba(128, 160, 255, 0.42);
+
+  --color-accent: #46d8f5;
+  --color-accent-strong: #32b9e8;
+  --color-accent-subtle: rgba(70, 216, 245, 0.12);
+  --color-accent-border: rgba(70, 216, 245, 0.44);
+
+  --color-success: #48e2a2;
+  --color-warning: #ffb968;
+  --color-danger: #ff6f8c;
+  --color-info: #7eb8ff;
+
+  /* ── Dark surfaces ── */
+  --ai-bg: #03060e;
+  --ai-shell: #060b17;
+  --ai-canvas: #050914;
+  --ai-panel-top: rgba(23, 36, 68, 0.72);
+  --ai-panel-bot: rgba(7, 12, 26, 0.94);
+  --ai-panel-solid: #0b1224;
+  --ai-inset: rgba(126, 166, 236, 0.07);
+  --ai-inset-strong: rgba(126, 166, 236, 0.12);
+  --ai-track: rgba(126, 166, 236, 0.13);
+
+  --ai-line: rgba(126, 166, 236, 0.14);
+  --ai-line-strong: rgba(142, 180, 255, 0.28);
+  --ai-hairline: rgba(255, 255, 255, 0.06);
+  --ai-sheen: rgba(255, 255, 255, 0.16);
+  --skeleton-sheen: rgba(255, 255, 255, 0.14);
+
+  --ai-text: #eaf1fe;
+  --ai-text-strong: #ffffff;
+  --ai-text-2: #a6b7d3;
+  --ai-muted: #6d7e9d;
+  --ai-faint: #4e5d79;
+
   --ai-shadow: 0 24px 60px rgba(0, 3, 14, 0.55);
   --ai-shadow-lift: 0 34px 78px rgba(0, 3, 14, 0.66);
+  --ai-shadow-sm: 0 10px 26px rgba(0, 3, 14, 0.42);
 
-  --font-sans: "Avenir Next", "Segoe UI", "Noto Sans Arabic", Tahoma, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  --app-canvas: linear-gradient(180deg, rgba(8, 15, 30, 0.72), rgba(5, 9, 20, 0.92));
+  --app-body:
+    radial-gradient(58% 40% at 84% -6%, rgba(96, 74, 224, 0.2), transparent 62%),
+    radial-gradient(44% 32% at 4% 0%, rgba(53, 217, 242, 0.09), transparent 60%),
+    linear-gradient(180deg, #070c1a 0%, #04070f 52%, #03060e 100%);
+  --sidebar-bg: linear-gradient(180deg, #080f21 0%, #050a15 58%, #03060f 100%);
+  --sidebar-background: var(--sidebar-bg);
+  --header-bg: rgba(5, 10, 22, 0.82);
+  --control-bg: rgba(8, 14, 30, 0.82);
+  --control-bg-hover: rgba(12, 20, 40, 0.92);
+
+  /* Legacy aliases. These now resolve to the master surfaces rather than to
+     their own private navies, so every module that still reads these names
+     renders on the same surface as the dashboard -- in BOTH themes -- without
+     each file having to be rewritten. Because they are aliases, the light
+     theme block below does not need to redeclare them. */
+  --color-bg: var(--ai-bg);
+  --color-surface: var(--ai-panel-solid);
+  --color-surface-subtle: var(--ai-inset-strong);
+  --color-surface-sunken: var(--ai-inset);
+  --color-surface-glass: var(--control-bg);
+  --color-border: var(--ai-line);
+  --color-border-strong: var(--ai-line-strong);
+  --color-text-primary: var(--ai-text);
+  --color-text-secondary: var(--ai-text-2);
+  --color-text-muted: var(--ai-muted);
+  --color-text-inverse: #ffffff;
+  --color-success-subtle: rgba(72, 226, 162, 0.12);
+  --color-success-border: rgba(72, 226, 162, 0.28);
+  --color-warning-subtle: rgba(255, 185, 104, 0.12);
+  --color-warning-border: rgba(255, 185, 104, 0.34);
+  --color-danger-subtle: rgba(255, 111, 140, 0.14);
+  --color-danger-border: rgba(255, 111, 140, 0.34);
+  --color-info-subtle: rgba(126, 184, 255, 0.12);
+  --color-info-border: rgba(126, 184, 255, 0.34);
+  --color-neutral-subtle: rgba(148, 183, 224, 0.1);
+  --color-neutral-border: rgba(148, 183, 224, 0.2);
+  --color-neutral-text: #a9bad1;
+
+  /* ── Theme-independent scales ── */
+  --font-ui: "Manrope", "Avenir Next", "Segoe UI", "Noto Sans Arabic", Tahoma, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji";
+  --font-display: "Sora", "Avenir Next", "Segoe UI", "Noto Kufi Arabic", Tahoma, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji";
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --font-sans: var(--font-ui);
+
+  --ai-r-lg: 16px;
+  --ai-r-md: 11px;
+  --ai-r-sm: 8px;
+  --ai-gap: 12px;
+
   --font-size-xs: 12px;
   --font-size-sm: 13px;
   --font-size-base: 14px;
@@ -137,18 +147,95 @@
 
   --shadow-sm: 0 1px 2px rgba(15, 26, 46, 0.05);
   --shadow-md: 0 2px 8px rgba(15, 26, 46, 0.08);
-  --shadow-card: 0 18px 44px rgba(0, 5, 16, 0.26), 0 0 0 1px rgba(148, 183, 224, 0.04);
-  --shadow-card-hover: 0 22px 52px rgba(0, 5, 16, 0.36), 0 0 0 1px rgba(70, 216, 245, 0.12);
-  --shadow-lg: 0 18px 42px rgba(6, 11, 24, 0.2);
+  --shadow-card: var(--ai-shadow-sm);
+  --shadow-card-hover: var(--ai-shadow);
+  --shadow-lg: var(--ai-shadow);
 
   --transition-fast: 120ms ease;
   --transition-base: 180ms cubic-bezier(0.2, 0, 0, 1);
   --transition-smooth: 240ms cubic-bezier(0.2, 0.75, 0.25, 1);
 
-  --sidebar-width: 262px;
-  --sidebar-width-rail: 76px;
-  --header-height: 64px;
-  --content-max-width: 1580px;
+  --sidebar-width: 226px;
+  --header-height: 56px;
+  --content-max-width: 1660px;
+
+  /* Shell content padding. Full-bleed layouts (Ask, Messages) cancel this out
+     with the exact negative, so the two must never drift apart -- they read
+     these same tokens instead of repeating the numbers. */
+  --shell-pad-x: 18px;
+  --shell-pad-top: 16px;
+  --shell-pad-bottom: 24px;
+}
+
+@media (max-width: 640px) {
+  :root {
+    --shell-pad-x: 12px;
+    --shell-pad-top: 12px;
+    --shell-pad-bottom: 20px;
+  }
+}
+
+/* ── Light theme ─────────────────────────────────────────────────────── */
+
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  /* Light is a tinted, layered surface -- never flat white. */
+  --ai-bg: #eef3fc;
+  --ai-shell: #ffffff;
+  --ai-canvas: #eef3fc;
+  --ai-panel-top: #ffffff;
+  --ai-panel-bot: #f6f9ff;
+  --ai-panel-solid: #ffffff;
+  --ai-inset: rgba(59, 110, 246, 0.055);
+  --ai-inset-strong: rgba(59, 110, 246, 0.1);
+  --ai-track: rgba(59, 110, 246, 0.13);
+
+  --ai-line: rgba(59, 110, 246, 0.15);
+  --ai-line-strong: rgba(59, 110, 246, 0.28);
+  --ai-hairline: rgba(59, 110, 246, 0.12);
+  --ai-sheen: rgba(59, 110, 246, 0.14);
+  --skeleton-sheen: rgba(59, 110, 246, 0.16);
+
+  --ai-text: #0f1c33;
+  --ai-text-strong: #060d1c;
+  --ai-text-2: #475569;
+  --ai-muted: #6b7c96;
+  --ai-faint: #94a3b8;
+
+  /* Coloured, not grey -- shadows carry the brand hue in light mode too. */
+  --ai-shadow: 0 18px 44px rgba(45, 78, 190, 0.13);
+  --ai-shadow-lift: 0 26px 60px rgba(45, 78, 190, 0.19);
+  --ai-shadow-sm: 0 8px 22px rgba(45, 78, 190, 0.09);
+
+  --app-canvas:
+    radial-gradient(72% 46% at 88% 0%, rgba(139, 107, 255, 0.13), transparent 64%),
+    radial-gradient(56% 38% at 2% 4%, rgba(53, 217, 242, 0.14), transparent 62%),
+    linear-gradient(180deg, #f4f8ff 0%, #e9eefb 100%);
+  --app-body:
+    radial-gradient(58% 40% at 84% -6%, rgba(139, 107, 255, 0.16), transparent 62%),
+    radial-gradient(44% 32% at 4% 0%, rgba(53, 217, 242, 0.14), transparent 60%),
+    linear-gradient(180deg, #f5f8ff 0%, #e9eefb 100%);
+  --sidebar-bg:
+    radial-gradient(120% 42% at 10% 0%, rgba(77, 141, 255, 0.12), transparent 62%),
+    linear-gradient(180deg, #ffffff 0%, #f7faff 100%);
+  --sidebar-background: var(--sidebar-bg);
+  --header-bg: rgba(255, 255, 255, 0.88);
+  --control-bg: #ffffff;
+  --control-bg-hover: #f4f7fd;
+
+  --color-text-inverse: #ffffff;
+  --color-neutral-subtle: rgba(15, 23, 42, 0.05);
+  --color-neutral-border: rgba(15, 23, 42, 0.12);
+  --color-neutral-text: #475569;
+
+  --color-primary: #3f6bff;
+  --color-accent: #0eaec4;
+  --color-success: #12a877;
+  --color-warning: #d98514;
+  --color-danger: #e04463;
+  --color-info: #3f6bff;
+
 }
 
 * { box-sizing: border-box; }
@@ -161,16 +248,14 @@ body {
 
 body {
   min-height: 100vh;
-  background:
-    radial-gradient(58% 40% at 84% -6%, rgba(96, 74, 224, 0.20), transparent 62%),
-    radial-gradient(44% 32% at 4% 0%, rgba(53, 217, 242, 0.09), transparent 60%),
-    linear-gradient(180deg, #070c1a 0%, #04070f 52%, #03060e 100%);
+  background: var(--app-body);
   background-attachment: fixed;
   color: var(--ai-text);
   font-family: var(--font-ui);
   font-size: var(--font-size-base);
   line-height: var(--line-height-base);
   -webkit-font-smoothing: antialiased;
+  transition: background-color var(--transition-base), color var(--transition-base);
 }
 
 h1, h2, h3, h4, p { margin: 0; }
@@ -179,6 +264,51 @@ a { color: var(--color-primary); text-decoration: none; }
 a:hover { text-decoration: none; }
 
 button, input, select, textarea { font-family: inherit; font-size: inherit; color: inherit; }
+
+/* Checkboxes are drawn from tokens rather than left to the browser: the
+   native control paints a pale system square that reads as a hole punched in
+   the dark panel, and `accent-color` only recolours the CHECKED state. This
+   one definition covers every checkbox in the app in both themes. */
+input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  flex-shrink: 0;
+  width: 17px;
+  height: 17px;
+  margin: 0;
+  border: 1px solid var(--ai-line-strong);
+  border-radius: 5px;
+  background: var(--control-bg);
+  cursor: pointer;
+  display: inline-grid;
+  place-content: center;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+input[type="checkbox"]::before {
+  content: "";
+  width: 9px;
+  height: 9px;
+  transform: scale(0);
+  transform-origin: center;
+  transition: transform var(--transition-fast);
+  background: var(--color-text-inverse);
+  clip-path: polygon(14% 46%, 0 60%, 39% 100%, 100% 22%, 85% 8%, 39% 71%);
+}
+
+input[type="checkbox"]:checked {
+  border-color: transparent;
+  background: var(--ai-brand);
+}
+
+input[type="checkbox"]:checked::before { transform: scale(1); }
+input[type="checkbox"]:hover:not(:disabled) { border-color: var(--color-primary-border); }
+input[type="checkbox"]:disabled { cursor: not-allowed; opacity: 0.5; }
+
+@media (prefers-reduced-motion: reduce) {
+  input[type="checkbox"],
+  input[type="checkbox"]::before { transition: none; }
+}
 ul, ol { margin: 0; padding: 0; list-style: none; }
 
 ::selection { background: rgba(97, 121, 255, 0.32); }
@@ -197,23 +327,25 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 
 .uae-fade-in { animation: fadeInUp 220ms cubic-bezier(0.2, 0, 0, 1); }
 .uae-dot-grid {
-  background-image: radial-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px);
+  background-image: radial-gradient(var(--ai-track) 1px, transparent 1px);
   background-size: 22px 22px;
 }
 
 .uae-skeleton {
   position: relative;
   overflow: hidden;
-  background: var(--color-surface-sunken);
+  background: var(--ai-inset-strong);
   border-radius: var(--radius-md);
 }
 
+/* The sweep has to brighten the dark surface and darken the light one, so the
+   highlight colour is a token rather than a fixed white. */
 .uae-skeleton::after {
   content: "";
   position: absolute;
   inset: 0;
   transform: translateX(-100%);
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  background: linear-gradient(90deg, transparent, var(--skeleton-sheen), transparent);
   animation: uae-shimmer 1.6s ease-in-out infinite;
 }
 
@@ -226,14 +358,7 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .uae-fade-in {
-    animation: none;
-  }
-  .uae-skeleton::after {
-    animation: none;
-  }
-  * {
-    scroll-behavior: auto !important;
-  }
+  .uae-fade-in { animation: none; }
+  .uae-skeleton::after { animation: none; }
+  * { scroll-behavior: auto !important; }
 }
-

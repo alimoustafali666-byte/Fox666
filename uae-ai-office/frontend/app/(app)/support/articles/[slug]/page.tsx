@@ -6,11 +6,21 @@ import { useParams } from "next/navigation";
 import { ApiError, supportApi } from "@/lib/api-client";
 import { errorMessage } from "@/lib/auth-context";
 import { useTranslation } from "@/lib/i18n";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { Card, CardBody } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { buttonClassName } from "@/components/ui/Button";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
-import { LoadingBlock } from "@/components/ui/Spinner";
+import {
+  InfoList,
+  InfoRow,
+  SkeletonRows,
+  WorkspaceColumn,
+  WorkspaceHero,
+  WorkspaceNote,
+  WorkspacePage,
+  WorkspacePanel,
+  WorkspaceSplit,
+} from "@/components/ui/Workspace";
+import { BrainIcon, DocumentsIcon, HelpIcon, ShieldIcon, TicketIcon } from "@/components/layout/icons";
 import { CATEGORY_LABEL_KEYS } from "@/components/support/labels";
 import type { SupportArticlePublic } from "@/lib/types";
 import styles from "../../Support.module.css";
@@ -48,32 +58,86 @@ export default function SupportArticlePage() {
     load();
   }, [load]);
 
+  /** The "still stuck?" column is the same whatever the article says, so it
+   *  renders in every state -- the page is never one lonely card. */
+  const helpColumn = (
+    <WorkspaceColumn>
+      <WorkspacePanel accent="cyan" icon={<HelpIcon />} title={t("workspace.article.helpfulTitle")} tight>
+        <InfoList>
+          <InfoRow
+            accent="violet"
+            icon={<BrainIcon />}
+            href="/support/assistant"
+            label={t("workspace.article.helpful.assistantTitle")}
+            meta={t("workspace.article.helpful.assistantDescription")}
+          />
+          <InfoRow
+            accent="magenta"
+            icon={<TicketIcon />}
+            href="/support/tickets/new"
+            label={t("workspace.article.helpful.ticketTitle")}
+            meta={t("workspace.article.helpful.ticketDescription")}
+          />
+          <InfoRow
+            accent="blue"
+            icon={<DocumentsIcon />}
+            href="/support"
+            label={t("workspace.article.helpful.centreTitle")}
+            meta={t("workspace.article.helpful.centreDescription")}
+          />
+        </InfoList>
+      </WorkspacePanel>
+
+      <WorkspaceNote accent="cyan" icon={<ShieldIcon />}>
+        {t("workspace.article.note")}
+      </WorkspaceNote>
+    </WorkspaceColumn>
+  );
+
   return (
-    <div>
+    <WorkspacePage module="support">
       <Link href="/support" className={styles.backLink}>
         {backArrow} {t("support.article.backLink")}
       </Link>
 
-      {loading ? (
-        <LoadingBlock label={t("support.genericLoadError")} />
-      ) : notFound ? (
-        <ErrorBanner message={t("support.article.notFound")} />
-      ) : error ? (
-        <ErrorBanner message={error} />
-      ) : article ? (
-        <>
-          <PageHeader
-            title={article.title}
-            actions={<Badge tone="primary">{t(CATEGORY_LABEL_KEYS[article.category])}</Badge>}
-          />
-          <Card>
-            <CardBody>
+      <WorkspaceHero
+        accent="cyan"
+        badge={t("workspace.article.badge")}
+        icon={<HelpIcon />}
+        title={article ? article.title : t("nav.help")}
+        actions={
+          article ? (
+            <>
+              <Badge tone="primary">{t(CATEGORY_LABEL_KEYS[article.category])}</Badge>
+              <Link href="/support/assistant" className={buttonClassName("secondary", "md")}>
+                {t("workspace.article.helpful.assistantTitle")}
+              </Link>
+            </>
+          ) : undefined
+        }
+      />
+
+      <WorkspaceSplit>
+        <WorkspaceColumn>
+          <WorkspacePanel
+            accent="cyan"
+            icon={<DocumentsIcon />}
+            title={article ? article.title : t("nav.help")}
+          >
+            {loading ? (
+              <SkeletonRows count={6} />
+            ) : notFound ? (
+              <ErrorBanner message={t("support.article.notFound")} />
+            ) : error ? (
+              <ErrorBanner message={error} />
+            ) : article ? (
               <p className={styles.articleBody}>{article.body}</p>
-            </CardBody>
-          </Card>
-        </>
-      ) : null}
-    </div>
+            ) : null}
+          </WorkspacePanel>
+        </WorkspaceColumn>
+
+        {helpColumn}
+      </WorkspaceSplit>
+    </WorkspacePage>
   );
 }
-

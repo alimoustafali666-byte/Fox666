@@ -7,11 +7,10 @@ import { useAuth } from "@/lib/auth-context";
 import { authApi } from "@/lib/api-client";
 import { useTranslation } from "@/lib/i18n";
 import { useMessagesUnreadBadge } from "@/lib/use-messages-badge";
-import { CompanyLogo } from "./CompanyLogo";
 import { LanguageSwitcher } from "./LanguageSwitcher";
-import { BellIcon, MenuIcon, SearchIcon } from "./icons";
+import { ThemeToggle } from "./ThemeToggle";
+import { BellIcon, CalendarIcon, ChevronDownIcon, MenuIcon, SearchIcon } from "./icons";
 import { NAV_ITEMS } from "./navItems";
-import { ROLE_LABEL_KEYS } from "./roles";
 import styles from "./Header.module.css";
 
 // Today's date in the active locale -- rendered client-side after mount so a
@@ -22,11 +21,14 @@ function DateChip({ locale }: { locale: string }) {
   if (!today) return null;
   return (
     <div className={styles.dateChip}>
-      <span className={styles.dateMain}>
-        {new Intl.DateTimeFormat(locale, { day: "2-digit", month: "short", year: "numeric" }).format(today)}
-      </span>
-      <span className={styles.dateSub}>
-        {new Intl.DateTimeFormat(locale, { weekday: "long" }).format(today)}
+      <CalendarIcon width={15} height={15} className={styles.dateIcon} />
+      <span className={styles.dateText}>
+        <span className={styles.dateMain}>
+          {new Intl.DateTimeFormat(locale, { day: "2-digit", month: "short", year: "numeric" }).format(today)}
+        </span>
+        <span className={styles.dateSub}>
+          {new Intl.DateTimeFormat(locale, { weekday: "long" }).format(today)}
+        </span>
       </span>
     </div>
   );
@@ -41,6 +43,19 @@ function QuickSearch() {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const boxRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  // The master design advertises a ⌘K shortcut, so it has to actually work.
+  useEffect(() => {
+    function onKey(event: KeyboardEvent) {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        inputRef.current?.focus();
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   const term = query.trim().toLowerCase();
   const matches = term
@@ -63,6 +78,7 @@ function QuickSearch() {
     >
       <SearchIcon width={15} height={15} />
       <input
+        ref={inputRef}
         type="search"
         value={query}
         placeholder={t("header.searchPlaceholder")}
@@ -80,6 +96,7 @@ function QuickSearch() {
           }
         }}
       />
+      <kbd className={styles.kbd}>⌘K</kbd>
       {open && term ? (
         <div className={styles.searchResults} role="listbox">
           {matches.length > 0 ? (
@@ -116,7 +133,7 @@ function initials(name: string | null, email: string): string {
 }
 
 export function Header({ onToggleMenu }: { onToggleMenu: () => void }) {
-  const { user, company, role, logout, switchCompany } = useAuth();
+  const { user, company, logout, switchCompany } = useAuth();
   const { t, locale } = useTranslation();
   const unread = useMessagesUnreadBadge();
   const [companies, setCompanies] = useState<{ company_id: string; company_name: string }[]>([]);
@@ -134,58 +151,48 @@ export function Header({ onToggleMenu }: { onToggleMenu: () => void }) {
       </button>
 
       {company ? (
-        <div className={styles.companyRow}>
-          <CompanyLogo hasLogo={company.has_logo} size={26} />
-          <div className={styles.company}>
+        <div className={styles.companyPill}>
+          <span className={styles.companyText}>
             <span className={styles.companyName}>{company.name}</span>
-            <span className={styles.companyMeta}>
-              {company.country} · {company.timezone}
-            </span>
-          </div>
+            <span className={styles.companyMeta}>{company.country}</span>
+          </span>
+          {companies.length > 1 ? (
+            <>
+              <ChevronDownIcon width={14} height={14} className={styles.companyChevron} />
+              <select
+                className={styles.companySelect}
+                aria-label={t("dashboard.exec.sectionLabel")}
+                value={company.id}
+                onChange={(event) => void switchCompany(event.target.value)}
+              >
+                {companies.map((item) => (
+                  <option key={item.company_id} value={item.company_id}>
+                    {item.company_name}
+                  </option>
+                ))}
+              </select>
+            </>
+          ) : null}
         </div>
       ) : null}
 
-      {companies.length > 1 ? (
-        <select
-          className={styles.companySelect}
-          aria-label="Company"
-          value={company?.id ?? ""}
-          onChange={(event) => void switchCompany(event.target.value)}
-        >
-          <option value="">{company?.name}</option>
-          {companies
-            .filter((item) => item.company_id !== company?.id)
-            .map((item) => (
-              <option key={item.company_id} value={item.company_id}>
-                {item.company_name}
-              </option>
-            ))}
-        </select>
-      ) : null}
-
+      <div className={styles.spacer} />
+      <QuickSearch />
       <div className={styles.spacer} />
 
-      <QuickSearch />
+      <ThemeToggle />
 
       <LanguageSwitcher />
 
-      <Link
-        href="/messages/notifications"
-        className={styles.iconButton}
-        aria-label={t("header.notifications")}
-      >
+      <Link href="/messages/notifications" className={styles.iconButton} aria-label={t("header.notifications")}>
         <BellIcon width={16} height={16} />
         {unread > 0 ? <span className={styles.iconBadge}>{unread > 99 ? "99+" : unread}</span> : null}
       </Link>
 
       <DateChip locale={locale} />
 
-      <Link href="/settings" className={styles.user}>
-        <span className={styles.avatar}>{user ? initials(user.full_name, user.email) : ""}</span>
-        <span className={styles.userInfo}>
-          <span className={styles.userName}>{user?.full_name || user?.email}</span>
-          <span className={styles.userRole}>{role ? t(ROLE_LABEL_KEYS[role]) : ""}</span>
-        </span>
+      <Link href="/settings" className={styles.avatar} title={user?.full_name || user?.email || ""}>
+        {user ? initials(user.full_name, user.email) : ""}
       </Link>
 
       <button

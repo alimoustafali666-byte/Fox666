@@ -2,7 +2,7 @@
   position: relative;
   overflow: hidden;
   border: 1px solid rgba(149, 187, 255, 0.2);
-  border-radius: 18px;
+  border-radius: var(--ai-r-lg);
   background: linear-gradient(180deg, rgba(11, 21, 39, 0.92), rgba(7, 17, 31, 0.92));
   box-shadow: 0 28px 70px rgba(0, 0, 0, 0.38), 0 0 0 1px rgba(70, 216, 245, 0.08), 0 0 48px rgba(75, 103, 255, 0.14);
   backdrop-filter: blur(16px);
@@ -13,7 +13,7 @@
   position: absolute;
   inset: 0 0 auto;
   height: 2px;
-  background: linear-gradient(90deg, var(--color-accent), var(--color-violet), var(--color-primary));
+  background: linear-gradient(90deg, #35d9f2, #8b6bff 52%, #e05ad0);
   opacity: 0.9;
 }
 
@@ -43,8 +43,11 @@
 
 .welcomeTitle {
   margin: 0;
-  color: var(--color-text-primary);
-  font-size: 32px;
+  color: var(--ai-text-strong);
+  font-family: var(--font-display);
+  font-size: clamp(24px, 4vw, 30px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
   line-height: 1.15;
 }
 
@@ -83,7 +86,7 @@
 .cardOrb span {
   position: absolute;
   top: 8px;
-  right: 5px;
+  inset-inline-end: 5px;
   width: 6px;
   height: 6px;
   border-radius: 50%;
@@ -91,42 +94,24 @@
   box-shadow: 0 0 10px #fff;
 }
 
-.formRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 4px;
-  margin-bottom: 10px;
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-sm);
-}
-
-.checkbox {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.checkbox input {
-  accent-color: #6d7dff;
-}
-
-.forgotLink {
-  color: #a8c5ff;
-}
-
 .signInButton {
   height: 46px;
   width: 100%;
   border: none;
-  border-radius: 12px;
-  background: linear-gradient(90deg, #607eff 0%, #7a69ff 44%, #dd7bff 100%);
-  color: #fff;
+  border-radius: var(--ai-r-md);
+  background: linear-gradient(122deg, #4d8dff 0%, #6f74ff 52%, #8b6bff 100%);
+  color: #ffffff;
+  font-family: var(--font-ui);
+  font-size: var(--font-size-sm);
   font-weight: 700;
-  box-shadow: 0 18px 34px rgba(110, 116, 255, 0.28);
+  cursor: pointer;
+  box-shadow: 0 14px 30px rgba(77, 141, 255, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  transition: background var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .signInButton:hover {
-  background: linear-gradient(90deg, #4c72ff 0%, #6e5df3 42%, #d567fa 100%);
+  background: linear-gradient(122deg, #5f9aff 0%, #8186ff 52%, #9b7dff 100%);
+  box-shadow: 0 16px 34px rgba(77, 141, 255, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.22);
 }
+
+.signInButton:disabled { opacity: 0.55; cursor: not-allowed; }

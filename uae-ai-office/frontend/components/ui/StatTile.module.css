@@ -1,0 +1,72 @@
+/* Shared count tile -- the compact sibling of the dashboard's KPI card.
+   Tasks and Daily Brief both rendered their own byte-identical copy of this;
+   they now share one definition. Every tone is alpha-tinted so a tile reads
+   correctly on the deep navy panel and on the light one. */
+
+.row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.stat {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  overflow: hidden;
+  /* The accent rail sits at the inline start, so the wider pad has to follow
+     it rather than staying on the left. */
+  padding-block: 13px;
+  padding-inline: var(--space-5) var(--space-4);
+  border: 1px solid var(--ai-line);
+  border-radius: var(--ai-r-md);
+  background: linear-gradient(150deg, var(--tile-wash, transparent), var(--ai-panel-bot) 74%);
+  box-shadow: var(--ai-shadow-sm);
+  color: inherit;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-base);
+}
+
+/* Only the linked variant (Tasks) is a click target. */
+a.stat:hover {
+  text-decoration: none;
+  transform: translateY(-2px);
+  border-color: var(--ai-line-strong);
+  box-shadow: var(--ai-shadow);
+}
+
+@media (prefers-reduced-motion: reduce) { a.stat:hover { transform: none; } }
+
+/* Leading accent rail -- logical, so it moves to the right under RTL. */
+.statBar {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 3px;
+  background: var(--tile-accent, var(--color-primary));
+}
+
+.stat[data-tone="primary"] { --tile-accent: linear-gradient(180deg, #4d8dff, #8b6bff); --tile-wash: rgba(77, 141, 255, 0.13); }
+.stat[data-tone="info"]    { --tile-accent: linear-gradient(180deg, #35d9f2, #4d8dff); --tile-wash: rgba(53, 217, 242, 0.12); }
+.stat[data-tone="success"] { --tile-accent: linear-gradient(180deg, #2fd48a, #7ef0b6); --tile-wash: rgba(47, 212, 138, 0.12); }
+.stat[data-tone="warning"] { --tile-accent: linear-gradient(180deg, #ffa43d, #ff7a5c); --tile-wash: rgba(255, 164, 61, 0.13); }
+.stat[data-tone="danger"]  { --tile-accent: linear-gradient(180deg, #ff5470, #e05ad0); --tile-wash: rgba(255, 84, 112, 0.13); }
+.stat[data-tone="neutral"] { --tile-accent: linear-gradient(180deg, #94a3b8, #6b7c96); --tile-wash: rgba(148, 183, 224, 0.1); }
+
+.statCount {
+  font-family: var(--font-display);
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--ai-text-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.statLabel {
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--ai-muted);
+}

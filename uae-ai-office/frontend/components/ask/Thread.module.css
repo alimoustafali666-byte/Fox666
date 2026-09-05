@@ -1,57 +1,74 @@
+/* Ask Your Business -- the flagship AI surface. The visual language is the
+   dashboard's: panel surfaces, the brand gradient for the person's own turn,
+   and a cyan "intelligence" rail on the assistant's. Citation chips are the
+   trust mechanism, so they are a first-class element rather than fine print. */
+
 .threadHeader {
-  padding: var(--space-4) var(--space-6);
-  border-bottom: 1px solid var(--color-border);
-  font-weight: 600;
-  font-size: var(--font-size-md);
+  display: flex;
+  align-items: center;
+  gap: 9px;
   flex-shrink: 0;
+  padding: 0 var(--space-5);
+  height: 52px;
+  border-bottom: 1px solid var(--ai-hairline);
+  background: linear-gradient(180deg, var(--ai-panel-top), transparent);
+  font-family: var(--font-display);
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ai-text);
 }
 
 .messages {
   flex: 1;
   overflow-y: auto;
-  padding: var(--space-6);
+  padding: var(--space-5);
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
 }
 
-.row {
-  display: flex;
-}
+/* A short thread sits against the composer rather than floating at the top of
+   an empty column -- where it ends up anyway once the thread is long enough
+   to scroll. The zero state is the exception and stays centred. */
+.messages > :first-child { margin-block-start: auto; }
+.messages[data-empty] { justify-content: center; }
+.messages[data-empty] > :first-child { margin-block-start: 0; }
 
-.rowUser {
-  justify-content: flex-end;
-}
-
-.rowAssistant {
-  justify-content: flex-start;
-}
+.row { display: flex; }
+.rowUser { justify-content: flex-end; }
+.rowAssistant { justify-content: flex-start; }
 
 .bubble {
-  max-width: 640px;
+  max-width: min(680px, 100%);
   padding: 12px 16px;
-  border-radius: var(--radius-lg);
-  font-size: var(--font-size-base);
-  line-height: var(--line-height-base);
+  border-radius: var(--ai-r-lg);
+  font-size: var(--font-size-sm);
+  line-height: 1.65;
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .bubbleUser {
-  background: linear-gradient(135deg, #2954e8 0%, var(--color-primary) 100%);
-  color: #fff;
+  background: linear-gradient(122deg, #4d8dff, #8b6bff);
+  color: #ffffff;
   border-end-end-radius: 4px;
+  box-shadow: 0 8px 22px rgba(77, 141, 255, 0.26);
 }
 
 .bubbleAssistant {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-inline-start: 3px solid var(--color-accent-border);
-  color: var(--color-text-primary);
+  background: var(--ai-panel-solid);
+  border: 1px solid var(--ai-line);
+  border-inline-start: 3px solid var(--color-accent);
+  color: var(--ai-text);
   border-end-start-radius: 4px;
+  box-shadow: var(--ai-shadow-sm);
 }
 
+/* A low-confidence answer must never be styled like a confident one. */
 .bubbleInsufficient {
   border-color: var(--color-warning-border);
+  border-inline-start-color: var(--color-warning);
   background: var(--color-warning-subtle);
 }
 
@@ -60,7 +77,8 @@
   flex-direction: column;
   gap: var(--space-2);
   align-items: flex-start;
-  max-width: 640px;
+  max-width: min(680px, 100%);
+  min-width: 0;
 }
 
 .citations {
@@ -73,45 +91,45 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 4px 10px;
+  padding: 3px 10px;
   border-radius: var(--radius-full);
   border: 1px solid var(--color-accent-border);
   background: var(--color-accent-subtle);
-  color: var(--color-accent-strong);
-  font-size: var(--font-size-xs);
-  font-weight: 600;
-  transition: background-color var(--transition-fast), border-color var(--transition-fast);
+  color: #0d93ad;
+  font-size: 11px;
+  font-weight: 700;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
 }
+
+:root:not([data-theme="light"]) .citationChip { color: #7fe6f6; }
 
 .citationChip:hover {
   text-decoration: none;
   background: var(--color-primary-subtle);
   border-color: var(--color-primary-border);
-  color: var(--color-primary);
 }
 
 .createTaskLink {
-  font-size: var(--font-size-xs);
-  font-weight: 600;
-  color: var(--color-text-secondary);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ai-text-2);
 }
+
+.createTaskLink:hover { color: var(--ai-text); }
 
 .thinking {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   padding: 10px 14px;
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
-  font-size: var(--font-size-sm);
-  color: var(--color-text-muted);
+  border-radius: var(--ai-r-lg);
+  border: 1px solid var(--ai-line);
+  background: var(--ai-panel-solid);
+  font-size: var(--font-size-xs);
+  color: var(--ai-muted);
 }
 
-.thinkingDots {
-  display: inline-flex;
-  gap: 3px;
-}
+.thinkingDots { display: inline-flex; gap: 3px; }
 
 .thinkingDots span {
   width: 5px;
@@ -121,52 +139,41 @@
   animation: thinkingPulse 1s ease-in-out infinite;
 }
 
-.thinkingDots span:nth-child(2) {
-  animation-delay: 0.15s;
-}
-
-.thinkingDots span:nth-child(3) {
-  animation-delay: 0.3s;
-}
+.thinkingDots span:nth-child(2) { animation-delay: 0.15s; }
+.thinkingDots span:nth-child(3) { animation-delay: 0.3s; }
 
 @keyframes thinkingPulse {
-  0%,
-  80%,
-  100% {
-    opacity: 0.3;
-    transform: scale(0.8);
-  }
-  40% {
-    opacity: 1;
-    transform: scale(1);
-  }
+  0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .thinkingDots span {
-    animation: none;
-  }
+  .thinkingDots span { animation: none; opacity: 0.7; }
 }
 
 .composer {
-  border-top: 1px solid var(--color-border);
-  padding: var(--space-4) var(--space-6);
   flex-shrink: 0;
+  padding: var(--space-4) var(--space-5);
+  border-top: 1px solid var(--ai-hairline);
+  background: linear-gradient(0deg, var(--ai-panel-top), transparent);
 }
 
 .composerRow {
   display: flex;
   gap: var(--space-3);
   align-items: flex-end;
+  flex-wrap: wrap;
 }
 
-.composerInput {
-  flex: 1;
-}
+.composerInput { flex: 1 1 240px; min-width: 0; }
 
 .meta {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-muted);
-  margin-top: 4px;
+  margin-top: 5px;
+  font-size: 11px;
+  color: var(--ai-muted);
 }
 
+@media (max-width: 640px) {
+  .messages { padding: var(--space-4); gap: var(--space-4); }
+  .composer, .threadHeader { padding-inline: var(--space-4); }
+}

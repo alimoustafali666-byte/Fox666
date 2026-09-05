@@ -2,8 +2,8 @@
 
 import { useTranslation } from "@/lib/i18n";
 import type { DailyBriefPublic } from "@/lib/types";
+import { StatTile, StatTileRow } from "@/components/ui/StatTile";
 import { CATEGORY_LABEL_KEYS, CATEGORY_ORDER, CATEGORY_TONE } from "./categories";
-import styles from "./BriefStatsRow.module.css";
 
 // Purely derived from the already-loaded brief.items -- no additional
 // API calls and no fabricated metrics, per the Step 16 "only summary
@@ -19,15 +19,15 @@ export function BriefStatsRow({ brief }: { brief: DailyBriefPublic }) {
   if (counts.every((c) => c.count === 0)) return null;
 
   return (
-    <div className={styles.row}>
+    <StatTileRow>
       {counts.map(({ category, count }) => (
-        <div key={category} className={styles.stat} data-tone={CATEGORY_TONE[category]}>
-          <span className={styles.statBar} />
-          <span className={styles.statCount}>{count}</span>
-          <span className={styles.statLabel}>{t(CATEGORY_LABEL_KEYS[category])}</span>
-        </div>
+        <StatTile
+          key={category}
+          tone={CATEGORY_TONE[category]}
+          count={count}
+          label={t(CATEGORY_LABEL_KEYS[category])}
+        />
       ))}
-    </div>
+    </StatTileRow>
   );
 }
-

@@ -1,83 +1,90 @@
+/* Buttons follow the master's action language: one saturated gradient for the
+   primary action, tinted-outline for everything else. All non-primary states
+   resolve through tokens so they invert correctly with the theme. */
+
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-2);
-  font-weight: 500;
-  border-radius: var(--radius-md);
+  gap: 7px;
+  font-family: var(--font-ui);
+  font-weight: 600;
+  border-radius: var(--ai-r-sm);
   border: 1px solid transparent;
   cursor: pointer;
   white-space: nowrap;
   transition: background-color var(--transition-fast), border-color var(--transition-fast),
-    opacity var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+    opacity var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast),
+    color var(--transition-fast);
 }
 
-.btn:not(:disabled):active {
-  transform: translateY(1px);
-}
+.btn:not(:disabled):active { transform: translateY(1px); }
 
 .btn:disabled {
   cursor: not-allowed;
-  opacity: 0.55;
+  opacity: 0.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn:not(:disabled):active { transform: none; }
 }
 
 .md {
-  padding: 9px 16px;
-  font-size: var(--font-size-base);
-}
-
-.sm {
-  padding: 6px 12px;
+  height: 36px;
+  padding: 0 16px;
   font-size: var(--font-size-sm);
 }
 
+.sm {
+  height: 30px;
+  padding: 0 12px;
+  font-size: var(--font-size-xs);
+}
+
+/* The "Generate brief" gradient from the master reference. White text on a
+   saturated fill reads correctly in both themes, so it is not themed. */
 .primary {
-  background: linear-gradient(135deg, var(--color-primary) 0%, #1d5bdc 58%, var(--color-accent-strong) 100%);
-  color: var(--color-text-inverse);
-  border-color: var(--color-primary);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  background: linear-gradient(122deg, #4d8dff 0%, #6f74ff 52%, #8b6bff 100%);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 8px 20px rgba(77, 141, 255, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 
 .primary:not(:disabled):hover {
-  background: linear-gradient(135deg, #2f5cf2 0%, var(--color-primary-hover) 62%, var(--color-primary-active) 100%);
-  border-color: var(--color-primary-hover);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 6px 16px rgba(33, 72, 214, 0.28);
+  background: linear-gradient(122deg, #5f9aff 0%, #8186ff 52%, #9b7dff 100%);
+  box-shadow: 0 10px 26px rgba(77, 141, 255, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.22);
 }
 
 .secondary {
-  background: var(--color-surface-glass);
-  color: var(--color-text-primary);
-  border-color: var(--color-border-strong);
+  background: var(--control-bg);
+  color: var(--ai-text);
+  border-color: var(--ai-line);
 }
 
 .secondary:not(:disabled):hover {
-  background: rgba(25, 52, 91, 0.84);
-  border-color: var(--color-primary-border);
-  box-shadow: var(--glow-primary);
+  background: var(--control-bg-hover);
+  border-color: var(--ai-line-strong);
 }
 
 .ghost {
   background: transparent;
-  color: var(--color-text-secondary);
+  color: var(--ai-text-2);
   border-color: transparent;
 }
 
 .ghost:not(:disabled):hover {
-  background: rgba(148, 183, 224, 0.12);
-  color: var(--color-text-primary);
+  background: var(--ai-inset);
+  color: var(--ai-text);
 }
 
 .danger {
-  background: var(--color-surface);
-  color: var(--color-danger);
-  border-color: var(--color-danger-border);
+  background: rgba(255, 84, 112, 0.1);
+  color: #e0455f;
+  border-color: rgba(255, 84, 112, 0.34);
 }
 
-.danger:not(:disabled):hover {
-  background: var(--color-danger-subtle);
-}
+:root:not([data-theme="light"]) .danger { color: #ff8ea3; }
 
-.block {
-  width: 100%;
-}
+.danger:not(:disabled):hover { background: rgba(255, 84, 112, 0.18); }
 
+.block { width: 100%; }

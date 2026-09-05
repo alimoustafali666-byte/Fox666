@@ -4,13 +4,13 @@
   height: var(--header-height);
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 0 20px;
-  background: rgba(5, 10, 22, 0.82);
+  gap: 9px;
+  padding: 0 18px;
+  background: var(--header-bg);
   backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--ai-line);
-  box-shadow: 0 14px 30px rgba(0, 3, 14, 0.3);
   z-index: 20;
+  transition: background-color var(--transition-base), border-color var(--transition-base);
 }
 
 @media print { .header { display: none !important; } }
@@ -19,78 +19,70 @@
   display: none;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   border-radius: var(--ai-r-md);
   border: 1px solid var(--ai-line);
-  background: rgba(8, 14, 30, 0.82);
+  background: var(--control-bg);
   color: var(--ai-text-2);
   cursor: pointer;
   flex-shrink: 0;
   transition: border-color var(--transition-fast), color var(--transition-fast), background-color var(--transition-fast);
 }
 
-.menuButton:hover {
-  background: rgba(12, 20, 40, 0.9);
-  border-color: var(--ai-line-strong);
-  color: var(--ai-text);
-}
+.menuButton:hover { background: var(--control-bg-hover); border-color: var(--ai-line-strong); color: var(--ai-text); }
 
 .spacer { flex: 1; }
 
-.companyRow {
+/* ── Company pill ─────────────────────────────────────────────────────── */
+
+.companyPill {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 8px;
   min-width: 0;
   height: 36px;
-  padding: 0 12px 0 7px;
+  padding: 0 12px;
   border-radius: var(--ai-r-md);
   border: 1px solid var(--ai-line);
-  background: rgba(8, 14, 30, 0.82);
+  background: var(--control-bg);
+  flex-shrink: 0;
 }
 
-.company {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  line-height: 1.16;
-  min-width: 0;
-}
+.companyText { display: flex; flex-direction: column; min-width: 0; line-height: 1.14; }
 
 .companyName {
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: -0.005em;
   color: var(--ai-text);
-  max-width: 22ch;
+  max-width: 20ch;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .companyMeta {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  letter-spacing: 0.06em;
+  font-size: 10px;
   color: var(--ai-muted);
   white-space: nowrap;
 }
 
-.companySelect {
-  height: 36px;
-  padding: 0 10px;
-  border-radius: var(--ai-r-md);
-  border: 1px solid var(--ai-line);
-  background: rgba(8, 14, 30, 0.82);
-  color: var(--ai-text-2);
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: border-color var(--transition-fast), color var(--transition-fast);
-}
+.companyChevron { flex-shrink: 0; color: var(--ai-faint); }
 
-.companySelect:hover { border-color: var(--ai-line-strong); color: var(--ai-text); }
+/* The native select sits invisibly over the pill so company switching keeps
+   working exactly as before while the pill matches the master design. */
+.companySelect {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  border: 0;
+  appearance: none;
+}
 
 /* ── Quick search ─────────────────────────────────────────────────────── */
 
@@ -100,20 +92,22 @@
   align-items: center;
   gap: 8px;
   height: 36px;
-  width: 260px;
-  max-width: 32vw;
-  padding: 0 12px;
+  width: 100%;
+  max-width: 340px;
+  /* Logical: the search icon end and the shortcut-badge end swap under RTL. */
+  padding-block: 0;
+  padding-inline: 13px 6px;
   border-radius: var(--radius-full);
   border: 1px solid var(--ai-line);
-  background: rgba(8, 14, 30, 0.82);
+  background: var(--control-bg);
   color: var(--ai-muted);
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
-  flex-shrink: 0;
+  flex-shrink: 1;
 }
 
 .search:focus-within {
-  border-color: rgba(53, 217, 242, 0.42);
-  box-shadow: 0 0 0 3px rgba(53, 217, 242, 0.1);
+  border-color: rgba(77, 141, 255, 0.5);
+  box-shadow: 0 0 0 3px rgba(77, 141, 255, 0.12);
 }
 
 .search input {
@@ -131,6 +125,19 @@
 .search input::placeholder { color: var(--ai-faint); }
 .search input::-webkit-search-cancel-button { display: none; }
 
+.kbd {
+  flex-shrink: 0;
+  padding: 3px 7px;
+  border-radius: 6px;
+  border: 1px solid var(--ai-line);
+  background: var(--ai-inset);
+  color: var(--ai-faint);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 500;
+  line-height: 1;
+}
+
 .searchResults {
   position: absolute;
   inset-inline: 0;
@@ -140,7 +147,7 @@
   padding: 6px;
   border-radius: var(--ai-r-md);
   border: 1px solid var(--ai-line-strong);
-  background: rgba(9, 15, 31, 0.98);
+  background: var(--ai-panel-solid);
   box-shadow: var(--ai-shadow-lift);
   z-index: 5;
 }
@@ -160,13 +167,9 @@
   cursor: pointer;
 }
 
-.searchResults button:hover { background: rgba(126, 166, 236, 0.1); color: var(--ai-text); }
+.searchResults button:hover { background: var(--ai-inset-strong); color: var(--ai-text); }
 
-.searchEmpty {
-  padding: 9px 10px;
-  font-size: 12px;
-  color: var(--ai-faint);
-}
+.searchEmpty { padding: 9px 10px; font-size: 12px; color: var(--ai-faint); }
 
 /* ── Controls ─────────────────────────────────────────────────────────── */
 
@@ -175,21 +178,17 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   flex-shrink: 0;
   border-radius: var(--ai-r-md);
   border: 1px solid var(--ai-line);
-  background: rgba(8, 14, 30, 0.82);
+  background: var(--control-bg);
   color: var(--ai-text-2);
   transition: border-color var(--transition-fast), color var(--transition-fast), background-color var(--transition-fast);
 }
 
-.iconButton:hover {
-  border-color: var(--ai-line-strong);
-  background: rgba(12, 20, 40, 0.92);
-  color: var(--ai-text);
-}
+.iconButton:hover { border-color: var(--ai-line-strong); background: var(--control-bg-hover); color: var(--ai-text); }
 
 .iconBadge {
   position: absolute;
@@ -206,22 +205,23 @@
   font-weight: 600;
   line-height: 17px;
   text-align: center;
-  box-shadow: 0 0 12px rgba(255, 84, 112, 0.6);
+  box-shadow: 0 0 12px rgba(255, 84, 112, 0.55);
 }
 
 .dateChip {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 1px;
+  align-items: center;
+  gap: 8px;
   height: 36px;
   padding: 0 12px;
   border-radius: var(--ai-r-md);
   border: 1px solid var(--ai-line);
-  background: rgba(8, 14, 30, 0.82);
-  line-height: 1.12;
+  background: var(--control-bg);
   flex-shrink: 0;
 }
+
+.dateIcon { color: var(--ai-blue); flex-shrink: 0; }
+.dateText { display: flex; flex-direction: column; line-height: 1.12; }
 
 .dateMain {
   font-size: 12px;
@@ -231,75 +231,34 @@
   white-space: nowrap;
 }
 
-.dateSub {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--ai-muted);
-  white-space: nowrap;
-}
-
-.user {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  height: 36px;
-  padding: 0 12px 0 6px;
-  border-radius: var(--radius-full);
-  border: 1px solid var(--ai-line);
-  background: rgba(8, 14, 30, 0.82);
-  color: inherit;
-  flex-shrink: 0;
-  transition: border-color var(--transition-fast), background-color var(--transition-fast);
-}
-
-.user:hover { border-color: var(--ai-line-strong); background: rgba(12, 20, 40, 0.92); }
+.dateSub { font-size: 10px; color: var(--ai-muted); white-space: nowrap; }
 
 .avatar {
-  width: 26px;
-  height: 26px;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
   border-radius: 50%;
   background: var(--ai-brand);
   color: #ffffff;
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: 10.5px;
+  font-size: 11.5px;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  box-shadow: 0 5px 14px rgba(90, 80, 255, 0.45);
+  box-shadow: 0 5px 16px rgba(90, 80, 255, 0.42);
+  transition: transform var(--transition-fast);
 }
 
-.userInfo { display: flex; flex-direction: column; line-height: 1.16; min-width: 0; }
-
-.userName {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--ai-text);
-  max-width: 18ch;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.userRole {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--ai-muted);
-  white-space: nowrap;
-}
+.avatar:hover { transform: translateY(-1px); }
 
 .logout {
-  height: 36px;
-  padding: 0 13px;
+  height: 34px;
+  padding: 0 12px;
   flex-shrink: 0;
   border-radius: var(--ai-r-md);
   border: 1px solid var(--ai-line);
-  background: rgba(8, 14, 30, 0.82);
+  background: var(--control-bg);
   color: var(--ai-text-2);
   font-size: 12px;
   font-weight: 600;
@@ -309,21 +268,30 @@
 }
 
 .logout:hover {
-  border-color: rgba(255, 111, 140, 0.4);
+  border-color: rgba(255, 111, 140, 0.42);
   background: rgba(255, 84, 112, 0.1);
-  color: #ff8ea3;
+  color: #e04463;
 }
 
-@media (max-width: 1400px) { .companyMeta { display: none; } }
-@media (max-width: 1280px) { .dateSub { display: none; } .search { width: 200px; } }
-@media (max-width: 1120px) { .userInfo { display: none; } .user { padding: 0 5px; } }
+:root:not([data-theme="light"]) .logout:hover { color: #ff8ea3; }
+
+@media (max-width: 1460px) { .logout { display: none; } }
+@media (max-width: 1320px) { .dateSub { display: none; } }
+@media (max-width: 1180px) { .kbd { display: none; } .search { max-width: 240px; } }
 
 @media (max-width: 900px) {
   .menuButton { display: flex; }
-  .header { padding: 0 14px; gap: 8px; }
-  .dateChip, .companySelect { display: none; }
-  .search { width: 168px; }
+  .header { padding: 0 12px; gap: 8px; }
+  .dateChip, .companyPill { display: none; }
+  .search { max-width: none; }
 }
 
-@media (max-width: 760px) { .companyRow { display: none; } .logout { display: none; } }
 @media (max-width: 560px) { .search { display: none; } }
+
+/* User-generated strings (names, titles, previews) can be in either script.
+   `plaintext` resolves each one's direction from its own first strong
+   character, so an English title inside the Arabic RTL layout still
+   truncates at its own end instead of losing its first characters. */
+.companyName {
+  unicode-bidi: plaintext;
+}

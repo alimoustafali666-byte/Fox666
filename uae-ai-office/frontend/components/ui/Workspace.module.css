@@ -1,0 +1,1364 @@
+/* ──────────────────────────────────────────────────────────────────────
+   Workspace kit.
+
+   The dashboard proved out a vocabulary -- a signal-field hero band, panels
+   with an icon chip and a leading rail, accent-tinted chips, and zero-data
+   states that explain rather than shrug. Everything here is that same
+   vocabulary, extracted so every other authenticated route can be composed
+   from it instead of centring one small card in an empty canvas.
+
+   Rules this file keeps:
+   - tokens only, so dark and light share one markup tree;
+   - logical properties everywhere, so RTL flips without a second stylesheet;
+   - decoration never encodes a number, so a designed empty state can never be
+     mistaken for a measurement.
+   ────────────────────────────────────────────────────────────────────── */
+
+/* ── Accent palette ───────────────────────────────────────────────────── */
+
+.accent { --wk-color: var(--ai-blue); --wk-2: var(--ai-cyan); }
+.accent[data-accent="cyan"]    { --wk-color: #0f9fc0; --wk-2: #4d8dff; }
+.accent[data-accent="blue"]    { --wk-color: #3b6ef6; --wk-2: #35d9f2; }
+.accent[data-accent="violet"]  { --wk-color: #6d4fe0; --wk-2: #e05ad0; }
+.accent[data-accent="magenta"] { --wk-color: #c23fae; --wk-2: #8b6bff; }
+.accent[data-accent="green"]   { --wk-color: #12a877; --wk-2: #7ef0b6; }
+.accent[data-accent="amber"]   { --wk-color: #bd7708; --wk-2: #ff7a5c; }
+
+:root:not([data-theme="light"]) .accent[data-accent="cyan"]    { --wk-color: #35d9f2; }
+:root:not([data-theme="light"]) .accent[data-accent="blue"]    { --wk-color: #7fa6ff; }
+:root:not([data-theme="light"]) .accent[data-accent="violet"]  { --wk-color: #a894ff; }
+:root:not([data-theme="light"]) .accent[data-accent="magenta"] { --wk-color: #ef83dc; }
+:root:not([data-theme="light"]) .accent[data-accent="green"]   { --wk-color: #6fe6b3; }
+:root:not([data-theme="light"]) .accent[data-accent="amber"]   { --wk-color: #ffc57e; }
+
+/* ── Page scaffolding ─────────────────────────────────────────────────── */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* A full-bleed route (Ask, Messages) mounts inside a flex column whose
+   overflow is hidden, so the workspace has to own its own scroller. */
+.scroller {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-5) var(--space-6) var(--space-8);
+}
+
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.splitWide {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+@media (max-width: 1180px) {
+  .split,
+  .splitWide { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 640px) {
+  .scroller { padding: var(--space-4) var(--space-4) var(--space-6); }
+}
+
+/* ── Hero band ────────────────────────────────────────────────────────── */
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  padding: var(--space-5) var(--space-6);
+  border: 1px solid var(--ai-line);
+  border-radius: var(--ai-r-lg);
+  background: linear-gradient(180deg, var(--ai-panel-top), var(--ai-panel-bot));
+  box-shadow: var(--ai-shadow-sm);
+}
+
+/* Abstract signal field, drawn not photographed. Purely decorative. */
+.heroField {
+  position: absolute;
+  inset-block-start: -40%;
+  inset-inline-end: -6%;
+  width: 62%;
+  height: 190%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(48% 40% at 62% 32%, color-mix(in srgb, var(--wk-color) 26%, transparent), transparent 70%),
+    radial-gradient(38% 34% at 88% 66%, color-mix(in srgb, var(--wk-2) 22%, transparent), transparent 72%);
+  opacity: 0.9;
+  /* The field is a box parked against the inline-end edge, so several of the
+     per-module patterns below are repeating gradients that would otherwise
+     stop dead at its inline-start edge and draw a visible vertical seam
+     across the hero. This fade dissolves that edge. It is declared here once
+     and consumed through the variable so a module that needs a second mask
+     layer can compose with it instead of replacing it. */
+  --field-fade: linear-gradient(to left, #000 0%, #000 46%, transparent 96%);
+  mask-image: var(--field-fade);
+  -webkit-mask-image: var(--field-fade);
+}
+
+[dir="rtl"] .heroField {
+  --field-fade: linear-gradient(to right, #000 0%, #000 46%, transparent 96%);
+}
+
+:root[data-theme="light"] .heroField { opacity: 0.55; }
+
+/* Faint grid, so the band reads as instrumentation rather than a gradient. */
+.hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, var(--ai-hairline) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--ai-hairline) 1px, transparent 1px);
+  background-size: 46px 46px;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.55), transparent 78%);
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.55), transparent 78%);
+}
+
+.heroTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-5);
+  flex-wrap: wrap;
+}
+
+.heroMain { min-width: 0; flex: 1 1 420px; }
+
+.heroBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 26px;
+  padding: 0 11px;
+  margin-bottom: var(--space-3);
+  border-radius: var(--radius-full);
+  border: 1px solid color-mix(in srgb, var(--wk-color) 34%, transparent);
+  background: color-mix(in srgb, var(--wk-color) 12%, transparent);
+  color: var(--wk-color);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.heroBadge i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 10px currentColor;
+}
+
+.heroHeading {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+
+.heroIcon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--wk-color) 30%, transparent);
+  background:
+    radial-gradient(closest-side, color-mix(in srgb, var(--wk-color) 26%, transparent), transparent 80%),
+    var(--ai-inset-strong);
+  color: var(--wk-color);
+}
+
+.heroIcon svg { width: 22px; height: 22px; }
+
+.hero h1 {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.16;
+  letter-spacing: -0.025em;
+  color: var(--ai-text-strong);
+}
+
+.heroDescription {
+  margin-top: 5px;
+  max-width: 62ch;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--ai-text-2);
+}
+
+.heroActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-top: var(--space-4);
+}
+
+.heroSide {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  align-items: flex-end;
+}
+
+/* Metric strip along the foot of the band. Values are always supplied by the
+   caller from a real response -- this file never invents one. */
+.heroMetrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--ai-hairline);
+}
+
+.metric { min-width: 0; }
+
+.metricLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ai-muted);
+}
+
+.metricLabel svg { width: 12px; height: 12px; color: var(--wk-color); }
+
+.metricValue {
+  margin-top: 3px;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--ai-text-strong);
+}
+
+.metricValue em {
+  font-style: normal;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ai-faint);
+}
+
+.metricHint {
+  margin-top: 2px;
+  font-size: 11.5px;
+  color: var(--ai-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .hero { padding: var(--space-5) var(--space-4); }
+  .hero h1 { font-size: 20px; }
+  .heroIcon { width: 40px; height: 40px; }
+}
+
+/* ── Panel ────────────────────────────────────────────────────────────── */
+
+.panel {
+  position: relative;
+  border: 1px solid var(--ai-line);
+  border-radius: var(--ai-r-lg);
+  background: linear-gradient(180deg, var(--ai-panel-top), var(--ai-panel-bot));
+  box-shadow: var(--ai-shadow-sm);
+  overflow: hidden;
+}
+
+/* Wraps rather than squeezing: a wide action in a narrow side panel drops to
+   its own line instead of crushing the title into three words per row. */
+.panelHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  padding: 12px var(--space-5);
+  border-bottom: 1px solid var(--ai-hairline);
+}
+
+.panelHead .panelTitles { flex: 1 1 150px; }
+
+.panelIcon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  border: 1px solid color-mix(in srgb, var(--wk-color) 28%, transparent);
+  background: color-mix(in srgb, var(--wk-color) 12%, transparent);
+  color: var(--wk-color);
+}
+
+.panelIcon svg { width: 15px; height: 15px; }
+
+.panelTitles { min-width: 0; flex: 1; }
+
+.panelTitle {
+  font-family: var(--font-display);
+  font-size: var(--font-size-md);
+  font-weight: 650;
+  letter-spacing: -0.012em;
+  color: var(--ai-text-strong);
+  overflow-wrap: anywhere;
+}
+
+.panelSubtitle {
+  margin-top: 1px;
+  font-size: 11.5px;
+  color: var(--ai-muted);
+}
+
+.panelAction { flex-shrink: 0; }
+
+.panelBody { padding: var(--space-4) var(--space-5); }
+.panelBodyTight { padding: var(--space-2); }
+
+/* ── Section label ────────────────────────────────────────────────────── */
+
+.sectionLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+.sectionLabel h2 {
+  font-family: var(--font-display);
+  font-size: var(--font-size-base);
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: var(--ai-text-strong);
+  white-space: nowrap;
+}
+
+.sectionRule {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, var(--ai-line-strong), transparent);
+}
+
+[dir="rtl"] .sectionRule { background: linear-gradient(to left, var(--ai-line-strong), transparent); }
+
+.sectionAside {
+  font-size: 11.5px;
+  color: var(--ai-muted);
+  white-space: nowrap;
+}
+
+/* ── Feature / capability cards ───────────────────────────────────────── */
+
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: var(--space-3);
+}
+
+.cardGridTwo { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+
+.featureCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: var(--space-4);
+  border: 1px solid var(--ai-line);
+  border-radius: var(--ai-r-md);
+  background: var(--ai-inset);
+  color: var(--ai-text);
+  text-align: start;
+  transition: transform var(--transition-fast), border-color var(--transition-fast),
+    background-color var(--transition-fast);
+}
+
+/* Top hairline in the card's accent -- the only chrome that distinguishes
+   one capability from the next, so the grid stays calm. */
+.featureCard::before {
+  content: "";
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline: 12px;
+  height: 2px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(to right, var(--wk-color), color-mix(in srgb, var(--wk-2) 70%, transparent));
+  opacity: 0.85;
+}
+
+.featureCardLink {
+  cursor: pointer;
+  width: 100%;
+  font: inherit;
+}
+
+.featureCardLink:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--wk-color) 42%, transparent);
+  background: var(--ai-inset-strong);
+  text-decoration: none;
+}
+
+.featureIcon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--wk-color) 28%, transparent);
+  background: color-mix(in srgb, var(--wk-color) 12%, transparent);
+  color: var(--wk-color);
+}
+
+.featureIcon svg { width: 16px; height: 16px; }
+
+.featureTitle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: var(--font-size-sm);
+  font-weight: 650;
+  color: var(--ai-text-strong);
+}
+
+.featureDescription {
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--ai-muted);
+}
+
+.featureMeta {
+  margin-top: auto;
+  padding-top: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--wk-color);
+}
+
+/* ── Prompt suggestions ───────────────────────────────────────────────── */
+
+.promptGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--space-3);
+}
+
+.promptCard {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  padding: 13px var(--space-4);
+  border: 1px solid var(--ai-line);
+  border-radius: var(--ai-r-md);
+  background: var(--ai-inset);
+  color: var(--ai-text);
+  text-align: start;
+  cursor: pointer;
+  font: inherit;
+  transition: transform var(--transition-fast), border-color var(--transition-fast),
+    background-color var(--transition-fast);
+}
+
+.promptCard:hover:not(:disabled) {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--wk-color) 44%, transparent);
+  background: var(--ai-inset-strong);
+}
+
+.promptCard:disabled { opacity: 0.55; cursor: progress; }
+
+.promptTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  align-self: flex-start;
+  height: 21px;
+  padding: 0 9px;
+  border-radius: var(--radius-full);
+  border: 1px solid color-mix(in srgb, var(--wk-color) 30%, transparent);
+  background: color-mix(in srgb, var(--wk-color) 11%, transparent);
+  color: var(--wk-color);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.promptText {
+  font-size: 13px;
+  font-weight: 550;
+  line-height: 1.5;
+  color: var(--ai-text);
+}
+
+.promptGo {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ai-faint);
+  transition: color var(--transition-fast);
+}
+
+.promptGo svg { width: 12px; height: 12px; }
+[dir="rtl"] .promptGo svg { transform: scaleX(-1); }
+
+.promptCard:hover:not(:disabled) .promptGo { color: var(--wk-color); }
+
+/* ── Chips ────────────────────────────────────────────────────────────── */
+
+.chipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: var(--radius-full);
+  border: 1px solid color-mix(in srgb, var(--wk-color) 30%, transparent);
+  background: color-mix(in srgb, var(--wk-color) 11%, transparent);
+  color: var(--wk-color);
+  font-size: 11.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  font-family: inherit;
+  transition: transform var(--transition-fast), border-color var(--transition-fast);
+}
+
+.chip:hover { transform: translateY(-1px); border-color: var(--wk-color); text-decoration: none; }
+.chip svg { width: 13px; height: 13px; }
+
+/* ── Step flow ────────────────────────────────────────────────────────── */
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: var(--space-3);
+}
+
+.step {
+  position: relative;
+  padding: var(--space-4) var(--space-4) var(--space-4) 0;
+  padding-inline-start: 44px;
+  border: 1px solid var(--ai-line);
+  border-radius: var(--ai-r-md);
+  background: var(--ai-inset);
+}
+
+.stepNumber {
+  position: absolute;
+  inset-block-start: var(--space-4);
+  inset-inline-start: var(--space-4);
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--wk-color) 38%, transparent);
+  background: color-mix(in srgb, var(--wk-color) 13%, transparent);
+  color: var(--wk-color);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.stepTitle {
+  font-size: var(--font-size-sm);
+  font-weight: 650;
+  color: var(--ai-text-strong);
+}
+
+.stepDescription {
+  margin-top: 4px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--ai-muted);
+}
+
+/* ── Status framework legend ──────────────────────────────────────────── */
+
+.legend {
+  display: grid;
+  gap: 1px;
+}
+
+/* One scannable line per state: swatch, name, share, count. The definition
+   lives in the row's title attribute, so the panel reads as a distribution
+   instead of a glossary. */
+.legendRow {
+  display: grid;
+  grid-template-columns: 9px minmax(64px, auto) minmax(28px, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: 7px var(--space-3);
+  border: 0;
+  border-radius: var(--ai-r-sm);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  transition: background-color var(--transition-fast);
+}
+
+button.legendRow { cursor: pointer; }
+.legendRow:hover { background: var(--ai-inset); }
+
+.legendRow[data-active="true"] {
+  background: color-mix(in srgb, var(--wk-color) 13%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--wk-color) 30%, transparent);
+}
+
+.legendDot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--legend-color, var(--ai-muted));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--legend-color, var(--ai-muted)) 16%, transparent);
+}
+
+.legendLabel {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ai-text);
+  white-space: nowrap;
+}
+
+/* The proportion rail. Width is set inline from count/total -- both real. */
+.legendTrack {
+  height: 5px;
+  min-width: 28px;
+  border-radius: var(--radius-full);
+  background: var(--ai-track);
+  overflow: hidden;
+}
+
+.legendFill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--legend-color, var(--ai-muted));
+  transition: width var(--transition-base);
+}
+
+/* Right-hand count. Always a real number handed in by the caller; when the
+   caller has nothing to report it passes nothing and the slot collapses. */
+.legendCount {
+  flex-shrink: 0;
+  min-width: 30px;
+  text-align: end;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ai-text-2);
+}
+
+.legendCount[data-zero="true"] { color: var(--ai-faint); }
+
+/* ── Compact info rows ────────────────────────────────────────────────── */
+
+.infoList { display: grid; gap: 1px; min-width: 0; }
+
+/* Grid items default to min-width:auto, which would let a long label push the
+   row past the panel's clipped edge -- so the row and its text column are both
+   allowed to shrink, and the label/meta ellipsize instead. */
+.infoRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+  gap: var(--space-3);
+  padding: 9px var(--space-3);
+  border-radius: var(--ai-r-sm);
+  font-size: var(--font-size-sm);
+  color: var(--ai-text);
+  transition: background-color var(--transition-fast);
+}
+
+a.infoRow:hover { background: var(--ai-inset); text-decoration: none; }
+
+.infoRowMain {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.infoRowIcon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  border: 1px solid var(--ai-line);
+  background: var(--ai-inset);
+  color: var(--wk-color);
+}
+
+.infoRowIcon svg { width: 14px; height: 14px; }
+
+.infoRowLabel {
+  font-weight: 550;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Must be a block for overflow/ellipsis to apply at all -- as an inline span
+   a long meta line escaped the panel instead of truncating. */
+.infoRowMeta {
+  display: block;
+  font-size: 11.5px;
+  color: var(--ai-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.infoRowValue {
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--ai-text-2);
+}
+
+/* ── Quiet inline note ────────────────────────────────────────────────── */
+
+/* A footnote, not another card. It sits under the column on a hairline so
+   the eye reads it last -- which is the priority a caveat deserves. */
+.note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 2px 0;
+  border-top: 1px solid var(--ai-hairline);
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--ai-faint);
+}
+
+.note svg {
+  flex-shrink: 0;
+  width: 13px;
+  height: 13px;
+  margin-top: 1px;
+  color: color-mix(in srgb, var(--wk-color) 72%, transparent);
+}
+
+.note strong { color: var(--ai-text-2); font-weight: 650; }
+
+/* ── Designed zero-data block (in-panel) ──────────────────────────────── */
+
+.zero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  padding: var(--space-6) var(--space-5);
+  text-align: center;
+}
+
+.zeroVisual {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 62px;
+  height: 62px;
+  margin-bottom: 3px;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--wk-color) 26%, transparent);
+  background:
+    radial-gradient(closest-side, color-mix(in srgb, var(--wk-color) 22%, transparent), transparent 78%),
+    var(--ai-inset);
+  color: var(--wk-color);
+}
+
+.zeroVisual svg { width: 24px; height: 24px; }
+
+/* Two dashed orbits -- decoration, never a value. */
+.zeroVisual::before,
+.zeroVisual::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  border: 1px dashed var(--ai-track);
+}
+
+.zeroVisual::before { inset: -6px; }
+.zeroVisual::after { inset: -13px; opacity: 0.55; }
+
+.zeroTitle {
+  font-family: var(--font-display);
+  font-size: var(--font-size-sm);
+  font-weight: 650;
+  color: var(--ai-text-strong);
+}
+
+.zeroText {
+  max-width: 44ch;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--ai-muted);
+}
+
+.zeroActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: var(--space-3);
+}
+
+/* ── Skeleton rows for a loading panel ────────────────────────────────── */
+
+.skeletonRows { display: grid; gap: 8px; padding: var(--space-2) 0; }
+
+.skeletonRow {
+  height: 34px;
+  border-radius: var(--ai-r-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .featureCardLink:hover,
+  .promptCard:hover:not(:disabled),
+  .chip:hover { transform: none; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   POLISH PASS
+   Denser primitives so a page is not a stack of identical rectangles, and
+   per-module identity so Reports never reads as Documents in a screenshot.
+   Same rules as above: tokens only, logical properties only, decoration
+   never encodes a number.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── Per-module identity ──────────────────────────────────────────────
+   Each module keeps the one family palette but gets its own decorative
+   field geometry, so the modules are told apart by FORM as well as hue.
+   Purely ornamental: no element here is driven by data. */
+
+.page[data-module] .heroField,
+.scroller[data-module] .heroField { opacity: 0.85; }
+
+/* Ask -- concentric knowledge rings. */
+[data-module="ask"] .heroField {
+  background:
+    radial-gradient(42% 36% at 66% 38%, color-mix(in srgb, var(--wk-color) 30%, transparent), transparent 68%),
+    repeating-radial-gradient(circle at 74% 46%, transparent 0 26px,
+      color-mix(in srgb, var(--wk-2) 13%, transparent) 26px 27px, transparent 27px 54px);
+}
+
+/* Messages -- overlapping conversation bubbles. */
+[data-module="messages"] .heroField {
+  background:
+    radial-gradient(26% 34% at 58% 30%, color-mix(in srgb, var(--wk-color) 26%, transparent), transparent 72%),
+    radial-gradient(22% 30% at 78% 56%, color-mix(in srgb, var(--wk-2) 24%, transparent), transparent 74%),
+    radial-gradient(18% 24% at 92% 28%, color-mix(in srgb, var(--wk-color) 20%, transparent), transparent 76%);
+}
+
+/* Projects -- diagonal delivery bands. */
+[data-module="projects"] .heroField {
+  background:
+    radial-gradient(46% 40% at 70% 40%, color-mix(in srgb, var(--wk-color) 24%, transparent), transparent 70%),
+    repeating-linear-gradient(118deg, transparent 0 30px,
+      color-mix(in srgb, var(--wk-2) 11%, transparent) 30px 44px);
+}
+
+/* Tasks -- upright workload columns. */
+[data-module="tasks"] .heroField {
+  background:
+    radial-gradient(44% 38% at 68% 44%, color-mix(in srgb, var(--wk-color) 24%, transparent), transparent 70%),
+    repeating-linear-gradient(90deg, transparent 0 22px,
+      color-mix(in srgb, var(--wk-2) 12%, transparent) 22px 30px);
+  /* Columns rise from the bottom, so this adds a vertical fade on top of the
+     shared inline-start fade rather than replacing it. */
+  mask-image: var(--field-fade), linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent 92%);
+  mask-composite: intersect;
+  -webkit-mask-image: var(--field-fade), linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent 92%);
+  -webkit-mask-composite: source-in;
+}
+
+/* Brief -- horizontal briefing scan lines. */
+[data-module="brief"] .heroField {
+  background:
+    radial-gradient(48% 42% at 68% 40%, color-mix(in srgb, var(--wk-color) 28%, transparent), transparent 70%),
+    repeating-linear-gradient(180deg, transparent 0 9px,
+      color-mix(in srgb, var(--wk-2) 10%, transparent) 9px 11px);
+}
+
+/* Reports -- columnar ledger. */
+[data-module="reports"] .heroField {
+  background:
+    radial-gradient(44% 40% at 72% 38%, color-mix(in srgb, var(--wk-color) 26%, transparent), transparent 70%),
+    repeating-linear-gradient(90deg, transparent 0 34px,
+      color-mix(in srgb, var(--wk-2) 12%, transparent) 34px 36px),
+    repeating-linear-gradient(180deg, transparent 0 26px,
+      color-mix(in srgb, var(--wk-2) 8%, transparent) 26px 27px);
+}
+
+/* Documents -- stacked sheets. */
+[data-module="documents"] .heroField {
+  background:
+    radial-gradient(42% 38% at 68% 42%, color-mix(in srgb, var(--wk-color) 24%, transparent), transparent 70%),
+    repeating-linear-gradient(160deg, transparent 0 18px,
+      color-mix(in srgb, var(--wk-2) 12%, transparent) 18px 20px, transparent 20px 40px);
+}
+
+/* Settings -- restrained governance mesh. */
+[data-module="settings"] .heroField {
+  opacity: 0.6;
+  background:
+    radial-gradient(40% 36% at 70% 40%, color-mix(in srgb, var(--wk-color) 20%, transparent), transparent 72%),
+    repeating-linear-gradient(45deg, transparent 0 14px,
+      color-mix(in srgb, var(--wk-2) 9%, transparent) 14px 15px),
+    repeating-linear-gradient(-45deg, transparent 0 14px,
+      color-mix(in srgb, var(--wk-2) 9%, transparent) 14px 15px);
+}
+
+/* Support -- resolution halo. */
+[data-module="support"] .heroField {
+  background:
+    radial-gradient(34% 44% at 68% 42%, color-mix(in srgb, var(--wk-color) 28%, transparent), transparent 62%),
+    repeating-radial-gradient(circle at 68% 42%, transparent 0 40px,
+      color-mix(in srgb, var(--wk-2) 10%, transparent) 40px 42px, transparent 42px 84px);
+}
+
+:root[data-theme="light"] [data-module] .heroField { opacity: 0.5; }
+:root[data-theme="light"] [data-module="settings"] .heroField { opacity: 0.4; }
+
+/* ── Compact hero ─────────────────────────────────────────────────────
+   The default band is right for a landing route. Working routes -- the ones
+   people sit in all day -- get a tighter one so the data starts higher. */
+
+.heroCompact { padding: var(--space-5) var(--space-6); }
+.heroCompact h1 { font-size: 20px; }
+.heroCompact .heroIcon { width: 38px; height: 38px; border-radius: 12px; }
+.heroCompact .heroIcon svg { width: 18px; height: 18px; }
+.heroCompact .heroDescription { margin-top: 4px; max-width: 76ch; font-size: 12.5px; line-height: 1.5; }
+.heroCompact .heroActions { margin-top: var(--space-3); }
+.heroCompact .heroMetrics { margin-top: var(--space-4); padding-top: var(--space-3); }
+.heroCompact .metricValue { font-size: 19px; }
+
+/* ── Stat strip ───────────────────────────────────────────────────────
+   A row of numbers that is a RULE, not five more boxes. Used where a card
+   grid would have repeated the same rectangle for each value. */
+
+.statStrip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 0;
+  border: 1px solid var(--ai-line);
+  border-radius: var(--ai-r-md);
+  background: var(--ai-inset);
+  overflow: hidden;
+}
+
+.stat {
+  flex: 1 1 128px;
+  min-width: 0;
+  padding: 10px var(--space-4);
+  border-inline-start: 1px solid var(--ai-hairline);
+}
+
+.stat:first-child { border-inline-start: none; }
+
+.statLabel {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ai-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.statLabel svg { width: 11px; height: 11px; color: var(--wk-color); flex-shrink: 0; }
+
+.statValue {
+  margin-top: 2px;
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: var(--ai-text-strong);
+}
+
+.statValue[data-zero="true"] { color: var(--ai-faint); }
+
+/* ── Progressive disclosure ───────────────────────────────────────────
+   Where a page used to lecture with a permanent four-card explainer, the
+   explanation now lives behind one quiet line. Native <details>, so it is
+   keyboard-operable and searchable without any JavaScript. */
+
+.disclosure {
+  border: 1px solid var(--ai-line);
+  border-radius: var(--ai-r-md);
+  background: var(--ai-inset);
+  overflow: hidden;
+}
+
+.disclosureSummary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 9px var(--space-4);
+  cursor: pointer;
+  list-style: none;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ai-text-2);
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.disclosureSummary::-webkit-details-marker { display: none; }
+.disclosureSummary:hover { background: var(--ai-inset-strong); color: var(--ai-text); }
+
+.disclosureSummary svg { width: 14px; height: 14px; color: var(--wk-color); flex-shrink: 0; }
+
+.disclosureChevron {
+  margin-inline-start: auto;
+  display: grid;
+  place-items: center;
+  color: var(--ai-muted);
+  transition: transform var(--transition-base);
+}
+
+/* Logical rotation: in RTL the closed chevron already points inward because
+   the icon itself is flipped by the shell, so only the open state rotates. */
+.disclosure[open] .disclosureChevron { transform: rotate(90deg); }
+.disclosureChevron svg { width: 13px; height: 13px; color: inherit; }
+
+.disclosureBody {
+  padding: var(--space-4);
+  border-top: 1px solid var(--ai-hairline);
+}
+
+/* ── Timeline ─────────────────────────────────────────────────────────
+   For activity trails, which read badly as a list of cards. */
+
+.timeline {
+  display: grid;
+  gap: 0;
+  padding-inline-start: 6px;
+}
+
+.timelineItem {
+  position: relative;
+  padding: 9px 0 9px var(--space-5);
+  padding-inline-start: var(--space-5);
+  padding-inline-end: 0;
+}
+
+.timelineItem::before {
+  content: "";
+  position: absolute;
+  inset-block-start: 15px;
+  inset-inline-start: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--wk-color);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--wk-color) 18%, transparent);
+}
+
+/* The rail stops at the last dot rather than dangling past it. */
+.timelineItem::after {
+  content: "";
+  position: absolute;
+  inset-block-start: 24px;
+  inset-block-end: -9px;
+  inset-inline-start: 3px;
+  width: 1px;
+  background: var(--ai-line);
+}
+
+.timelineItem:last-child::after { display: none; }
+
+.timelineLine {
+  font-size: var(--font-size-sm);
+  color: var(--ai-text);
+  line-height: 1.45;
+}
+
+.timelineLine strong { font-weight: 650; color: var(--ai-text-strong); }
+
+.timelineMeta {
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--ai-muted);
+}
+
+/* ── Segmented control ────────────────────────────────────────────────
+   Replaces a row of look-alike buttons for mutually exclusive choices. */
+
+.segmented {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid var(--ai-line);
+  border-radius: var(--radius-full);
+  background: var(--ai-inset);
+  gap: 2px;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.segmented::-webkit-scrollbar { display: none; }
+
+.segment {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 13px;
+  border: none;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--ai-text-2);
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.segment:hover { color: var(--ai-text); background: var(--ai-inset-strong); }
+
+.segment[data-active="true"] {
+  background: color-mix(in srgb, var(--wk-color) 16%, var(--ai-panel-solid));
+  border: 1px solid color-mix(in srgb, var(--wk-color) 38%, transparent);
+  padding: 4px 12px;
+  color: var(--wk-color);
+}
+
+.segment svg { width: 13px; height: 13px; }
+
+.segmentCount {
+  font-size: 10.5px;
+  font-weight: 700;
+  opacity: 0.75;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Meta grid ────────────────────────────────────────────────────────
+   Dense label/value pairs -- the alternative to one card per fact. */
+
+.metaGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--space-3) var(--space-5);
+}
+
+.metaItem { min-width: 0; }
+
+.metaKey {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ai-muted);
+}
+
+.metaVal {
+  margin-top: 3px;
+  font-size: var(--font-size-sm);
+  color: var(--ai-text);
+  overflow-wrap: anywhere;
+}
+
+/* ── Compact capability list ──────────────────────────────────────────
+   The explainer content itself, once demoted inside a disclosure: two
+   columns of quiet rows instead of four glowing cards. */
+
+.pointList {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-3) var(--space-5);
+}
+
+.point { display: flex; gap: 10px; min-width: 0; }
+
+.pointIcon {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--wk-color) 13%, transparent);
+  color: var(--wk-color);
+}
+
+.pointIcon svg { width: 12px; height: 12px; }
+
+.pointTitle {
+  font-size: 12.5px;
+  font-weight: 650;
+  color: var(--ai-text);
+  line-height: 1.35;
+}
+
+.pointText {
+  margin-top: 1px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--ai-muted);
+}
+
+/* ── Inline numbered steps ────────────────────────────────────────────
+   The four-box StepFlow, flattened to one readable line per step. */
+
+.stepList { display: grid; gap: var(--space-3); }
+
+.stepRow { display: flex; gap: 10px; align-items: flex-start; }
+
+.stepRowNum {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 19px;
+  height: 19px;
+  margin-top: 1px;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--wk-color) 40%, transparent);
+  background: color-mix(in srgb, var(--wk-color) 12%, transparent);
+  color: var(--wk-color);
+  font-size: 10.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.stepRowText { font-size: 12.5px; line-height: 1.5; color: var(--ai-muted); min-width: 0; }
+.stepRowText b { font-weight: 650; color: var(--ai-text); }
+
+/* ── Light-mode depth ─────────────────────────────────────────────────
+   Light surfaces are pure white by token, which flattens a panel sitting on
+   a near-white canvas. These give the edge back without darkening the card. */
+
+:root[data-theme="light"] .panel,
+:root[data-theme="light"] .hero {
+  box-shadow: 0 1px 2px rgba(45, 78, 190, 0.06), 0 10px 26px rgba(45, 78, 190, 0.07);
+}
+
+:root[data-theme="light"] .statStrip,
+:root[data-theme="light"] .disclosure { background: rgba(59, 110, 246, 0.035); }
+
+:root[data-theme="light"] .featureCard { background: rgba(59, 110, 246, 0.028); }
+
+@media (max-width: 640px) {
+  .statStrip { border-radius: var(--ai-r-sm); }
+  .stat { flex: 1 1 100%; border-inline-start: none; border-top: 1px solid var(--ai-hairline); }
+  .stat:first-child { border-top: none; }
+  .heroCompact { padding: var(--space-4); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .disclosureChevron { transition: none; }
+}
+
+/* ── Launch box ───────────────────────────────────────────────────────
+   The primary AI affordance on a landing route: a real input, sized and lit
+   so it out-ranks every explainer on the page. */
+
+.launch {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding-block: 7px;
+  padding-inline: var(--space-4) 7px;
+  border: 1px solid color-mix(in srgb, var(--wk-color) 34%, var(--ai-line));
+  border-radius: var(--radius-full);
+  background: var(--ai-panel-solid);
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--wk-color) 8%, transparent),
+    var(--ai-shadow-sm);
+  transition: border-color var(--transition-base), box-shadow var(--transition-base);
+}
+
+.launch:focus-within {
+  border-color: var(--wk-color);
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--wk-color) 16%, transparent),
+    var(--ai-shadow);
+}
+
+.launchIcon { display: grid; place-items: center; flex-shrink: 0; color: var(--wk-color); }
+.launchIcon svg { width: 17px; height: 17px; }
+
+.launchInput {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--ai-text);
+  font-size: var(--font-size-md);
+  padding: 6px 0;
+}
+
+.launchInput::placeholder { color: var(--ai-faint); }
+
+@media (max-width: 640px) {
+  .launch { flex-wrap: wrap; border-radius: var(--ai-r-lg); padding: var(--space-3); }
+  .launchInput { flex: 1 1 100%; }
+}
+
+/* User-generated strings (names, titles, previews) can be in either script.
+   `plaintext` resolves each one's direction from its own first strong
+   character, so an English title inside the Arabic RTL layout still
+   truncates at its own end instead of losing its first characters. */
+.infoRowLabel,
+.infoRowMeta,
+.metricHint,
+.hero h1,
+.heroDescription {
+  unicode-bidi: plaintext;
+}

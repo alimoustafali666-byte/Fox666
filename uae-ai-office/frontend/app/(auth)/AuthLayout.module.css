@@ -1,8 +1,62 @@
+/* The authentication surface is a permanently dark branded splash -- that is
+   the approved login direction, and it does not follow the app theme toggle.
+
+   Because it is always dark, it re-declares the design tokens LOCALLY on the
+   wrapper. Everything nested inside (Card, Field, Button, AuthForm, the login
+   panel) therefore resolves to dark-surface values even while the rest of the
+   application is in light mode. Without this the shared primitives would
+   render dark navy text on the dark splash and the form would be unreadable. */
+
 .wrap {
   min-height: 100vh;
+  min-height: 100dvh;
   display: grid;
   grid-template-columns: 1.15fr 0.85fr;
   background: #040d1b;
+  color-scheme: dark;
+
+  --ai-panel-top: rgba(23, 36, 68, 0.72);
+  --ai-panel-bot: rgba(7, 12, 26, 0.94);
+  --ai-panel-solid: #0b1224;
+  --ai-inset: rgba(126, 166, 236, 0.07);
+  --ai-inset-strong: rgba(126, 166, 236, 0.12);
+  --ai-track: rgba(126, 166, 236, 0.13);
+  --ai-line: rgba(126, 166, 236, 0.16);
+  --ai-line-strong: rgba(142, 180, 255, 0.3);
+  --ai-hairline: rgba(255, 255, 255, 0.07);
+  --ai-sheen: rgba(255, 255, 255, 0.16);
+  --ai-text: #eaf1fe;
+  --ai-text-strong: #ffffff;
+  --ai-text-2: #a6b7d3;
+  --ai-muted: #7c8dab;
+  --ai-faint: #5d6c88;
+  --ai-shadow: 0 24px 60px rgba(0, 3, 14, 0.55);
+  --ai-shadow-sm: 0 10px 26px rgba(0, 3, 14, 0.42);
+  --control-bg: rgba(8, 14, 30, 0.82);
+  --control-bg-hover: rgba(12, 20, 40, 0.92);
+  --skeleton-sheen: rgba(255, 255, 255, 0.14);
+
+  /* The legacy aliases are resolved against :root's --ai-* values at the point
+     they are declared, so overriding --ai-text above does NOT reach them.
+     Anything still reading these names has to be re-pointed here as well. */
+  --color-surface: var(--ai-panel-solid);
+  --color-surface-subtle: var(--ai-inset-strong);
+  --color-surface-sunken: var(--ai-inset);
+  --color-surface-glass: var(--control-bg);
+  --color-border: var(--ai-line);
+  --color-border-strong: var(--ai-line-strong);
+  --color-text-primary: var(--ai-text);
+  --color-text-secondary: var(--ai-text-2);
+  --color-text-muted: var(--ai-muted);
+  --color-neutral-text: #a9bad1;
+  --color-neutral-subtle: rgba(148, 183, 224, 0.1);
+  --color-neutral-border: rgba(148, 183, 224, 0.2);
+  --color-primary: #5a7dff;
+  --color-accent: #46d8f5;
+  --color-success: #48e2a2;
+  --color-warning: #ffb968;
+  --color-danger: #ff6f8c;
+  --color-info: #7eb8ff;
 }
 
 .hero {
@@ -11,21 +65,21 @@
   display: flex;
   align-items: center;
   padding: 48px 52px;
-  background:
-    linear-gradient(135deg, rgba(4, 12, 23, 0.78), rgba(4, 12, 23, 0.82)),
+  background: linear-gradient(135deg, #071429 0%, #040d1b 58%, #030a16 100%);
 }
 
+/* Soft brand wash over the hero. */
 .hero::before {
   content: "";
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(135deg, rgba(8, 18, 34, 0.3), rgba(8, 18, 34, 0.78)),
-  opacity: 0.28;
-  mix-blend-mode: screen;
+    radial-gradient(72% 55% at 84% 6%, rgba(53, 217, 242, 0.16), transparent 62%),
+    radial-gradient(60% 50% at 6% 96%, rgba(139, 107, 255, 0.18), transparent 64%);
   pointer-events: none;
 }
 
+/* Vignette, so the hero copy holds the centre. */
 .hero::after {
   content: "";
   position: absolute;
@@ -64,13 +118,13 @@
   pointer-events: none;
 }
 
-.loginMode .hero { min-height: 100vh; }
+.loginMode .hero { min-height: 100vh; min-height: 100dvh; }
 
 .heroContent {
   position: relative;
   z-index: 1;
   max-width: 500px;
-  color: #fff;
+  color: #ffffff;
 }
 
 .heroEyebrow {
@@ -79,10 +133,10 @@
   gap: 6px;
   margin-bottom: 16px;
   padding: 4px 10px;
-  border-radius: 999px;
-  background: rgba(255,255,255,0.06);
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(170, 214, 255, 0.15);
-  color: rgba(255,255,255,0.9);
+  color: rgba(255, 255, 255, 0.9);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -104,22 +158,23 @@
 }
 
 .brandName {
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: var(--font-size-lg);
-  color: var(--color-text-primary);
+  color: #ffffff;
 }
 
 .brandSubtitle {
   display: block;
   margin-top: 2px;
-  color: var(--color-text-muted);
+  color: rgba(215, 229, 250, 0.62);
   font-size: 10px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
-.hero .brandName { color: #ffffff; }
 .heroTitle {
+  font-family: var(--font-display);
   font-size: clamp(2.1rem, 3vw, 3.3rem);
   font-weight: 700;
   letter-spacing: -0.04em;
@@ -127,12 +182,14 @@
   margin-bottom: 14px;
   text-wrap: balance;
 }
+
 .heroTitleAccent {
   background: linear-gradient(135deg, #7fd9ff 0%, #a67dff 44%, #ff7ce0 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
+
 .heroSubtitle {
   font-size: 1.02rem;
   color: rgba(215, 229, 250, 0.78);
@@ -140,23 +197,27 @@
   margin-bottom: 28px;
   max-width: 420px;
 }
+
 .heroList { display: flex; flex-direction: column; gap: 14px; }
+
 .heroList li {
   display: flex;
   align-items: flex-start;
   gap: 10px;
   font-size: var(--font-size-sm);
-  color: rgba(255,255,255,0.9);
+  color: rgba(255, 255, 255, 0.9);
   line-height: 1.5;
 }
+
 .heroList li svg {
   flex-shrink: 0;
   width: 18px;
   height: 18px;
   padding: 3px;
   border-radius: 6px;
-  background: var(--gradient-ai);
+  background: linear-gradient(122deg, #4d8dff, #8b6bff);
 }
+
 .formSide {
   display: flex;
   flex-direction: column;
@@ -170,8 +231,9 @@
     radial-gradient(circle at 88% 88%, rgba(141, 96, 255, 0.08), transparent 25%),
     #040d1b;
 }
+
 .authControls { position: absolute; top: 18px; inset-inline-end: 20px; z-index: 2; }
-.authControls :global(button) { border-color: rgba(126, 184, 255, 0.22); background: rgba(12, 29, 56, 0.68); }
+
 .formSide::before {
   content: "";
   position: absolute;
@@ -182,6 +244,7 @@
   mask-image: linear-gradient(135deg, transparent, black 55%, transparent);
   pointer-events: none;
 }
+
 .panel {
   width: min(100%, 430px);
   position: relative;
@@ -191,12 +254,12 @@
 
 @media (max-width: 980px) {
   .wrap { grid-template-columns: 1fr; }
-  .hero { padding: 24px 24px 50px; align-items: flex-start; }
+  .hero { padding: 24px 24px 50px; align-items: flex-start; min-height: 0; }
+  .loginMode .hero { min-height: 0; }
   .heroContent { max-width: none; }
   .heroSubtitle, .heroList { display: none; }
   .brand { margin-bottom: 10px; }
-  .brandCompact { display: none; }
-  .formSide { padding: 0 18px 24px; margin-top: -24px; }
+  .formSide { padding: 0 18px 28px; margin-top: -24px; }
 }
 
 @media (max-width: 560px) {
@@ -204,8 +267,3 @@
   .hero { padding-bottom: 38px; }
   .formSide { margin-top: -14px; }
 }
-
-@media (prefers-reduced-motion: reduce) {
-  .networkNodeOne, .networkNodeTwo, .networkNodeThree, .networkNodeFour { transition: none; }
-}
-

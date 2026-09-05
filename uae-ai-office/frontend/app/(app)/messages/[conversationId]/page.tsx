@@ -15,6 +15,8 @@ import { useTranslation } from "@/lib/i18n";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { LoadingBlock } from "@/components/ui/Spinner";
 import { Button } from "@/components/ui/Button";
+import { ZeroState } from "@/components/ui/Workspace";
+import { MessagesIcon, PhoneIcon, SparkIcon, TeamIcon, VideoIcon } from "@/components/layout/icons";
 import type { ChatConversationPublic, ChatMessagePublic, ConversationMemberPublic, ConversationType, PinnedMessagePublic } from "@/lib/types";
 import type { TranslationKey } from "@/lib/i18n";
 import styles from "./Thread.module.css";
@@ -294,18 +296,18 @@ export default function ConversationThreadPage() {
           {conversation.type === "direct" && peerMember ? (
             <>
               <button type="button" className={styles.iconAction} title={t("messages.calls.startVoiceCall")} onClick={() => call.startCall("voice", conversationId)}>
-                📞
+                <PhoneIcon />
               </button>
               <button type="button" className={styles.iconAction} title={t("messages.calls.startVideoCall")} onClick={() => call.startCall("video", conversationId)}>
-                🎥
+                <VideoIcon />
               </button>
             </>
           ) : null}
           <button type="button" className={styles.iconAction} title={t("messages.ai.panelTitle")} onClick={() => setPanel(panel === "ai" ? null : "ai")}>
-            ✨
+            <SparkIcon />
           </button>
           <button type="button" className={styles.iconAction} title={t("messages.members.title")} onClick={() => setPanel(panel === "members" ? null : "members")}>
-            👥
+            <TeamIcon />
           </button>
         </div>
       </div>
@@ -331,7 +333,7 @@ export default function ConversationThreadPage() {
         <div className={styles.threadColumn}>
           {error ? <ErrorBanner message={error} /> : null}
 
-          <div className={styles.messages} ref={scrollRef}>
+          <div className={styles.messages} ref={scrollRef} data-empty={messages.length === 0 ? "true" : undefined}>
             {nextCursor ? (
               <div className={styles.loadOlderWrap}>
                 <Button size="sm" variant="secondary" onClick={loadOlder}>
@@ -341,7 +343,12 @@ export default function ConversationThreadPage() {
             ) : null}
 
             {messages.length === 0 ? (
-              <div style={{ color: "var(--color-text-muted)", fontSize: "var(--font-size-sm)" }}>{t("messages.threadEmpty")}</div>
+              <ZeroState
+                accent="cyan"
+                icon={<MessagesIcon />}
+                title={t("messages.threadEmpty")}
+                text={t("workspace.messages.recentEmptyText")}
+              />
             ) : (
               messages.map((message) => (
                 <MessageRow

@@ -1,12 +1,16 @@
+/* Status pills. Every tone resolves through alpha-tinted fills plus a token
+   text colour, so a badge stays legible on the deep navy panel and on the
+   light one without a second definition. */
+
 .badge {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 3px 10px;
+  padding: 3px 9px;
   border-radius: var(--radius-full);
-  font-size: var(--font-size-xs);
-  font-weight: 600;
-  line-height: 1.4;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.5;
   letter-spacing: 0.01em;
   border: 1px solid transparent;
   white-space: nowrap;
@@ -17,42 +21,20 @@
   height: 6px;
   border-radius: 50%;
   background: currentColor;
+  box-shadow: 0 0 8px currentColor;
   flex-shrink: 0;
 }
 
-.neutral {
-  background: var(--color-neutral-subtle);
-  border-color: var(--color-neutral-border);
-  color: var(--color-neutral-text);
-}
+.neutral { background: var(--color-neutral-subtle); border-color: var(--color-neutral-border); color: var(--color-neutral-text); }
+.info    { background: var(--color-info-subtle);    border-color: var(--color-info-border);    color: #3b82f6; }
+.success { background: var(--color-success-subtle); border-color: var(--color-success-border); color: #16a97a; }
+.warning { background: var(--color-warning-subtle); border-color: var(--color-warning-border); color: #bd7708; }
+.danger  { background: var(--color-danger-subtle);  border-color: var(--color-danger-border);  color: #e0455f; }
+.primary { background: var(--color-primary-subtle); border-color: var(--color-primary-border); color: #3b82f6; }
 
-.info {
-  background: var(--color-info-subtle);
-  border-color: var(--color-info-border);
-  color: var(--color-info);
-}
-
-.success {
-  background: var(--color-success-subtle);
-  border-color: var(--color-success-border);
-  color: var(--color-success);
-}
-
-.warning {
-  background: var(--color-warning-subtle);
-  border-color: var(--color-warning-border);
-  color: var(--color-warning);
-}
-
-.danger {
-  background: var(--color-danger-subtle);
-  border-color: var(--color-danger-border);
-  color: var(--color-danger);
-}
-
-.primary {
-  background: var(--color-primary-subtle);
-  border-color: var(--color-primary-border);
-  color: var(--color-primary);
-}
-
+/* On the dark panel the light-tuned text colours above are too dark. */
+:root:not([data-theme="light"]) .info    { color: #7fb4ff; }
+:root:not([data-theme="light"]) .success { color: #6fe6b3; }
+:root:not([data-theme="light"]) .warning { color: #ffc57e; }
+:root:not([data-theme="light"]) .danger  { color: #ff8ea3; }
+:root:not([data-theme="light"]) .primary { color: #93b7ff; }

@@ -18,8 +18,10 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-  padding: var(--space-4) var(--space-5);
-  border-bottom: 1px solid var(--color-border);
+  padding: 0 var(--space-5);
+  height: 52px;
+  border-bottom: 1px solid var(--ai-hairline);
+  background: linear-gradient(180deg, var(--ai-panel-top), transparent);
   flex-shrink: 0;
 }
 
@@ -28,8 +30,10 @@
 }
 
 .headerTitle {
+  font-family: var(--font-display);
   font-size: var(--font-size-md);
-  font-weight: 700;
+  font-weight: 600;
+  letter-spacing: -0.01em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -49,9 +53,11 @@
 .iconAction {
   width: 34px;
   height: 34px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
+  border-radius: var(--ai-r-sm);
+  border: 1px solid var(--ai-line);
+  background: var(--control-bg);
+  color: var(--ai-text-2);
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
   cursor: pointer;
   font-size: 15px;
   display: flex;
@@ -60,14 +66,30 @@
 }
 
 .iconAction:hover {
-  background: var(--color-surface-subtle);
+  background: var(--control-bg-hover);
+  border-color: var(--ai-line-strong);
 }
 
+/* A short thread sits against the composer rather than floating at the top
+   of an empty column -- the same place it ends up once the thread is long
+   enough to scroll. `auto` top margin does this without breaking scrolling
+   the way `justify-content: flex-end` would. */
 .messages {
   flex: 1;
   overflow-y: auto;
   padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
 }
+
+.messages > :first-child {
+  margin-block-start: auto;
+}
+
+/* The zero state is the exception: it belongs in the middle of the empty
+   column, not pinned to the composer. */
+.messages[data-empty] { justify-content: center; }
+.messages[data-empty] > :first-child { margin-block-start: 0; }
 
 .loadOlderWrap {
   display: flex;
@@ -106,3 +128,11 @@
   }
 }
 
+
+/* User-generated strings (names, titles, previews) can be in either script.
+   `plaintext` resolves each one's direction from its own first strong
+   character, so an English title inside the Arabic RTL layout still
+   truncates at its own end instead of losing its first characters. */
+.headerTitle {
+  unicode-bidi: plaintext;
+}

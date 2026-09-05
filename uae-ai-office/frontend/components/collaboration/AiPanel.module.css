@@ -1,8 +1,9 @@
 .panel {
   width: 320px;
+  max-width: 100%;
   flex-shrink: 0;
-  border-inline-start: 1px solid var(--color-border);
-  background: var(--color-surface);
+  border-inline-start: 1px solid var(--ai-line);
+  background: linear-gradient(180deg, var(--ai-panel-top), var(--ai-panel-bot));
   padding: var(--space-4);
   overflow-y: auto;
   display: flex;
@@ -113,3 +114,10 @@
   border-top: 1px solid var(--color-border);
 }
 
+@media (max-width: 900px) {
+  .panel {
+    width: 100%;
+    border-inline-start: none;
+    border-top: 1px solid var(--ai-line);
+  }
+}

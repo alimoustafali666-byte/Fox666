@@ -1,31 +1,65 @@
+/* Report catalogue: one labelled strip rather than a floating row of pills,
+   so the picker reads as a control and not as decoration. */
+.pickerBar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  padding: 10px var(--space-4);
+  border: 1px solid var(--ai-line);
+  border-radius: var(--ai-r-md);
+  background: var(--ai-inset);
+}
+
+.pickerLabel {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ai-faint);
+  white-space: nowrap;
+}
+
+/* Report type picker -- segmented chips in the master's pill language. */
 .typeRow {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: var(--space-4);
+  gap: 7px;
+  flex: 1;
+  min-width: 0;
 }
 
 .typeChip {
-  padding: 8px 16px;
+  height: 32px;
+  padding: 0 15px;
   border-radius: var(--radius-full);
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-sm);
-  font-weight: 600;
+  border: 1px solid var(--ai-line);
+  background: var(--control-bg);
+  color: var(--ai-text-2);
+  font-size: var(--font-size-xs);
+  font-weight: 700;
   cursor: pointer;
+  white-space: nowrap;
   transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
 }
 
-.typeChip:hover {
-  border-color: var(--color-primary-border);
+.typeChip:hover { border-color: var(--ai-line-strong); background: var(--control-bg-hover); color: var(--ai-text); }
+
+.typeChipActive,
+.typeChipActive:hover {
+  background: linear-gradient(122deg, #4d8dff, #8b6bff);
+  border-color: transparent;
+  color: #ffffff;
+  box-shadow: 0 6px 16px rgba(77, 141, 255, 0.3);
 }
 
-.typeChipActive {
-  background: var(--gradient-ai);
-  border-color: transparent;
-  color: #fff;
-  box-shadow: var(--glow-accent);
+/* Guidance blocks under the preview: two columns of explanation on desktop,
+   stacked below it. Keeps the lower half of the page composed instead of
+   trailing off into whitespace when a report returns few rows. */
+.guidance {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--space-3);
 }
 
 .exportRow {
@@ -34,19 +68,14 @@
   gap: 6px;
 }
 
-.printMeta {
-  display: none;
-}
+.printMeta { display: none; }
 
-/* Reports (Step 20): print shows only the report card content -- the
-   filter toolbar, type picker, and export/print controls (marked
-   .noPrint) disappear, and the meta block normally hidden on screen
-   (redundant with the CardHeader above it) becomes the printed page's
-   own header since CardHeader isn't guaranteed print-friendly styling. */
+/* Print shows only the report card content -- the filter toolbar, type picker
+   and export/print controls (marked .noPrint) disappear, and the meta block
+   normally hidden on screen becomes the printed page's own header. Forced to
+   black-on-white so a dark-theme viewer doesn't print an inverted page. */
 @media print {
-  .noPrint {
-    display: none !important;
-  }
+  .noPrint { display: none !important; }
 
   .printMeta {
     display: block;
@@ -62,8 +91,9 @@
   }
 
   .printCard {
-    box-shadow: none;
-    border: none;
+    box-shadow: none !important;
+    border: none !important;
+    background: #ffffff !important;
+    color: #000000 !important;
   }
 }
-

@@ -4,9 +4,20 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  text-align: left;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: var(--font-size-xs);
-  color: var(--color-text-muted);
+  /* Metadata is a machine payload: it stays LTR even in an RTL layout. */
+  direction: ltr;
+  text-align: start;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ai-muted);
 }
 
+@media (max-width: 900px) { .metadata { max-width: 180px; } }
+
+/* User-generated strings (names, titles, previews) can be in either script.
+   `plaintext` resolves each one's direction from its own first strong
+   character, so an English title inside the Arabic RTL layout still
+   truncates at its own end instead of losing its first characters. */
+.metadata {
+  unicode-bidi: plaintext;
+}

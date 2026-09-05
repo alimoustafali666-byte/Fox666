@@ -1,80 +1,103 @@
-.grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--space-5);
-}
+/* Settings is a form surface, not a list of navigation tiles: what remains
+   here are the small typographic and control pieces the workspace kit does
+   not own. Everything structural (hero, panels, rows) comes from the kit. */
 
-.hoverCard {
-  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
-}
-
-.hoverCard:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
-}
-
-.linkCard {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-}
-
-.linkIcon {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-md);
-  background: var(--gradient-ai);
-  color: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.linkTitle {
-  font-size: var(--font-size-base);
-  font-weight: 600;
-  color: var(--color-text-primary);
-}
-
-.linkDescription {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-muted);
-  margin-top: 2px;
-}
-
-.companyGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-5);
-}
-
+/* Label/value pair used across settings and the detail pages. */
 .metaLabel {
-  font-size: var(--font-size-xs);
+  font-size: 10.5px;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
-  color: var(--color-text-muted);
+  letter-spacing: 0.09em;
+  color: var(--ai-faint);
+  margin-top: var(--space-4);
   margin-bottom: 4px;
 }
 
 .metaValue {
   font-size: var(--font-size-base);
-  color: var(--color-text-primary);
+  color: var(--ai-text);
+  overflow-wrap: anywhere;
+}
+
+.helperText {
+  margin-top: 6px;
+  font-size: var(--font-size-xs);
+  line-height: 1.55;
+  color: var(--ai-muted);
+}
+
+/* Save confirmations and inline errors both land here -- kept quiet so a
+   successful save doesn't shout, and legible in both themes. */
+.statusText {
+  margin-top: var(--space-3);
+  padding: 8px 11px;
+  border-radius: var(--ai-r-sm);
+  border: 1px solid var(--ai-line);
+  background: var(--ai-inset);
+  font-size: var(--font-size-xs);
+  color: var(--ai-text-2);
+}
+
+.actionRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+.subSection {
+  margin-top: var(--space-5);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--ai-hairline);
+}
+
+.subTitle {
+  font-family: var(--font-display);
+  font-size: var(--font-size-base);
+  font-weight: 650;
+  color: var(--ai-text);
+}
+
+/* Two credentials side by side on desktop, stacked on narrow screens. */
+.fieldPair {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.toggleRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: var(--space-4) 0;
+  font-size: var(--font-size-sm);
+  color: var(--ai-text);
+  cursor: pointer;
+}
+
+/* Size and appearance come from the shared checkbox rule in globals.css --
+   this only stops the generic .control input style (meant for text fields)
+   from stretching the box across the row. */
+.checkbox {
+  width: 17px;
+  flex-shrink: 0;
 }
 
 .backLink {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
+  gap: 6px;
+  height: 28px;
+  padding: 0 12px;
   margin-bottom: var(--space-4);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--ai-line);
+  background: var(--ai-inset);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--ai-text-2);
+  transition: border-color var(--transition-fast), background-color var(--transition-fast), color var(--transition-fast);
 }
 
-@media (max-width: 720px) {
-  .grid,
-  .companyGrid {
-    grid-template-columns: 1fr;
-  }
-}
-
+.backLink:hover { border-color: var(--ai-line-strong); background: var(--ai-inset-strong); color: var(--ai-text); }

@@ -5,6 +5,7 @@ import { collaborationApi } from "@/lib/api-client";
 import { useTranslation } from "@/lib/i18n";
 import type { AttachmentPublic } from "@/lib/types";
 import styles from "./MessageRow.module.css";
+import { PaperclipIcon } from "@/components/layout/icons";
 
 export function AttachmentView({ attachment }: { attachment: AttachmentPublic }) {
   const { t } = useTranslation();
@@ -42,7 +43,7 @@ export function AttachmentView({ attachment }: { attachment: AttachmentPublic })
 
   return (
     <a href={url ?? undefined} className={styles.attachmentFile} target="_blank" rel="noreferrer">
-      📎 {attachment.file_name}
+      <PaperclipIcon width={13} height={13} /> {attachment.file_name}
       {!url ? ` (${t("common.loading")})` : ""}
     </a>
   );

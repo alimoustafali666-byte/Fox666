@@ -40,9 +40,10 @@
 }
 
 .bubble {
-  background: var(--color-surface-subtle);
-  border-radius: var(--radius-lg);
-  padding: 10px 14px;
+  background: var(--ai-inset-strong);
+  border: 1px solid var(--ai-line);
+  border-radius: var(--ai-r-md);
+  padding: 9px 13px;
   font-size: var(--font-size-sm);
   color: var(--color-text-primary);
   white-space: pre-wrap;
@@ -51,6 +52,7 @@
 
 .bubbleOwn {
   background: var(--color-primary-subtle);
+  border-color: var(--color-primary-border);
 }
 
 .bubbleDeleted {
@@ -107,8 +109,10 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-full);
   padding: 1px 8px;
-  background: var(--color-surface);
+  background: var(--control-bg);
+  color: var(--ai-text-2);
   cursor: pointer;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
 }
 
 .reactionChipMine {
@@ -186,3 +190,11 @@
   background: var(--color-surface-subtle);
 }
 
+
+/* User-generated strings (names, titles, previews) can be in either script.
+   `plaintext` resolves each one's direction from its own first strong
+   character, so an English title inside the Arabic RTL layout still
+   truncates at its own end instead of losing its first characters. */
+.replyPreview {
+  unicode-bidi: plaintext;
+}

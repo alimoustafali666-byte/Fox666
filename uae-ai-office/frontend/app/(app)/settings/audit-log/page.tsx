@@ -1,17 +1,33 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ApiError, auditApi, tenancyApi } from "@/lib/api-client";
 import { errorMessage } from "@/lib/auth-context";
 import { useTranslation, formatDateTime } from "@/lib/i18n";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { Card } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
+import { Button, buttonClassName } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Field";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { LoadingBlock } from "@/components/ui/Spinner";
+import {
+  Disclosure,
+  PointList,
+  SkeletonRows,
+  WorkspaceColumn,
+  WorkspaceHero,
+  WorkspaceNote,
+  WorkspacePage,
+  WorkspacePanel,
+  WorkspaceSplit,
+  ZeroState,
+} from "@/components/ui/Workspace";
+import {
+  AuditIcon,
+  DocumentsIcon,
+  ReportsIcon,
+  ShieldIcon,
+  TasksIcon,
+  TeamIcon,
+} from "@/components/layout/icons";
 import type { AuditLogEntry, CompanyMemberPublic } from "@/lib/types";
 import tableStyles from "@/components/ui/Table.module.css";
 import toolbarStyles from "@/components/ui/Toolbar.module.css";
@@ -30,6 +46,8 @@ export default function AuditLogPage() {
   const [forbidden, setForbidden] = useState(false);
   const [actionFilter, setActionFilter] = useState("");
   const [resourceTypeFilter, setResourceTypeFilter] = useState("");
+
+  const filtered = actionFilter.trim() !== "" || resourceTypeFilter.trim() !== "";
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -68,6 +86,14 @@ export default function AuditLogPage() {
       .catch(() => setMembers([]));
   }, []);
 
+  // Counted from the entries actually returned for the current filters --
+  // these describe the page in view, never the whole log.
+  const distinctActions = useMemo(() => new Set(entries.map((e) => e.action)).size, [entries]);
+  const distinctActors = useMemo(
+    () => new Set(entries.map((e) => e.actor_user_id ?? "system")).size,
+    [entries]
+  );
+
   async function loadMore() {
     if (!nextCursor) return;
     setLoadingMore(true);
@@ -93,48 +119,129 @@ export default function AuditLogPage() {
     return member?.full_name || member?.email || actorUserId;
   }
 
+  if (forbidden) {
+    return (
+      <WorkspacePage module="settings">
+        <Link href="/settings" className={settingsStyles.backLink}>
+          {backArrow} {t("settings.auditLog.backToSettings")}
+        </Link>
+        <WorkspaceHero
+          accent="violet"
+          badge={t("workspace.audit.badge")}
+          icon={<AuditIcon />}
+          title={t("settings.auditLog.pageTitle")}
+          description={t("workspace.audit.description")}
+        />
+        <WorkspacePanel accent="amber" icon={<ShieldIcon />} title={t("settings.auditLog.forbiddenTitle")}>
+          <ZeroState
+            accent="amber"
+            icon={<ShieldIcon />}
+            title={t("settings.auditLog.forbiddenTitle")}
+            text={t("settings.auditLog.forbiddenDescription")}
+            actions={
+              <Link href="/settings" className={buttonClassName("secondary", "sm")}>
+                {t("settings.auditLog.backToSettings")}
+              </Link>
+            }
+          />
+        </WorkspacePanel>
+      </WorkspacePage>
+    );
+  }
+
   return (
-    <div>
+    <WorkspacePage module="settings">
       <Link href="/settings" className={settingsStyles.backLink}>
         {backArrow} {t("settings.auditLog.backToSettings")}
       </Link>
 
-      <PageHeader title={t("settings.auditLog.pageTitle")} description={t("settings.auditLog.pageDescription")} />
+      {error ? <ErrorBanner message={error} /> : null}
 
-      {forbidden ? (
-        <Card>
-          <EmptyState title={t("settings.auditLog.forbiddenTitle")} description={t("settings.auditLog.forbiddenDescription")} />
-        </Card>
-      ) : (
-        <>
-          {error ? (
-            <div style={{ marginBottom: "var(--space-4)" }}>
-              <ErrorBanner message={error} />
-            </div>
-          ) : null}
+      <WorkspaceHero
+        accent="amber"
+        badge={t("workspace.audit.badge")}
+        icon={<AuditIcon />}
+        title={t("settings.auditLog.pageTitle")}
+        description={t("workspace.audit.description")}
+        metrics={[
+          {
+            label: t("workspace.audit.metrics.entriesLabel"),
+            value: loading ? "—" : entries.length,
+            hint: t("workspace.audit.metrics.entriesHint"),
+            icon: <AuditIcon />,
+          },
+          {
+            label: t("workspace.audit.metrics.actionsLabel"),
+            value: loading ? "—" : distinctActions,
+            hint: t("workspace.audit.metrics.actionsHint"),
+            icon: <TasksIcon />,
+          },
+          {
+            label: t("workspace.audit.metrics.actorsLabel"),
+            value: loading ? "—" : distinctActors,
+            hint: t("workspace.audit.metrics.actorsHint"),
+            icon: <TeamIcon />,
+          },
+        ]}
+      />
 
-          <div className={toolbarStyles.toolbar}>
-            <div className={toolbarStyles.field} style={{ width: 220 }}>
-              <Input
-                placeholder={t("settings.auditLog.filterByAction")}
-                value={actionFilter}
-                onChange={(e) => setActionFilter(e.target.value)}
-              />
+      <WorkspaceSplit>
+        <WorkspaceColumn>
+          <WorkspacePanel accent="amber" icon={<AuditIcon />} title={t("settings.auditLog.pageTitle")} tight>
+            <div className={toolbarStyles.toolbar}>
+              <div className={toolbarStyles.field} style={{ width: 220 }}>
+                <Input
+                  placeholder={t("settings.auditLog.filterByAction")}
+                  value={actionFilter}
+                  onChange={(e) => setActionFilter(e.target.value)}
+                />
+              </div>
+              <div className={toolbarStyles.field} style={{ width: 220 }}>
+                <Input
+                  placeholder={t("settings.auditLog.filterByResourceType")}
+                  value={resourceTypeFilter}
+                  onChange={(e) => setResourceTypeFilter(e.target.value)}
+                />
+              </div>
+              {filtered ? (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    setActionFilter("");
+                    setResourceTypeFilter("");
+                  }}
+                >
+                  {t("workspace.audit.clearFilters")}
+                </Button>
+              ) : null}
             </div>
-            <div className={toolbarStyles.field} style={{ width: 220 }}>
-              <Input
-                placeholder={t("settings.auditLog.filterByResourceType")}
-                value={resourceTypeFilter}
-                onChange={(e) => setResourceTypeFilter(e.target.value)}
-              />
-            </div>
-          </div>
 
-          <Card>
             {loading ? (
-              <LoadingBlock label={t("settings.auditLog.loadingLabel")} />
+              <div style={{ padding: "var(--space-3)" }}>
+                <SkeletonRows count={6} />
+              </div>
             ) : entries.length === 0 ? (
-              <EmptyState title={t("settings.auditLog.noMatchingTitle")} description={t("settings.auditLog.noMatchingDescription")} />
+              <ZeroState
+                accent="amber"
+                icon={<AuditIcon />}
+                title={filtered ? t("workspace.audit.emptyFilteredTitle") : t("workspace.audit.emptyTitle")}
+                text={filtered ? t("workspace.audit.emptyFilteredText") : t("workspace.audit.emptyText")}
+                actions={
+                  filtered ? (
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => {
+                        setActionFilter("");
+                        setResourceTypeFilter("");
+                      }}
+                    >
+                      {t("workspace.audit.clearFilters")}
+                    </Button>
+                  ) : undefined
+                }
+              />
             ) : (
               <>
                 <div className={tableStyles.wrap}>
@@ -175,7 +282,9 @@ export default function AuditLogPage() {
                 </div>
                 {nextCursor ? (
                   <div className={tableStyles.footer}>
-                    <span className={tableStyles.muted}>{t("settings.auditLog.showingCount", { count: entries.length })}</span>
+                    <span className={tableStyles.muted}>
+                      {t("settings.auditLog.showingCount", { count: entries.length })}
+                    </span>
                     <Button size="sm" variant="secondary" onClick={loadMore} loading={loadingMore}>
                       {loadingMore ? t("common.loading") : t("common.loadMore")}
                     </Button>
@@ -183,10 +292,35 @@ export default function AuditLogPage() {
                 ) : null}
               </>
             )}
-          </Card>
-        </>
-      )}
-    </div>
+          </WorkspacePanel>
+        </WorkspaceColumn>
+
+        <WorkspaceColumn>
+          <Disclosure accent="violet" icon={<ShieldIcon />} label={t("workspace.audit.coversTitle")}>
+            <PointList
+              accent="violet"
+              items={[
+                { icon: <TeamIcon />, title: t("workspace.audit.covers.accessTitle"), text: t("workspace.audit.covers.accessDescription") },
+                { icon: <DocumentsIcon />, title: t("workspace.audit.covers.contentTitle"), text: t("workspace.audit.covers.contentDescription") },
+                { icon: <TasksIcon />, title: t("workspace.audit.covers.deliveryTitle"), text: t("workspace.audit.covers.deliveryDescription") },
+                { icon: <ReportsIcon />, title: t("workspace.audit.covers.exportTitle"), text: t("workspace.audit.covers.exportDescription") },
+              ]}
+            />
+          </Disclosure>
+
+          <WorkspacePanel accent="green" icon={<ReportsIcon />} title={t("nav.reports")} tight>
+            <div style={{ padding: "var(--space-3)" }}>
+              <Link href="/reports" className={buttonClassName("secondary", "sm", true)}>
+                {t("nav.reports")}
+              </Link>
+            </div>
+          </WorkspacePanel>
+
+          <WorkspaceNote accent="amber" icon={<ShieldIcon />}>
+            {t("workspace.audit.note")}
+          </WorkspaceNote>
+        </WorkspaceColumn>
+      </WorkspaceSplit>
+    </WorkspacePage>
   );
 }
-

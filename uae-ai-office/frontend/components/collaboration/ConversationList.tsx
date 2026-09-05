@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCollaboration } from "./CollaborationContext";
 import { useTranslation, formatDate, type TranslationKey } from "@/lib/i18n";
 import { buttonClassName } from "@/components/ui/Button";
+import { BellIcon, ChevronRightIcon, MessagesIcon, SearchIcon } from "@/components/layout/icons";
 import { Spinner } from "@/components/ui/Spinner";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import clsx from "@/components/ui/clsx";
@@ -34,11 +35,26 @@ export function ConversationList() {
   const params = useParams<{ conversationId?: string }>();
   const { t, locale } = useTranslation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [filter, setFilter] = useState("");
+
+  // Narrows the threads already loaded into the rail. Purely client-side, so
+  // typing never issues a request and never changes what the rail is allowed
+  // to show.
+  const visible = useMemo(() => {
+    const needle = filter.trim().toLowerCase();
+    if (!needle) return conversations;
+    return conversations.filter((conversation) =>
+      conversationTitle(conversation, directPeerNames, t).toLowerCase().includes(needle)
+    );
+  }, [conversations, directPeerNames, filter, t]);
 
   return (
     <aside className={styles.sidebar}>
       <div className={styles.sidebarHeader}>
-        <div className={styles.sidebarTitle}>{t("messages.sidebarTitle")}</div>
+        <div className={styles.sidebarTitle}>
+          {t("messages.sidebarTitle")}
+          {conversations.length > 0 ? <span className={styles.sidebarCount}>{conversations.length}</span> : null}
+        </div>
         <div className={styles.newMenu}>
           <button
             type="button"
@@ -66,8 +82,22 @@ export function ConversationList() {
       </div>
 
       <Link href="/messages/notifications" className={styles.notificationsLink}>
-        {t("messages.notificationsLink")}
+        <BellIcon />
+        <span className={styles.notificationsLabel}>{t("messages.notificationsLink")}</span>
+        <ChevronRightIcon />
       </Link>
+
+      {conversations.length > 0 ? (
+        <div className={styles.railSearch}>
+          <SearchIcon />
+          <input
+            value={filter}
+            onChange={(event) => setFilter(event.target.value)}
+            placeholder={t("messages.filterPlaceholder")}
+            aria-label={t("messages.filterPlaceholder")}
+          />
+        </div>
+      ) : null}
       {error ? <div style={{ padding: "0 var(--space-3) var(--space-3)" }}><ErrorBanner message={error} /><button type="button" className={buttonClassName("ghost", "sm")} onClick={() => void refresh()}>{t("common.loadMore")}</button></div> : null}
 
       <div className={styles.list}>
@@ -76,11 +106,17 @@ export function ConversationList() {
             <Spinner size="sm" />
           </div>
         ) : conversations.length === 0 ? (
-          <div style={{ padding: 16, fontSize: "var(--font-size-sm)", color: "var(--color-text-muted)" }}>
+          <div className={styles.railEmpty}>
+            <span className={styles.railEmptyIcon} aria-hidden="true"><MessagesIcon /></span>
             {t("messages.noConversations")}
           </div>
+        ) : visible.length === 0 ? (
+          <div className={styles.railEmpty}>
+            <span className={styles.railEmptyIcon} aria-hidden="true"><SearchIcon /></span>
+            {t("messages.filterEmpty")}
+          </div>
         ) : (
-          conversations.map((conversation) => {
+          visible.map((conversation) => {
             const active = params.conversationId === conversation.id;
             const title = conversationTitle(conversation, directPeerNames, t);
             return (

@@ -5,7 +5,8 @@ import { useAuth } from "@/lib/auth-context";
 import { ApiError, tenancyApi } from "@/lib/api-client";
 import { errorMessage } from "@/lib/auth-context";
 import { useTranslation } from "@/lib/i18n";
-import { Card, CardBody, CardHeader } from "@/components/ui/Card";
+import { WorkspacePanel } from "@/components/ui/Workspace";
+import { SettingsIcon } from "@/components/layout/icons";
 import { Button } from "@/components/ui/Button";
 import { FieldWrapper, Input } from "@/components/ui/Field";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
@@ -91,18 +92,20 @@ export function CompanyBrandingCard() {
   }
 
   return (
-    <Card>
-      <CardHeader
-        title={t("settings.company.title")}
-        actions={
-          canManage && !editing ? (
-            <Button size="sm" variant="secondary" onClick={startEditing}>
-              {t("common.edit")}
-            </Button>
-          ) : undefined
-        }
-      />
-      <CardBody>
+    <WorkspacePanel
+      accent="violet"
+      icon={<SettingsIcon />}
+      title={t("settings.company.title")}
+      subtitle={t("workspace.settings.groups.companySubtitle")}
+      action={
+        canManage && !editing ? (
+          <Button size="sm" variant="secondary" onClick={startEditing}>
+            {t("common.edit")}
+          </Button>
+        ) : undefined
+      }
+    >
+      <>
         {error ? (
           <div style={{ marginBottom: "var(--space-4)" }}>
             <ErrorBanner message={error} />
@@ -178,8 +181,8 @@ export function CompanyBrandingCard() {
             </div>
           </div>
         )}
-      </CardBody>
-    </Card>
+      </>
+    </WorkspacePanel>
   );
 }
 

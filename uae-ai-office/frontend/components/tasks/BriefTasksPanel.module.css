@@ -9,24 +9,41 @@
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
-  border-radius: var(--radius-md);
+  border-radius: var(--ai-r-sm);
   transition: background-color var(--transition-fast);
 }
 
 .row:hover {
-  background: var(--color-surface-subtle);
+  background: var(--ai-inset);
   text-decoration: none;
 }
 
+/* A leading rail carries the semantic colour of each attention bucket, so the
+   three rows read as urgency rather than as three identical links. */
+.row::before {
+  content: "";
+  width: 3px;
+  align-self: stretch;
+  flex-shrink: 0;
+  border-radius: 2px;
+  background: var(--row-accent, var(--ai-line-strong));
+}
+
+.row[data-key="overdue"] { --row-accent: #ff5470; }
+.row[data-key="dueToday"] { --row-accent: #ffa43d; }
+.row[data-key="blocked"] { --row-accent: #8b6bff; }
+
 .count {
+  font-family: var(--font-display);
   font-size: var(--font-size-lg);
   font-weight: 700;
-  color: var(--color-text-primary);
+  color: var(--ai-text-strong);
   min-width: 24px;
+  font-variant-numeric: tabular-nums;
 }
 
 .label {
   font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
+  color: var(--ai-text-2);
 }
 

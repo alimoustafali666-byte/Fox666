@@ -1,77 +1,104 @@
 .backLink {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
+  gap: 6px;
+  height: 28px;
+  padding: 0 12px;
   margin-bottom: var(--space-4);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--ai-line);
+  background: var(--ai-inset);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--ai-text-2);
+  transition: border-color var(--transition-fast), background-color var(--transition-fast), color var(--transition-fast);
 }
+
+.backLink:hover { border-color: var(--ai-line-strong); background: var(--ai-inset-strong); color: var(--ai-text); }
 
 .header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: var(--space-4);
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--space-5);
+  padding-inline-start: 14px;
+  position: relative;
+}
+
+/* Same leading accent rail as the shared PageHeader, so a task detail reads
+   as the same family as every list page. */
+.header::before {
+  content: "";
+  position: absolute;
+  inset-block: 2px;
+  inset-inline-start: 0;
+  width: 3px;
+  border-radius: var(--radius-full);
+  background: var(--ai-rail);
 }
 
 .title {
-  font-size: var(--font-size-xl);
-  font-weight: 700;
   margin-bottom: var(--space-2);
+  font-family: var(--font-display);
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--ai-text-strong);
+  overflow-wrap: anywhere;
 }
 
 .badgeRow {
   display: flex;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 7px;
 }
 
 .layout {
   display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: var(--space-5);
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: var(--space-4);
   align-items: start;
 }
 
-.main {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-5);
-  min-width: 0;
-}
-
+.main,
 .sidebar {
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
+  gap: var(--space-4);
   min-width: 0;
 }
 
 .description {
   font-size: var(--font-size-sm);
-  color: var(--color-text-primary);
+  line-height: 1.65;
+  color: var(--ai-text);
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .muted {
-  color: var(--color-text-muted);
   font-size: var(--font-size-sm);
+  color: var(--ai-muted);
 }
 
 .metaList {
   display: grid;
-  grid-template-columns: auto 1fr;
-  gap: var(--space-3) var(--space-4);
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px var(--space-4);
   font-size: var(--font-size-sm);
 }
 
 .metaList dt {
-  color: var(--color-text-muted);
+  color: var(--ai-muted);
   font-weight: 600;
 }
 
 .metaList dd {
-  color: var(--color-text-primary);
+  color: var(--ai-text);
+  overflow-wrap: anywhere;
 }
 
 .commentList {
@@ -83,19 +110,27 @@
 
 .comment {
   padding-bottom: var(--space-3);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--ai-hairline);
 }
+
+.comment:last-child { border-bottom: none; padding-bottom: 0; }
 
 .commentMeta {
   display: flex;
   justify-content: space-between;
-  font-size: var(--font-size-xs);
+  flex-wrap: wrap;
+  gap: var(--space-2);
   margin-bottom: 4px;
+  font-size: 11px;
+  color: var(--ai-muted);
 }
 
 .commentBody {
   font-size: var(--font-size-sm);
+  line-height: 1.6;
+  color: var(--ai-text);
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .commentForm {
@@ -112,20 +147,23 @@
 
 .activityItem {
   padding-bottom: var(--space-2);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--ai-hairline);
 }
 
-.activityItem:last-child {
-  border-bottom: none;
-}
+.activityItem:last-child { border-bottom: none; padding-bottom: 0; }
 
 .activityLine {
   font-size: var(--font-size-sm);
+  line-height: 1.55;
+  color: var(--ai-text-2);
 }
 
-@media (max-width: 900px) {
-  .layout {
-    grid-template-columns: 1fr;
-  }
+@media (max-width: 1000px) {
+  .layout { grid-template-columns: 1fr; }
 }
 
+@media (max-width: 640px) {
+  .title { font-size: var(--font-size-xl); }
+  .metaList { grid-template-columns: 1fr; gap: 4px; }
+  .metaList dd { margin-bottom: 8px; }
+}

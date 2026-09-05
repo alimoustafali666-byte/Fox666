@@ -1,22 +1,46 @@
+/* Page header == a restrained echo of the dashboard's greeting band: display
+   type, a leading accent rail, and the actions parked opposite. It is the
+   first thing on every non-dashboard page, so it carries the family
+   resemblance that makes the modules read as one product. */
+
 .header {
+  position: relative;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-4);
-  margin-bottom: var(--space-6);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-5);
+  padding-inline-start: 14px;
+}
+
+/* Leading rail -- the cyan-to-violet gradient the master uses on the sidebar
+   active item and panel accents. Logical inset so it flips under RTL. */
+.header::before {
+  content: "";
+  position: absolute;
+  inset-block: 2px;
+  inset-inline-start: 0;
+  width: 3px;
+  border-radius: var(--radius-full);
+  background: var(--ai-rail);
 }
 
 .title {
-  font-size: var(--font-size-xl);
+  font-family: var(--font-display);
+  font-size: var(--font-size-2xl);
   font-weight: 700;
-  color: var(--color-text-primary);
-  letter-spacing: 0;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--ai-text-strong);
 }
 
 .description {
-  margin-top: 4px;
+  margin-top: 5px;
   font-size: var(--font-size-sm);
-  color: var(--color-text-muted);
+  line-height: 1.5;
+  color: var(--ai-muted);
+  max-width: 70ch;
 }
 
 .actions {
@@ -24,5 +48,11 @@
   align-items: center;
   gap: var(--space-2);
   flex-shrink: 0;
+  flex-wrap: wrap;
 }
 
+@media (max-width: 640px) {
+  .header { margin-bottom: var(--space-4); }
+  .title { font-size: var(--font-size-xl); }
+  .actions { width: 100%; }
+}

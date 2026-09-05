@@ -7,11 +7,29 @@ import { useAuth } from "@/lib/auth-context";
 import { errorMessage } from "@/lib/auth-context";
 import { documentsApi } from "@/lib/api-client";
 import { useTranslation, formatDateTime } from "@/lib/i18n";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { Card, CardBody } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
+import { Button, buttonClassName } from "@/components/ui/Button";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
-import { LoadingBlock } from "@/components/ui/Spinner";
+import {
+  InfoList,
+  InfoRow,
+  SkeletonRows,
+  WorkspaceColumn,
+  WorkspaceHero,
+  WorkspaceNote,
+  WorkspacePage,
+  WorkspacePanel,
+  WorkspaceSplit,
+} from "@/components/ui/Workspace";
+import {
+  AskIcon,
+  BoltIcon,
+  ClockIcon,
+  DocumentsIcon,
+  GaugeIcon,
+  ProjectsIcon,
+  ReportsIcon,
+  ShieldIcon,
+} from "@/components/layout/icons";
 import { LifecycleBadge } from "@/components/documents/LifecycleBadge";
 import { LifecycleStepper } from "@/components/documents/LifecycleStepper";
 import { DOCUMENT_TYPE_KEYS, formatFileSize, getLifecycleInfo } from "@/components/documents/lifecycle";
@@ -126,118 +144,201 @@ export default function DocumentDetailPage() {
     }
   }
 
-  if (loading) return <LoadingBlock label={t("documents.loadingList")} />;
+  if (loading) {
+    return (
+      <WorkspacePage module="documents">
+        <Link href="/documents" className={styles.backLink}>
+          {backArrow} {t("documents.detail.backLink")}
+        </Link>
+        <WorkspacePanel accent="cyan" icon={<DocumentsIcon />} title={t("documents.loadingList")}>
+          <SkeletonRows count={6} />
+        </WorkspacePanel>
+      </WorkspacePage>
+    );
+  }
 
   if (!doc) {
     return (
-      <div>
+      <WorkspacePage module="documents">
         <Link href="/documents" className={styles.backLink}>
           {backArrow} {t("documents.detail.backLink")}
         </Link>
         <ErrorBanner message={error ?? t("documents.detail.notFound")} />
-      </div>
+      </WorkspacePage>
     );
   }
 
   const info = getLifecycleInfo(doc);
 
   return (
-    <div>
+    <WorkspacePage module="documents">
       <Link href="/documents" className={styles.backLink}>
         {backArrow} {t("documents.detail.backLink")}
       </Link>
 
-      <PageHeader
+      {error ? <ErrorBanner message={error} /> : null}
+      {info.errorMessage ? <ErrorBanner message={info.errorMessage} /> : null}
+
+      <WorkspaceHero
+        accent="cyan"
+        badge={t("workspace.documentDetail.badge")}
+        icon={<DocumentsIcon />}
         title={doc.file_name}
-        description={`${t(DOCUMENT_TYPE_KEYS[doc.document_type])} · ${formatFileSize(doc.file_size_bytes)}`}
-        actions={<LifecycleBadge document={doc} />}
-      />
-
-      {error ? (
-        <div style={{ marginBottom: "var(--space-4)" }}>
-          <ErrorBanner message={error} />
-        </div>
-      ) : null}
-
-      {info.errorMessage ? (
-        <div style={{ marginBottom: "var(--space-4)" }}>
-          <ErrorBanner message={info.errorMessage} />
-        </div>
-      ) : null}
-
-      <div style={{ marginBottom: "var(--space-4)" }}>
-        <Card>
-          <CardBody>
-            <div className={styles.stepperLabel}>{t("documents.detail.lifecycleTitle")}</div>
-            <LifecycleStepper document={doc} />
-            <div className={styles.stepperNote}>{t("documents.detail.manualStepsNote")}</div>
-          </CardBody>
-        </Card>
-      </div>
-
-      {previewUrl ? (
-        <div style={{ marginBottom: "var(--space-4)" }}>
-          <Card>
-            <CardBody>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--space-3)" }}>
-                <strong>{t("documents.detail.preview")}</strong>
-                <Button size="sm" variant="secondary" onClick={() => window.open(previewUrl, "_blank", "noopener,noreferrer")}>
-                  {t("documents.detail.download")}
-                </Button>
-              </div>
-              <iframe
-                title={doc.file_name}
-                src={previewUrl}
-                style={{ width: "100%", minHeight: "720px", border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)" }}
-              />
-            </CardBody>
-          </Card>
-        </div>
-      ) : null}
-
-      <Card>
-        <CardBody>
-          <div className={styles.grid}>
-            <div>
-              <div className={styles.metaLabel}>{t("documents.detail.uploadedLabel")}</div>
-              <div className={styles.metaValue}>{formatDateTime(locale, doc.created_at)}</div>
-            </div>
-            <div>
-              <div className={styles.metaLabel}>{t("documents.detail.lastUpdatedLabel")}</div>
-              <div className={styles.metaValue}>{formatDateTime(locale, doc.updated_at)}</div>
-            </div>
-            <div>
-              <div className={styles.metaLabel}>{t("documents.detail.fileTypeLabel")}</div>
-              <div className={styles.metaValue}>{doc.file_type}</div>
-            </div>
-          </div>
-
-          <div className={styles.actions}>
-            <Button variant="secondary" onClick={handleRefresh} loading={actionBusy === "refresh"}>
-              {actionBusy === "refresh" ? t("common.loading") : t("documents.detail.refresh")}
-            </Button>
-            <Button variant="secondary" onClick={handleDownload} loading={actionBusy === "download"}>
-              {actionBusy === "download" ? t("documents.detail.preparing") : t("documents.detail.download")}
-            </Button>
-            {doc.file_type === "application/pdf" ? <Button variant="secondary" onClick={handlePreview}>{t("documents.detail.preview")}</Button> : null}
+        description={`${t(DOCUMENT_TYPE_KEYS[doc.document_type])} \u00b7 ${formatFileSize(doc.file_size_bytes)}`}
+        actions={
+          <>
+            <LifecycleBadge document={doc} />
             {canManage && info.nextAction ? (
               <Button
-                variant="secondary"
+                size="md"
                 onClick={() => handleLifecycleAction(info.nextAction as "process" | "index")}
                 loading={actionBusy === info.nextAction}
               >
                 {actionBusy === info.nextAction ? t("documents.detail.working") : t(info.nextActionLabelKey!)}
               </Button>
             ) : null}
-            {canDelete ? (
-              <Button variant="danger" onClick={handleDelete} loading={actionBusy === "delete"}>
-                {actionBusy === "delete" ? t("common.deleting") : t("documents.detail.deleteButton")}
+            <Button size="md" variant="secondary" onClick={handleDownload} loading={actionBusy === "download"}>
+              {actionBusy === "download" ? t("documents.detail.preparing") : t("documents.detail.download")}
+            </Button>
+          </>
+        }
+        metrics={[
+          {
+            label: t("workspace.documentDetail.metrics.statusLabel"),
+            value: <span style={{ fontSize: 15 }}>{t(info.labelKey)}</span>,
+            hint: t("workspace.documentDetail.metrics.statusHint"),
+            icon: <GaugeIcon />,
+          },
+          {
+            label: t("workspace.documentDetail.metrics.typeLabel"),
+            value: <span style={{ fontSize: 15 }}>{t(DOCUMENT_TYPE_KEYS[doc.document_type])}</span>,
+            hint: t("workspace.documentDetail.metrics.typeHint"),
+            icon: <DocumentsIcon />,
+          },
+          {
+            label: t("workspace.documentDetail.metrics.sizeLabel"),
+            value: <span style={{ fontSize: 15 }}>{formatFileSize(doc.file_size_bytes)}</span>,
+            hint: t("workspace.documentDetail.metrics.sizeHint"),
+            icon: <BoltIcon />,
+          },
+          {
+            label: t("workspace.documentDetail.metrics.uploadedLabel"),
+            value: <span style={{ fontSize: 15 }}>{formatDateTime(locale, doc.created_at)}</span>,
+            hint: t("workspace.documentDetail.metrics.uploadedHint"),
+            icon: <ClockIcon />,
+          },
+        ]}
+      />
+
+      <WorkspaceSplit>
+        <WorkspaceColumn>
+          <WorkspacePanel accent="cyan" icon={<GaugeIcon />} title={t("documents.detail.lifecycleTitle")}>
+            <LifecycleStepper document={doc} />
+            <div className={styles.stepperNote}>{t("documents.detail.manualStepsNote")}</div>
+          </WorkspacePanel>
+
+          {previewUrl ? (
+            <WorkspacePanel
+              accent="blue"
+              icon={<DocumentsIcon />}
+              title={t("documents.detail.preview")}
+              action={
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => window.open(previewUrl, "_blank", "noopener,noreferrer")}
+                >
+                  {t("documents.detail.download")}
+                </Button>
+              }
+            >
+              <iframe
+                title={doc.file_name}
+                src={previewUrl}
+                style={{
+                  width: "100%",
+                  minHeight: "720px",
+                  border: "1px solid var(--ai-line)",
+                  borderRadius: "var(--ai-r-md)",
+                }}
+              />
+            </WorkspacePanel>
+          ) : null}
+
+          <WorkspacePanel accent="violet" icon={<AskIcon />} title={t("workspace.documentDetail.useTitle")} tight>
+            <InfoList>
+              <InfoRow
+                accent="violet"
+                icon={<AskIcon />}
+                href="/ask"
+                label={t("workspace.documentDetail.use.askTitle")}
+                meta={t("workspace.documentDetail.use.askDescription")}
+              />
+              <InfoRow
+                accent="green"
+                icon={<ReportsIcon />}
+                href="/reports"
+                label={t("workspace.documentDetail.use.reportsTitle")}
+                meta={t("workspace.documentDetail.use.reportsDescription")}
+              />
+              <InfoRow
+                accent="blue"
+                icon={<ProjectsIcon />}
+                href="/projects"
+                label={t("workspace.documentDetail.use.projectTitle")}
+                meta={t("workspace.documentDetail.use.projectDescription")}
+              />
+            </InfoList>
+          </WorkspacePanel>
+        </WorkspaceColumn>
+
+        <WorkspaceColumn>
+          <WorkspacePanel accent="blue" icon={<DocumentsIcon />} title={t("documents.detail.lifecycleTitle")}>
+            <div className={styles.grid}>
+              <div>
+                <div className={styles.metaLabel}>{t("documents.detail.uploadedLabel")}</div>
+                <div className={styles.metaValue}>{formatDateTime(locale, doc.created_at)}</div>
+              </div>
+              <div>
+                <div className={styles.metaLabel}>{t("documents.detail.lastUpdatedLabel")}</div>
+                <div className={styles.metaValue}>{formatDateTime(locale, doc.updated_at)}</div>
+              </div>
+              <div>
+                <div className={styles.metaLabel}>{t("documents.detail.fileTypeLabel")}</div>
+                <div className={styles.metaValue}>{doc.file_type}</div>
+              </div>
+            </div>
+
+            <div className={styles.actions}>
+              <Button variant="secondary" onClick={handleRefresh} loading={actionBusy === "refresh"}>
+                {actionBusy === "refresh" ? t("common.loading") : t("documents.detail.refresh")}
               </Button>
-            ) : null}
-          </div>
-        </CardBody>
-      </Card>
-    </div>
+              {doc.file_type === "application/pdf" ? (
+                <Button variant="secondary" onClick={handlePreview}>
+                  {t("documents.detail.preview")}
+                </Button>
+              ) : null}
+              {canDelete ? (
+                <Button variant="danger" onClick={handleDelete} loading={actionBusy === "delete"}>
+                  {actionBusy === "delete" ? t("common.deleting") : t("documents.detail.deleteButton")}
+                </Button>
+              ) : null}
+            </div>
+          </WorkspacePanel>
+
+          <WorkspacePanel accent="green" icon={<DocumentsIcon />} title={t("nav.documents")} tight>
+            <div style={{ padding: "var(--space-3)" }}>
+              <Link href="/documents" className={buttonClassName("secondary", "sm", true)}>
+                {t("nav.documents")}
+              </Link>
+            </div>
+          </WorkspacePanel>
+
+          <WorkspaceNote accent="cyan" icon={<ShieldIcon />}>
+            {t("workspace.documentDetail.note")}
+          </WorkspaceNote>
+        </WorkspaceColumn>
+      </WorkspaceSplit>
+    </WorkspacePage>
   );
 }
-

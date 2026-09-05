@@ -1,57 +1,46 @@
-.layout {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: var(--space-6);
-  align-items: start;
-}
-
-.sidebar {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-6);
-}
+/* Layout now comes from the shared workspace split (components/ui/Workspace);
+   what remains here is only the brief-history list, which is specific to this
+   route. */
 
 .historyItem {
   display: block;
-  padding: var(--space-3) var(--space-4);
-  border-radius: var(--radius-md);
+  padding: 9px 12px;
+  border-radius: var(--ai-r-sm);
   border: 1px solid transparent;
   transition: background-color var(--transition-fast), border-color var(--transition-fast);
 }
 
-.historyItem:hover {
-  background: var(--color-surface-subtle);
-  text-decoration: none;
-}
+.historyItem:hover { background: var(--ai-inset); border-color: var(--ai-line); }
 
-.historyItemActive {
-  background: var(--color-primary-subtle);
-  border-color: var(--color-primary-border);
-}
-
+.historyItemActive,
 .historyItemActive:hover {
   background: var(--color-primary-subtle);
+  border-color: var(--color-primary-border);
 }
 
 .historyDate {
   font-size: var(--font-size-sm);
   font-weight: 600;
-  color: var(--color-text-primary);
+  color: var(--ai-text);
 }
 
 .historySummary {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-muted);
   margin-top: 2px;
+  font-size: var(--font-size-xs);
+  line-height: 1.5;
+  color: var(--ai-muted);
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-@media (max-width: 900px) {
-  .layout {
-    grid-template-columns: 1fr;
-  }
-}
 
+/* User-generated strings (names, titles, previews) can be in either script.
+   `plaintext` resolves each one's direction from its own first strong
+   character, so an English title inside the Arabic RTL layout still
+   truncates at its own end instead of losing its first characters. */
+.historySummary {
+  unicode-bidi: plaintext;
+}

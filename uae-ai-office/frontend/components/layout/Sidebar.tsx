@@ -32,11 +32,12 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
         <div className={styles.glow} aria-hidden="true" />
         <div className={styles.brand}>
           <BrandMark size={30} />
-          <div>
+          <div className={styles.brandText}>
             <div className={styles.brandName}>{t("common.appName")}</div>
             <div className={styles.brandSub}>{t("common.tagline")}</div>
           </div>
         </div>
+
         <div className={styles.navScroll}>
           {NAV_GROUPS.map((group) => (
             <div className={styles.navGroup} key={group.label}>
@@ -52,14 +53,14 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
                       aria-current={active ? "page" : undefined}
                       className={clsx(styles.navItem, styles[`accent-${item.accent}`], active && styles.navItemActive)}
                     >
-                      <span className={styles.activeBar} />
                       <span className={styles.icon}>
-                        <Icon />
+                        <Icon width={15} height={15} />
                       </span>
                       <span className={styles.navLabel}>{t(item.labelKey)}</span>
                       {item.href === "/messages" && unreadMessages > 0 ? (
                         <span className={styles.navBadge}>{unreadMessages > 99 ? "99+" : unreadMessages}</span>
                       ) : null}
+                      <ChevronRightIcon width={14} height={14} className={styles.chevron} />
                     </Link>
                   );
                 })}
@@ -67,6 +68,7 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
             </div>
           ))}
         </div>
+
         <div className={styles.dock}>
           <Link href="/settings" className={styles.profile}>
             <span className={styles.profileAvatar}>{user ? initials(user.full_name, user.email) : ""}</span>
@@ -74,7 +76,7 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
               <span className={styles.profileName}>{user?.full_name || user?.email}</span>
               {role ? <span className={styles.profileRole}>{t(ROLE_LABEL_KEYS[role])}</span> : null}
             </span>
-            <ChevronRightIcon width={15} height={15} className={styles.profileChevron} />
+            <ChevronRightIcon width={14} height={14} className={styles.profileChevron} />
           </Link>
         </div>
       </aside>

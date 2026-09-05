@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { conversationsApi } from "@/lib/api-client";
 import { errorMessage } from "@/lib/auth-context";
 import { useTranslation } from "@/lib/i18n";
@@ -10,16 +10,19 @@ import { Textarea } from "@/components/ui/Field";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { LoadingBlock } from "@/components/ui/Spinner";
 import { MessageBubble } from "@/components/ask/MessageBubble";
+import { ZeroState } from "@/components/ui/Workspace";
+import { BrainIcon } from "@/components/layout/icons";
 import type { ConversationPublic, MessagePublic } from "@/lib/types";
 import styles from "@/components/ask/Thread.module.css";
 
 export default function ConversationThreadPage() {
   const params = useParams<{ conversationId: string }>();
+  const searchParams = useSearchParams();
   const { t } = useTranslation();
   const [conversation, setConversation] = useState<ConversationPublic | null>(null);
   const [messages, setMessages] = useState<MessagePublic[]>([]);
   const [loading, setLoading] = useState(true);
-  const [question, setQuestion] = useState("");
+  const [question, setQuestion] = useState(() => searchParams.get("q") ?? "");
   const [asking, setAsking] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -97,10 +100,15 @@ export default function ConversationThreadPage() {
     <>
       <div className={styles.threadHeader}>{conversation?.title || t("ask.untitledConversation")}</div>
 
-      <div className={styles.messages} ref={scrollRef}>
+      <div className={styles.messages} ref={scrollRef} data-empty={messages.length === 0 ? "true" : undefined}>
         {error ? <ErrorBanner message={error} /> : null}
         {messages.length === 0 ? (
-          <div style={{ color: "var(--color-text-muted)", fontSize: "var(--font-size-sm)" }}>{t("ask.threadEmpty")}</div>
+          <ZeroState
+            accent="violet"
+            icon={<BrainIcon />}
+            title={t("ask.emptyTitle")}
+            text={t("ask.threadEmpty")}
+          />
         ) : (
           messages.map((message) => <MessageBubble key={message.id} message={message} />)
         )}

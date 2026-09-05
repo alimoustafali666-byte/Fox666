@@ -1,17 +1,34 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCollaboration } from "@/components/collaboration/CollaborationContext";
 import { projectsApi, tenancyApi } from "@/lib/api-client";
 import { errorMessage, useAuth } from "@/lib/auth-context";
 import { useTranslation } from "@/lib/i18n";
-import { Button } from "@/components/ui/Button";
-import { Card, CardBody, CardHeader } from "@/components/ui/Card";
+import { Button, buttonClassName } from "@/components/ui/Button";
 import { FieldWrapper, Input, Select, Textarea } from "@/components/ui/Field";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
-import { LoadingBlock } from "@/components/ui/Spinner";
 import clsx from "@/components/ui/clsx";
+import {
+  Disclosure,
+  SkeletonRows,
+  StepList,
+  WorkspaceColumn,
+  WorkspaceHero,
+  WorkspaceNote,
+  WorkspaceScroller,
+  WorkspacePanel,
+  WorkspaceSplit,
+  ZeroState,
+} from "@/components/ui/Workspace";
+import {
+  MessagesIcon,
+  ShieldIcon,
+  TargetIcon,
+  TeamIcon,
+} from "@/components/layout/icons";
 import type { CompanyMemberPublic, ProjectPublic } from "@/lib/types";
 import styles from "../New.module.css";
 
@@ -21,8 +38,9 @@ export default function NewConversationPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const { createDirect, createGroup, createProjectChannel } = useCollaboration();
+  const canInvite = role === "owner" || role === "admin";
 
   const initialKind = (searchParams.get("type") as ConversationKind | null) || "direct";
   const [kind, setKind] = useState<ConversationKind>(initialKind);
@@ -67,6 +85,7 @@ export default function NewConversationPage() {
   }, []);
 
   const memberOptions = useMemo(() => members, [members]);
+  const noColleagues = !loading && memberOptions.length === 0;
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -104,124 +123,213 @@ export default function NewConversationPage() {
     }
   }
 
-  if (loading) return <LoadingBlock label={t("common.loading")} />;
+  const panelTitle =
+    kind === "direct"
+      ? t("messages.newConversation.directTitle")
+      : kind === "group"
+        ? t("messages.newConversation.groupTitle")
+        : t("messages.newConversation.channelTitle");
 
   return (
-    <div style={{ padding: "var(--space-6)", maxWidth: 560, margin: "0 auto" }}>
-      <div className={styles.tabs}>
-        <button type="button" className={clsx(styles.tab, kind === "direct" && styles.tabActive)} onClick={() => setKind("direct")}>
-          {t("messages.newDirect")}
-        </button>
-        <button type="button" className={clsx(styles.tab, kind === "group" && styles.tabActive)} onClick={() => setKind("group")}>
-          {t("messages.newGroup")}
-        </button>
-        <button
-          type="button"
-          className={clsx(styles.tab, kind === "project_channel" && styles.tabActive)}
-          onClick={() => setKind("project_channel")}
-        >
-          {t("messages.newChannel")}
-        </button>
-      </div>
+    <WorkspaceScroller module="messages">
+      {error ? <ErrorBanner message={error} /> : null}
 
-      <Card>
-        <CardHeader
-          title={
-            kind === "direct"
-              ? t("messages.newConversation.directTitle")
-              : kind === "group"
-                ? t("messages.newConversation.groupTitle")
-                : t("messages.newConversation.channelTitle")
-          }
-        />
-        <CardBody>
-          {error ? (
-            <div style={{ marginBottom: "var(--space-4)" }}>
-              <ErrorBanner message={error} />
+      <WorkspaceHero
+        accent="cyan"
+        badge={t("workspace.newConversation.badge")}
+        icon={<MessagesIcon />}
+        title={panelTitle}
+        description={t("workspace.newConversation.description")}
+        actions={
+          <Link href="/messages" className={buttonClassName("secondary", "md")}>
+            {t("nav.messages")}
+          </Link>
+        }
+      />
+
+      <WorkspaceSplit>
+        <WorkspaceColumn>
+          <WorkspacePanel accent="cyan" icon={<MessagesIcon />} title={panelTitle}>
+            <div className={styles.tabs}>
+              <button
+                type="button"
+                className={clsx(styles.tab, kind === "direct" && styles.tabActive)}
+                onClick={() => setKind("direct")}
+              >
+                {t("messages.newDirect")}
+              </button>
+              <button
+                type="button"
+                className={clsx(styles.tab, kind === "group" && styles.tabActive)}
+                onClick={() => setKind("group")}
+              >
+                {t("messages.newGroup")}
+              </button>
+              <button
+                type="button"
+                className={clsx(styles.tab, kind === "project_channel" && styles.tabActive)}
+                onClick={() => setKind("project_channel")}
+              >
+                {t("messages.newChannel")}
+              </button>
             </div>
-          ) : null}
 
-          <form onSubmit={handleSubmit}>
-            {kind === "direct" ? (
-              <FieldWrapper label={t("messages.newConversation.memberLabel")} htmlFor="member">
-                <Select id="member" value={selectedMemberId} onChange={(e) => setSelectedMemberId(e.target.value)} required>
-                  <option value="" disabled>
-                    {t("messages.newConversation.memberLabel")}
-                  </option>
-                  {memberOptions.map((m) => (
-                    <option key={m.user_id} value={m.user_id}>
-                      {m.full_name || m.email}
-                    </option>
-                  ))}
-                </Select>
-              </FieldWrapper>
+            {loading ? (
+              <SkeletonRows count={5} />
+            ) : noColleagues && kind === "direct" ? (
+              <ZeroState
+                accent="cyan"
+                icon={<TeamIcon />}
+                title={t("workspace.newConversation.noMembersTitle")}
+                text={t("workspace.newConversation.noMembersText")}
+                actions={
+                  canInvite ? (
+                    <Link href="/settings/team" className={buttonClassName("primary", "sm")}>
+                      {t("workspace.newConversation.inviteCta")}
+                    </Link>
+                  ) : undefined
+                }
+              />
             ) : (
-              <>
-                {kind === "project_channel" ? (
-                  <FieldWrapper label={t("messages.newConversation.channelProjectLabel")} htmlFor="project">
-                    <Select id="project" value={selectedProjectId} onChange={(e) => setSelectedProjectId(e.target.value)} required>
+              <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
+                {kind === "direct" ? (
+                  <FieldWrapper label={t("messages.newConversation.memberLabel")} htmlFor="member">
+                    <Select
+                      id="member"
+                      value={selectedMemberId}
+                      onChange={(e) => setSelectedMemberId(e.target.value)}
+                      required
+                    >
                       <option value="" disabled>
-                        {t("messages.newConversation.channelProjectLabel")}
+                        {t("messages.newConversation.memberLabel")}
                       </option>
-                      {projects.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.name}
+                      {memberOptions.map((m) => (
+                        <option key={m.user_id} value={m.user_id}>
+                          {m.full_name || m.email}
                         </option>
                       ))}
                     </Select>
                   </FieldWrapper>
-                ) : null}
+                ) : (
+                  <>
+                    {kind === "project_channel" ? (
+                      <FieldWrapper label={t("messages.newConversation.channelProjectLabel")} htmlFor="project">
+                        <Select
+                          id="project"
+                          value={selectedProjectId}
+                          onChange={(e) => setSelectedProjectId(e.target.value)}
+                          required
+                        >
+                          <option value="" disabled>
+                            {t("messages.newConversation.channelProjectLabel")}
+                          </option>
+                          {projects.map((p) => (
+                            <option key={p.id} value={p.id}>
+                              {p.name}
+                            </option>
+                          ))}
+                        </Select>
+                      </FieldWrapper>
+                    ) : null}
 
-                <FieldWrapper label={t("messages.newConversation.groupNameLabel")} htmlFor="name">
-                  <Input
-                    id="name"
-                    value={groupName}
-                    onChange={(e) => setGroupName(e.target.value)}
-                    placeholder={t("messages.newConversation.groupNamePlaceholder")}
-                    maxLength={200}
-                    required
-                  />
-                </FieldWrapper>
+                    <FieldWrapper label={t("messages.newConversation.groupNameLabel")} htmlFor="name">
+                      <Input
+                        id="name"
+                        value={groupName}
+                        onChange={(e) => setGroupName(e.target.value)}
+                        placeholder={t("messages.newConversation.groupNamePlaceholder")}
+                        maxLength={200}
+                        required
+                      />
+                    </FieldWrapper>
 
-                <FieldWrapper label={t("messages.newConversation.descriptionLabel")} htmlFor="description" optional>
-                  <Textarea
-                    id="description"
-                    value={groupDescription}
-                    onChange={(e) => setGroupDescription(e.target.value)}
-                    rows={2}
-                    maxLength={2000}
-                  />
-                </FieldWrapper>
+                    <FieldWrapper label={t("messages.newConversation.descriptionLabel")} htmlFor="description" optional>
+                      <Textarea
+                        id="description"
+                        value={groupDescription}
+                        onChange={(e) => setGroupDescription(e.target.value)}
+                        rows={3}
+                        maxLength={2000}
+                      />
+                    </FieldWrapper>
 
-                <FieldWrapper label={t("messages.newConversation.membersLabel")} hint={t("messages.newConversation.selectMembersHint")}>
-                  <div className={styles.memberChecklist}>
-                    {memberOptions.map((m) => (
-                      <label key={m.user_id} className={styles.memberCheckboxRow}>
-                        <input
-                          type="checkbox"
-                          checked={selectedMemberIds.has(m.user_id)}
-                          onChange={() => toggleMember(m.user_id)}
+                    <FieldWrapper
+                      label={t("messages.newConversation.membersLabel")}
+                      hint={t("messages.newConversation.selectMembersHint")}
+                    >
+                      {memberOptions.length === 0 ? (
+                        <ZeroState
+                          accent="cyan"
+                          icon={<TeamIcon />}
+                          title={t("workspace.newConversation.noMembersTitle")}
+                          text={t("workspace.newConversation.noMembersText")}
+                          actions={
+                            canInvite ? (
+                              <Link href="/settings/team" className={buttonClassName("primary", "sm")}>
+                                {t("workspace.newConversation.inviteCta")}
+                              </Link>
+                            ) : undefined
+                          }
                         />
-                        {m.full_name || m.email}
-                      </label>
-                    ))}
-                  </div>
-                </FieldWrapper>
-              </>
-            )}
+                      ) : (
+                        <div className={styles.memberChecklist}>
+                          {memberOptions.map((m) => (
+                            <label key={m.user_id} className={styles.memberCheckboxRow}>
+                              <input
+                                type="checkbox"
+                                checked={selectedMemberIds.has(m.user_id)}
+                                onChange={() => toggleMember(m.user_id)}
+                              />
+                              {m.full_name || m.email}
+                            </label>
+                          ))}
+                        </div>
+                      )}
+                    </FieldWrapper>
+                  </>
+                )}
 
-            <div style={{ display: "flex", gap: "var(--space-3)", marginTop: "var(--space-5)" }}>
-              <Button type="submit" loading={submitting}>
-                {submitting ? t("messages.newConversation.creating") : t("messages.newConversation.createButton")}
-              </Button>
-              <Button type="button" variant="secondary" onClick={() => router.push("/messages")}>
-                {t("messages.newConversation.cancelButton")}
-              </Button>
-            </div>
-          </form>
-        </CardBody>
-      </Card>
-    </div>
+                <div style={{ display: "flex", gap: "var(--space-3)" }}>
+                  <Button type="submit" loading={submitting}>
+                    {submitting ? t("messages.newConversation.creating") : t("messages.newConversation.createButton")}
+                  </Button>
+                  <Button type="button" variant="secondary" onClick={() => router.push("/messages")}>
+                    {t("messages.newConversation.cancelButton")}
+                  </Button>
+                </div>
+              </form>
+            )}
+          </WorkspacePanel>
+
+        </WorkspaceColumn>
+
+        <WorkspaceColumn>
+          <Disclosure accent="green" icon={<TargetIcon />} label={t("workspace.newConversation.guidanceTitle")}>
+            <StepList
+              accent="green"
+              steps={[
+                { title: t("workspace.newConversation.guidance.oneTitle"), description: t("workspace.newConversation.guidance.oneDescription") },
+                { title: t("workspace.newConversation.guidance.twoTitle"), description: t("workspace.newConversation.guidance.twoDescription") },
+                { title: t("workspace.newConversation.guidance.threeTitle"), description: t("workspace.newConversation.guidance.threeDescription") },
+              ]}
+            />
+          </Disclosure>
+
+          {canInvite ? (
+            <WorkspacePanel accent="violet" icon={<TeamIcon />} title={t("workspace.newConversation.inviteCta")} tight>
+              <div style={{ padding: "var(--space-3)" }}>
+                <Link href="/settings/team" className={buttonClassName("secondary", "sm", true)}>
+                  {t("workspace.newConversation.inviteCta")}
+                </Link>
+              </div>
+            </WorkspacePanel>
+          ) : null}
+
+          <WorkspaceNote accent="cyan" icon={<ShieldIcon />}>
+            {t("workspace.newConversation.note")}
+          </WorkspaceNote>
+        </WorkspaceColumn>
+      </WorkspaceSplit>
+    </WorkspaceScroller>
   );
 }
-

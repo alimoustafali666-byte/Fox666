@@ -1,9 +1,20 @@
+/* Shared "back to list" pill. CSS Modules can't share a class across files,
+   so the three detail-page modules each carry this identical definition.
+   The arrow glyph itself is flipped in the page (dir-aware), not here. */
 .backLink {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
+  gap: 6px;
+  height: 28px;
+  padding: 0 12px;
   margin-bottom: var(--space-4);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--ai-line);
+  background: var(--ai-inset);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--ai-text-2);
+  transition: border-color var(--transition-fast), background-color var(--transition-fast), color var(--transition-fast);
 }
 
+.backLink:hover { border-color: var(--ai-line-strong); background: var(--ai-inset-strong); color: var(--ai-text); }

@@ -269,3 +269,125 @@ export function ClockIcon(props: SVGProps<SVGSVGElement>) {
     </Base>
   );
 }
+
+export function SunIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Base {...props}>
+      <circle cx="9" cy="9" r="3.4" />
+      <path d="M9 1.9v1.7M9 14.4v1.7M16.1 9h-1.7M3.6 9H1.9M14 4l-1.2 1.2M5.2 12.8 4 14M14 14l-1.2-1.2M5.2 5.2 4 4" />
+    </Base>
+  );
+}
+
+export function MoonIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Base {...props}>
+      <path d="M14.8 10.6A6.2 6.2 0 0 1 7.4 3.2a6.4 6.4 0 1 0 7.4 7.4z" />
+    </Base>
+  );
+}
+
+export function CalendarIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Base {...props}>
+      <rect x="2.6" y="3.6" width="12.8" height="11.8" rx="1.6" />
+      <path d="M2.6 7.2h12.8M6 2.2v2.6M12 2.2v2.6" />
+    </Base>
+  );
+}
+
+export function ChevronDownIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Base {...props} strokeWidth="1.6">
+      <path d="M4.5 7 9 11.5 13.5 7" />
+    </Base>
+  );
+}
+
+export function BrainIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Base {...props} strokeWidth="1.3">
+      <path d="M9 3.4v11.2" />
+      <path d="M9 4.6a2.1 2.1 0 0 0-3.7-1A2 2 0 0 0 3 5.9a2 2 0 0 0-.4 3.3A2.1 2.1 0 0 0 3.6 12a2 2 0 0 0 3 1.8" />
+      <path d="M9 4.6a2.1 2.1 0 0 1 3.7-1A2 2 0 0 1 15 5.9a2 2 0 0 1 .4 3.3 2.1 2.1 0 0 1-1 2.8 2 2 0 0 1-3 1.8" />
+    </Base>
+  );
+}
+
+export function TargetIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Base {...props}>
+      <circle cx="9" cy="9" r="6.4" />
+      <circle cx="9" cy="9" r="3.2" />
+      <circle cx="9" cy="9" r="0.4" fill="currentColor" />
+    </Base>
+  );
+}
+
+export function BoltIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Base {...props}>
+      <path d="M10 2 4 10h4l-1 6 6-8H9z" />
+    </Base>
+  );
+}
+
+export function StarIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Base {...props}>
+      <path d="M9 2.6 11 6.8l4.6.7-3.3 3.2.8 4.6L9 13.1l-4.1 2.2.8-4.6L2.4 7.5l4.6-.7z" />
+    </Base>
+  );
+}
+
+export function GaugeIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Base {...props}>
+      <path d="M2.8 13.2a7 7 0 1 1 12.4 0" />
+      <path d="m9 9.4 3-2.6" />
+      <circle cx="9" cy="10.2" r="1" />
+    </Base>
+  );
+}
+
+export function PhoneIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Base {...props}>
+      <path d="M6.1 2.8 7.5 6 6.2 7.4a8.4 8.4 0 0 0 4.4 4.4L12 10.5l3.2 1.4v2.4c0 .7-.6 1.3-1.3 1.2A12.2 12.2 0 0 1 2.5 4.1c-.1-.7.5-1.3 1.2-1.3z" />
+    </Base>
+  );
+}
+
+export function VideoIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Base {...props}>
+      <rect x="1.8" y="4.6" width="10" height="8.8" rx="1.8" />
+      <path d="m11.8 9.6 4.4-2.5v3.8l-4.4-2.5z" />
+    </Base>
+  );
+}
+
+export function PaperclipIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Base {...props}>
+      <path d="M13.6 8.4 8.5 13.5a3.2 3.2 0 0 1-4.5-4.5l5.6-5.6a2.1 2.1 0 1 1 3 3l-5.6 5.6a1 1 0 0 1-1.5-1.5l5.1-5.1" />
+    </Base>
+  );
+}
+
+export function MicIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Base {...props}>
+      <rect x="6.6" y="1.9" width="4.8" height="8" rx="2.4" />
+      <path d="M3.9 8.3a5.1 5.1 0 0 0 10.2 0M9 13.4v2.7" />
+    </Base>
+  );
+}
+
+export function StopIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Base {...props}>
+      <rect x="4.4" y="4.4" width="9.2" height="9.2" rx="1.6" fill="currentColor" stroke="none" />
+    </Base>
+  );
+}

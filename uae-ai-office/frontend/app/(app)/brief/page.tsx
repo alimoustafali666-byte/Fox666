@@ -1,18 +1,39 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { ApiError, briefsApi } from "@/lib/api-client";
 import { errorMessage } from "@/lib/auth-context";
 import { useTranslation, formatDate } from "@/lib/i18n";
-import { PageHeader } from "@/components/ui/PageHeader";
-import { Card, CardBody, CardHeader } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
+import { Button, buttonClassName } from "@/components/ui/Button";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { LoadingBlock, Spinner } from "@/components/ui/Spinner";
-import { EmptyState } from "@/components/ui/EmptyState";
 import { BriefContent } from "@/components/brief/BriefContent";
+import { BriefStatsRow } from "@/components/brief/BriefStatsRow";
 import { BriefTasksPanel } from "@/components/tasks/BriefTasksPanel";
+import {
+  BriefIcon,
+  CalendarIcon,
+  ClockIcon,
+  InsightIcon,
+  SettingsIcon,
+  ShieldIcon,
+  TargetIcon,
+} from "@/components/layout/icons";
+import {
+  ChipLink,
+  ChipRow,
+  Disclosure,
+  StepList,
+  WorkspaceColumn,
+  WorkspaceHero,
+  WorkspaceNote,
+  WorkspacePage,
+  WorkspacePanel,
+  WorkspaceSplit,
+  ZeroState,
+} from "@/components/ui/Workspace";
 import clsx from "@/components/ui/clsx";
 import type { DailyBriefPublic, DailyBriefSummary } from "@/lib/types";
 import styles from "./Brief.module.css";
@@ -111,90 +132,165 @@ export default function BriefPage() {
     }
   }
 
+  // Counted off the brief already loaded -- nothing is generated here.
+  const attention = useMemo(() => {
+    if (!brief) return null;
+    return brief.items.filter((item) => item.category === "pending_action" || item.category === "potential_issue").length;
+  }, [brief]);
+
+  const panelTitle =
+    viewDate === "latest"
+      ? brief
+        ? formatLongDate(brief.brief_date)
+        : t("brief.latestBriefFallbackTitle")
+      : formatLongDate(viewDate);
+
   return (
-    <div>
-      <PageHeader
+    <WorkspacePage module="brief">
+      <WorkspaceHero
+        accent="violet"
+        compact
+        badge={t("workspace.brief.badge")}
+        icon={<BriefIcon />}
         title={t("brief.title")}
-        description={t("brief.description")}
+        description={t("workspace.brief.description")}
         actions={
-          canRegenerate ? (
-            <Button onClick={handleRegenerate} loading={regenerating}>
-              {regenerating
-                ? t("brief.generating")
-                : viewDate === "latest" && !brief
-                  ? t("brief.generateButton")
-                  : t("brief.regenerateButton")}
-            </Button>
-          ) : undefined
+          <>
+            {canRegenerate ? (
+              <Button onClick={handleRegenerate} loading={regenerating}>
+                {regenerating
+                  ? t("brief.generating")
+                  : viewDate === "latest" && !brief
+                    ? t("brief.generateButton")
+                    : t("brief.regenerateButton")}
+              </Button>
+            ) : null}
+            <ChipRow>
+              <ChipLink accent="blue" href="/tasks" icon={<TargetIcon />}>
+                {t("tasks.myTasksTitle")}
+              </ChipLink>
+              <ChipLink accent="magenta" href="/settings" icon={<SettingsIcon />}>
+                {t("workspace.brief.scheduleCta")}
+              </ChipLink>
+            </ChipRow>
+          </>
         }
+        metrics={[
+          {
+            label: t("workspace.brief.metrics.latestLabel"),
+            value: loadingBrief ? "—" : brief ? formatDate(locale, brief.brief_date, { month: "short", day: "numeric" }) : t("workspace.brief.metrics.noneValue"),
+            hint: t("workspace.brief.metrics.latestHint"),
+            icon: <CalendarIcon />,
+          },
+          {
+            label: t("workspace.brief.contains.prioritiesTitle"),
+            value: attention === null ? "—" : attention,
+            hint: t("workspace.brief.metrics.prioritiesHint"),
+            icon: <TargetIcon />,
+          },
+          {
+            label: t("workspace.brief.metrics.historyLabel"),
+            value: loadingHistory ? "—" : history.length,
+            hint: t("workspace.brief.metrics.historyHint"),
+            icon: <ClockIcon />,
+          },
+        ]}
       />
 
-      <div className={styles.layout}>
-        <Card>
-          <CardHeader
-            title={
-              viewDate === "latest"
-                ? brief
-                  ? formatLongDate(brief.brief_date)
-                  : t("brief.latestBriefFallbackTitle")
-                : formatLongDate(viewDate)
-            }
-          />
-          <CardBody>
+      <WorkspaceSplit>
+        <WorkspaceColumn>
+          <WorkspacePanel accent="violet" icon={<BriefIcon />} title={panelTitle}>
             {briefError ? <ErrorBanner message={briefError} /> : null}
             {loadingBrief ? (
               <LoadingBlock label={t("brief.loadingBrief")} />
             ) : brief ? (
-              <BriefContent brief={brief} />
+              <>
+                <BriefStatsRow brief={brief} />
+                <BriefContent brief={brief} />
+              </>
             ) : !briefError ? (
-              <EmptyState
-                title={t("brief.noBriefTitle")}
-                description={canRegenerate ? t("brief.noBriefManager") : t("brief.noBriefMember")}
+              <ZeroState
+                accent="violet"
+                icon={<BriefIcon />}
+                title={t("workspace.brief.emptyTitle")}
+                text={canRegenerate ? t("workspace.brief.emptyManagerText") : t("workspace.brief.emptyMemberText")}
+                actions={
+                  canRegenerate ? (
+                    <Button size="sm" onClick={handleRegenerate} loading={regenerating}>
+                      {t("brief.generateButton")}
+                    </Button>
+                  ) : undefined
+                }
               />
             ) : null}
-          </CardBody>
-        </Card>
+          </WorkspacePanel>
+        </WorkspaceColumn>
 
-        <div className={styles.sidebar}>
+        <WorkspaceColumn>
           <BriefTasksPanel />
 
-          <Card>
-            <CardHeader title={t("brief.historyTitle")} subtitle={t("brief.historySubtitle")} />
-            <CardBody tight>
-              {loadingHistory ? (
-                <LoadingBlock label={t("brief.loadingHistory")} />
-              ) : history.length === 0 ? (
-                <div style={{ padding: "var(--space-5)" }}>
-                  <EmptyState title={t("brief.noHistoryTitle")} description={t("brief.noHistoryDescription")} />
-                </div>
-              ) : (
-                <div style={{ padding: "var(--space-2)" }}>
-                  {history.map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => handleSelectDate(item.brief_date)}
-                      className={clsx(styles.historyItem, viewDate === item.brief_date && styles.historyItemActive)}
-                      style={{ width: "100%", textAlign: "start", background: "transparent", cursor: "pointer" }}
-                    >
-                      <div className={styles.historyDate}>{formatLongDate(item.brief_date)}</div>
-                      <div className={styles.historySummary}>{item.summary}</div>
-                    </button>
-                  ))}
-                  {historyCursor ? (
-                    <div style={{ padding: "var(--space-3)", textAlign: "center" }}>
-                      <Button size="sm" variant="ghost" onClick={loadMoreHistory} loading={loadingMoreHistory}>
-                        {loadingMoreHistory ? <Spinner size="sm" /> : t("common.loadMore")}
-                      </Button>
-                    </div>
-                  ) : null}
-                </div>
-              )}
-            </CardBody>
-          </Card>
-        </div>
-      </div>
-    </div>
+          <WorkspacePanel
+            accent="magenta"
+            icon={<ClockIcon />}
+            title={t("brief.historyTitle")}
+            subtitle={t("brief.historySubtitle")}
+            tight
+          >
+            {loadingHistory ? (
+              <LoadingBlock label={t("brief.loadingHistory")} />
+            ) : history.length === 0 ? (
+              <ZeroState
+                accent="magenta"
+                icon={<ClockIcon />}
+                title={t("workspace.brief.historyEmptyTitle")}
+                text={t("workspace.brief.historyEmptyText")}
+              />
+            ) : (
+              <div style={{ padding: "var(--space-2)" }}>
+                {history.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => handleSelectDate(item.brief_date)}
+                    className={clsx(styles.historyItem, viewDate === item.brief_date && styles.historyItemActive)}
+                    style={{ width: "100%", textAlign: "start", background: "transparent", cursor: "pointer" }}
+                  >
+                    <div className={styles.historyDate}>{formatLongDate(item.brief_date)}</div>
+                    <div className={styles.historySummary}>{item.summary}</div>
+                  </button>
+                ))}
+                {historyCursor ? (
+                  <div style={{ padding: "var(--space-3)", textAlign: "center" }}>
+                    <Button size="sm" variant="ghost" onClick={loadMoreHistory} loading={loadingMoreHistory}>
+                      {loadingMoreHistory ? <Spinner size="sm" /> : t("common.loadMore")}
+                    </Button>
+                  </div>
+                ) : null}
+              </div>
+            )}
+          </WorkspacePanel>
+
+          {/* The scheduling entry point is already a chip in the hero, so the
+              panel that repeated it here has been dropped rather than shown
+              twice; the explanation moves in beside the rest. */}
+          <Disclosure accent="violet" icon={<InsightIcon />} label={t("workspace.brief.containsTitle")}>
+            <StepList
+              accent="magenta"
+              steps={[
+                { title: t("workspace.brief.contains.summaryTitle"), description: t("workspace.brief.contains.summaryDescription") },
+                { title: t("workspace.brief.contains.prioritiesTitle"), description: t("workspace.brief.contains.prioritiesDescription") },
+                { title: t("workspace.brief.contains.risksTitle"), description: t("workspace.brief.contains.risksDescription") },
+                { title: t("workspace.brief.contains.activityTitle"), description: t("workspace.brief.contains.activityDescription") },
+                { title: t("workspace.brief.scheduleTitle"), description: t("workspace.brief.scheduleText") },
+              ]}
+            />
+          </Disclosure>
+
+          <WorkspaceNote accent="violet" icon={<ShieldIcon />}>
+            {t("workspace.brief.note")}
+          </WorkspaceNote>
+        </WorkspaceColumn>
+      </WorkspaceSplit>
+    </WorkspacePage>
   );
 }
-

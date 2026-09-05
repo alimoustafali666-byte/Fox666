@@ -247,7 +247,10 @@ export function healthScore(input: {
   if (input.overdueShare !== null) candidates.push({ key: "overdue", value: 100 - input.overdueShare, weight: 0.2 });
   if (input.documentProcessedRate !== null) candidates.push({ key: "documents", value: input.documentProcessedRate, weight: 0.1 });
   if (input.projectDeliveryRate !== null) candidates.push({ key: "projects", value: input.projectDeliveryRate, weight: 0.1 });
-  if (candidates.length === 0) return null;
+  // A single signal -- especially a vacuous one like "0 of 0 tasks overdue"
+  // -- is not a business score. Below two real signals the UI shows its
+  // "building intelligence" state instead of grading an empty workspace.
+  if (candidates.length < 2) return null;
 
   const weight = candidates.reduce((a, factor) => a + factor.weight, 0);
   const score = candidates.reduce((a, factor) => a + factor.value * factor.weight, 0) / weight;

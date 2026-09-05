@@ -1,59 +1,76 @@
+/* Form controls in the master's language: a flat tinted control surface, a
+   hairline border, and a focus ring that is the ONLY glow on the control.
+   (The previous version applied --glow-focus permanently, so every input on
+   every page carried a resting halo.) */
+
 .field {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  min-width: 0;
 }
 
 .label {
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
   font-weight: 600;
-  color: var(--color-text-primary);
+  letter-spacing: 0.02em;
+  color: var(--ai-text-2);
 }
 
 .optional {
   font-weight: 400;
-  color: var(--color-text-muted);
+  color: var(--ai-faint);
 }
 
 .control {
   width: 100%;
-  padding: 9px 12px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border-strong);
-  background: rgba(4, 11, 24, 0.56);
-  background: var(--color-surface-glass);
-  font-size: var(--font-size-base);
-  box-shadow: var(--glow-focus);
+  min-width: 0;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: var(--ai-r-sm);
+  border: 1px solid var(--ai-line);
+  background: var(--control-bg);
+  color: var(--ai-text);
+  font-size: var(--font-size-sm);
+  transition: border-color var(--transition-fast), background-color var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 
-.control::placeholder {
-  color: var(--color-text-muted);
-}
+.control:hover:not(:disabled) { border-color: var(--ai-line-strong); }
+
+.control::placeholder { color: var(--ai-faint); }
 
 .control:focus {
   outline: none;
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px var(--color-primary-subtle), 0 0 20px rgba(57, 214, 232, 0.08);
+  box-shadow: 0 0 0 3px var(--color-primary-subtle);
 }
 
 .control:disabled {
-  background: var(--color-surface-subtle);
-  color: var(--color-text-muted);
+  background: var(--ai-inset);
+  color: var(--ai-muted);
   cursor: not-allowed;
 }
 
+/* Native select needs room for its arrow and can't use a fixed line-height. */
+select.control { padding-inline-end: 28px; cursor: pointer; }
+
 .hint {
   font-size: var(--font-size-xs);
-  color: var(--color-text-muted);
+  color: var(--ai-muted);
 }
 
 .error {
   font-size: var(--font-size-xs);
-  color: var(--color-danger);
+  color: #e0455f;
 }
+
+:root:not([data-theme="light"]) .error { color: #ff8ea3; }
 
 textarea.control {
+  height: auto;
+  min-height: 92px;
+  padding: 9px 12px;
+  line-height: 1.55;
   resize: vertical;
-  min-height: 90px;
 }
-

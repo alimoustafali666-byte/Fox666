@@ -29,9 +29,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid var(--color-border-strong);
+  border: 2px solid var(--ai-line-strong);
   color: transparent;
-  background: var(--color-surface);
+  background: var(--ai-panel-solid);
   flex-shrink: 0;
 }
 
@@ -62,7 +62,7 @@
   font-size: var(--font-size-xs);
   font-weight: 600;
   white-space: nowrap;
-  color: var(--color-text-muted);
+  color: var(--ai-muted);
 }
 
 .label-done,
@@ -79,7 +79,7 @@
   flex: 1;
   margin: 0 6px;
   margin-bottom: 22px;
-  background: var(--color-border);
+  background: var(--ai-line);
 }
 
 .connector-done {
@@ -95,4 +95,7 @@
     display: none;
   }
 }
-
+/* The active dot pulses; honour a reduced-motion preference. */
+@media (prefers-reduced-motion: reduce) {
+  .dot.active { animation: none; }
+}
