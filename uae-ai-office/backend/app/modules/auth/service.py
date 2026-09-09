@@ -27,8 +27,13 @@ from app.modules.auth.exceptions import (
 )
 from app.modules.auth.models import RefreshSession, User
 from app.modules.auth.rate_limit import login_rate_limiter
-from app.modules.auth.schemas import AccessTokenResponse, LoginRequest, SignupRequest
-from app.modules.auth.schemas import PasswordChangeRequest, ProfileUpdateRequest
+from app.modules.auth.schemas import (
+    AccessTokenResponse,
+    LoginRequest,
+    PasswordChangeRequest,
+    ProfileUpdateRequest,
+    SignupRequest,
+)
 
 
 @dataclass

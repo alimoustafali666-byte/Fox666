@@ -282,7 +282,10 @@
 
 .kpiCaption {
   margin-top: 2px;
-  font-size: 9px;
+  /* 10px, matching every other uppercase micro-label in the product
+     (Workspace chips, sidebar badges, header meta). At 9px this was the
+     single smallest text in the app and the only one below that floor. */
+  font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.11em;
   text-transform: uppercase;

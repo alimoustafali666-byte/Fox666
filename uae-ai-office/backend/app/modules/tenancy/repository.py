@@ -1,5 +1,4 @@
 import uuid
-
 from datetime import date, datetime, time
 
 from sqlalchemy import func, select, update

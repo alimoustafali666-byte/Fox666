@@ -40,21 +40,26 @@ clear_stale_pid() {
   fi
 }
 
+# A cold start on a small codespace (2 vCPUs, slow workspace filesystem) can
+# take well over a minute just to page in the backend's dependency tree, so the
+# readiness budget is generous by default and can be raised further.
+READY_TIMEOUT_SECONDS="${READY_TIMEOUT_SECONDS:-180}"
+
 wait_for_http() {
-  local name="$1" url="$2" pid_file="$3" attempts=0 status
-  while (( attempts < 60 )); do
+  local name="$1" url="$2" pid_file="$3" deadline status
+  deadline=$((SECONDS + READY_TIMEOUT_SECONDS))
+  while (( SECONDS < deadline )); do
     if ! pid_is_ours "$pid_file" ""; then
       error "$name process exited before becoming ready. See $RUN_DIR."
     fi
-    status="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' "$url" || true)"
+    status="$(curl --silent --output /dev/null --write-out '%{http_code}' "$url" || true)"
     if [[ "$status" == "200" ]]; then
       printf 'SUCCESS: %s is ready (HTTP %s)\n' "$name" "$status"
       return 0
     fi
-    attempts=$((attempts + 1))
     sleep 1
   done
-  error "$name did not become ready at $url. See $RUN_DIR."
+  error "$name did not become ready at $url within ${READY_TIMEOUT_SECONDS}s. See $RUN_DIR."
 }
 
 frontend_origin="http://localhost:3000,http://127.0.0.1:3000"
@@ -90,6 +95,10 @@ else
   printf 'PostgreSQL: using configured managed database\n'
 fi
 
+# Let the backend finish binding before the frontend build starts competing
+# for the same cores; two cold starts at once is what starves the backend.
+wait_for_http "backend" "http://127.0.0.1:8000/v1/health" "$BACKEND_PID"
+
 if pid_is_ours "$FRONTEND_PID" "npm"; then
   printf 'Frontend already running (PID %s)\n' "$(<"$FRONTEND_PID")"
 else
@@ -102,6 +111,5 @@ else
   printf 'Started frontend (PID %s)\n' "$!"
 fi
 
-wait_for_http "backend" "http://127.0.0.1:8000/v1/health" "$BACKEND_PID"
 wait_for_http "frontend" "http://127.0.0.1:3000/" "$FRONTEND_PID"
 printf 'SUCCESS: UAE AI Office is running\n'

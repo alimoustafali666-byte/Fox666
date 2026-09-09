@@ -59,5 +59,5 @@ async def scheduler_loop(stop_event: asyncio.Event) -> None:
         await asyncio.to_thread(run_due_schedules)
         try:
             await asyncio.wait_for(stop_event.wait(), timeout=_POLL_SECONDS)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             pass

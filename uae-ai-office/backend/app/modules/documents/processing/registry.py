@@ -5,9 +5,9 @@ orchestration itself never references a specific parser class.
 
 from app.modules.documents.processing.base import DocumentParser
 from app.modules.documents.processing.docx_parser import DocxParser
+from app.modules.documents.processing.ocr_parser import OcrParser
 from app.modules.documents.processing.pdf_parser import PdfParser
 from app.modules.documents.processing.xlsx_parser import XlsxParser
-from app.modules.documents.processing.ocr_parser import OcrParser
 
 _PARSERS: tuple[DocumentParser, ...] = (PdfParser(), OcrParser(), DocxParser(), XlsxParser())
 

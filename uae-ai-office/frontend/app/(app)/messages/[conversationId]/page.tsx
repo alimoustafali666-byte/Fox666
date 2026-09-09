@@ -6,8 +6,10 @@ import { useCollaboration } from "@/components/collaboration/CollaborationContex
 import { AiPanel } from "@/components/collaboration/AiPanel";
 import { CallPanel } from "@/components/collaboration/CallPanel";
 import { Composer } from "@/components/collaboration/Composer";
+import { MediaPanel } from "@/components/collaboration/MediaPanel";
 import { MembersPanel } from "@/components/collaboration/MembersPanel";
 import { MessageRow } from "@/components/collaboration/MessageRow";
+import { SearchPanel } from "@/components/collaboration/SearchPanel";
 import { useCollaborationCall } from "@/components/collaboration/useCollaborationCall";
 import { collaborationApi, ApiError } from "@/lib/api-client";
 import { errorMessage, useAuth } from "@/lib/auth-context";
@@ -16,7 +18,7 @@ import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { LoadingBlock } from "@/components/ui/Spinner";
 import { Button } from "@/components/ui/Button";
 import { ZeroState } from "@/components/ui/Workspace";
-import { MessagesIcon, PhoneIcon, SparkIcon, TeamIcon, VideoIcon } from "@/components/layout/icons";
+import { MessagesIcon, PaperclipIcon, PhoneIcon, SearchIcon, SparkIcon, TeamIcon, VideoIcon } from "@/components/layout/icons";
 import type { ChatConversationPublic, ChatMessagePublic, ConversationMemberPublic, ConversationType, PinnedMessagePublic } from "@/lib/types";
 import type { TranslationKey } from "@/lib/i18n";
 import styles from "./Thread.module.css";
@@ -45,7 +47,7 @@ export default function ConversationThreadPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [replyTo, setReplyTo] = useState<ChatMessagePublic | null>(null);
-  const [panel, setPanel] = useState<"members" | "ai" | null>(null);
+  const [panel, setPanel] = useState<"members" | "ai" | "search" | "media" | null>(null);
   const [typingUsers, setTypingUsers] = useState<Map<string, number>>(new Map());
   const scrollRef = useRef<HTMLDivElement>(null);
   const messagesRef = useRef<ChatMessagePublic[]>([]);
@@ -303,6 +305,12 @@ export default function ConversationThreadPage() {
               </button>
             </>
           ) : null}
+          <button type="button" className={styles.iconAction} title={t("messages.search.openAction")} onClick={() => setPanel(panel === "search" ? null : "search")}>
+            <SearchIcon />
+          </button>
+          <button type="button" className={styles.iconAction} title={t("messages.media.openAction")} onClick={() => setPanel(panel === "media" ? null : "media")}>
+            <PaperclipIcon />
+          </button>
           <button type="button" className={styles.iconAction} title={t("messages.ai.panelTitle")} onClick={() => setPanel(panel === "ai" ? null : "ai")}>
             <SparkIcon />
           </button>
@@ -400,6 +408,12 @@ export default function ConversationThreadPage() {
         ) : null}
 
         {panel === "ai" ? <AiPanel conversationId={conversationId} onClose={() => setPanel(null)} onJumpToMessage={jumpToMessage} /> : null}
+
+        {panel === "search" ? (
+          <SearchPanel conversationId={conversationId} onClose={() => setPanel(null)} onJumpToMessage={jumpToMessage} />
+        ) : null}
+
+        {panel === "media" ? <MediaPanel conversationId={conversationId} onClose={() => setPanel(null)} /> : null}
       </div>
 
       <CallPanel

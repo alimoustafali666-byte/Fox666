@@ -5,6 +5,11 @@ from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+def _is_loopback_origin(origin: str) -> bool:
+    host = origin.split("://", 1)[-1].split("/", 1)[0].split(":", 1)[0].lower()
+    return host in ("localhost", "127.0.0.1", "0.0.0.0", "::1", "[::1]")
+
+
 class Settings(BaseSettings):
     """Application settings, sourced from environment variables."""
 
@@ -244,6 +249,51 @@ class Settings(BaseSettings):
     collaboration_ai_rate_limit_max: int = 20
     collaboration_ai_rate_limit_window_seconds: int = 3600
 
+    # ---------------------------------------------------------------
+    # Transactional email (team invitations).
+    #
+    # EMAIL_PROVIDER has NO default, unlike storage_provider/llm_provider.
+    # Those default to a real provider because a missing credential there
+    # surfaces as a visible failure on first use. Mail is different: a
+    # silently-unconfigured mailer looks exactly like a working one from
+    # the UI, so "not configured" must be an explicit, loud error rather
+    # than an inferred default. See app/core/email/factory.py.
+    #
+    # "resend" -> app.core.email.resend_provider (HTTPS API)
+    # "smtp"   -> app.core.email.smtp_provider (any SMTP relay: SES,
+    #             SendGrid, Mailgun, Postmark, Microsoft 365, ...)
+    email_provider: str | None = None
+    # The envelope/header From. Must be an address on a domain the
+    # provider has verified for this account, or the provider rejects
+    # the send outright (which this app reports as a failure, never as
+    # a delivered invitation).
+    email_from_address: str | None = None
+    email_from_name: str = "UAE AI Office"
+    email_reply_to: str | None = None
+    email_timeout_seconds: float = 20.0
+
+    resend_api_key: str | None = None
+
+    smtp_host: str | None = None
+    smtp_port: int = 587
+    smtp_username: str | None = None
+    smtp_password: str | None = None
+    # Port 587 submission: connect in the clear, then upgrade with
+    # STARTTLS (the default). Port 465: implicit TLS from the first
+    # byte -- set SMTP_USE_SSL=true and SMTP_USE_STARTTLS=false.
+    smtp_use_starttls: bool = True
+    smtp_use_ssl: bool = False
+
+    # Absolute, publicly reachable base URL of the frontend, used to
+    # build the invitation link that goes into the email. Set this
+    # explicitly in any deployment: a link pointing at localhost is
+    # useless in a recipient's inbox. Left unset, it is resolved from
+    # the runtime environment -- see public_frontend_url below.
+    app_public_url: str | None = None
+
+    # How long an invitation link stays valid.
+    invitation_ttl_days: int = 7
+
     @property
     def frontend_origins(self) -> list[str]:
         """Return the exact browser origins allowed for the current runtime,
@@ -278,6 +328,45 @@ class Settings(BaseSettings):
         raw_origins.extend(["http://localhost:3000", "http://127.0.0.1:3000"])
 
         return list(dict.fromkeys(origin.rstrip("/") for origin in raw_origins if origin.strip()))
+
+    @property
+    def public_frontend_url(self) -> str:
+        """The base URL an *external* recipient can actually open, used
+        to build invitation links.
+
+        Distinct from frontend_origins, which is a CORS allowlist and
+        deliberately includes localhost variants -- correct for CORS,
+        wrong for an email. Resolution order:
+
+        1. APP_PUBLIC_URL, when set. Always prefer an explicit value.
+        2. The Codespaces forwarded frontend origin, derived the same
+           way frontend_origins derives it.
+        3. The first configured FRONTEND_ORIGIN entry that is not a
+           loopback address.
+        4. http://localhost:3000 as a last resort -- valid for purely
+           local development, and flagged by is_public_frontend_url so
+           callers can warn rather than mail out a dead link.
+        """
+        if self.app_public_url:
+            return self.app_public_url.rstrip("/")
+
+        codespace_name = os.getenv("CODESPACE_NAME")
+        forwarding_domain = os.getenv("GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN")
+        if codespace_name and forwarding_domain:
+            return f"https://{codespace_name}-3000.{forwarding_domain}"
+
+        for origin in self.frontend_origins:
+            if not _is_loopback_origin(origin):
+                return origin
+
+        return "http://localhost:3000"
+
+    @property
+    def is_public_frontend_url(self) -> bool:
+        """False when the resolved base URL is a loopback address, i.e.
+        one that cannot possibly work from a recipient's mail client.
+        """
+        return not _is_loopback_origin(self.public_frontend_url)
 
     @field_validator("database_url")
     @classmethod

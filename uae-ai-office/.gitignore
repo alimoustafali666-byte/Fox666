@@ -18,6 +18,9 @@ venv/
 # Node / Next.js
 node_modules/
 .next/
+# Throwaway build dir used to verify a production build without
+# clobbering the .next a running `next dev` is serving (NEXT_DIST_DIR).
+.next-verify/
 *.tsbuildinfo
 
 # Editor / OS

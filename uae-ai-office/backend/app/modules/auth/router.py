@@ -6,21 +6,25 @@ from app.core.request_ip import get_client_ip
 from app.db.session import get_db
 from app.modules.auth import service
 from app.modules.auth.dependencies import get_current_user, get_tenant_context
+from app.modules.auth.models import User
 from app.modules.auth.schemas import (
     AccessTokenResponse,
-    LoginRequest,
-    PasswordChangeRequest,
-    ProfileUpdateRequest,
     CompanyMembershipPublic,
     CompanySwitchRequest,
+    LoginRequest,
     MeResponse,
+    PasswordChangeRequest,
+    ProfileUpdateRequest,
     SignupRequest,
     UserPublic,
 )
 from app.modules.auth.service import TenantContext
-from app.modules.auth.models import User
 from app.modules.tenancy import service as tenancy_service
-from app.modules.tenancy.schemas import InvitationAcceptRequest
+from app.modules.tenancy.models import Company
+from app.modules.tenancy.schemas import (
+    InvitationAcceptRequest,
+    InvitationPreviewResponse,
+)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -69,6 +73,26 @@ def login(
     result = service.login(db, data, ip_address=get_client_ip(request))
     _set_refresh_cookie(response, result.raw_refresh_token)
     return result.access_token_response
+
+
+# Unauthenticated by design: the holder of the link is, at this point,
+# exactly who this endpoint exists to serve. It returns only what is
+# needed to recognise the invitation and render the right form, and a
+# token that is expired, revoked or already accepted is indistinguishable
+# from one that never existed (both 400 invitation_invalid).
+@router.get("/invitations/{token}", response_model=InvitationPreviewResponse)
+def preview_invitation(token: str, db: Session = Depends(get_db)) -> InvitationPreviewResponse:
+    invitation = tenancy_service.get_invitation_for_acceptance(db, token)
+    company = db.get(Company, invitation.company_id)
+    return InvitationPreviewResponse(
+        email=str(invitation.email),
+        company_name=company.name if company else "",
+        role=invitation.role,
+        expires_at=invitation.expires_at,
+        requires_existing_password=tenancy_service.invitation_requires_existing_password(
+            db, invitation
+        ),
+    )
 
 
 @router.post("/invitations/{token}/accept", response_model=AccessTokenResponse)

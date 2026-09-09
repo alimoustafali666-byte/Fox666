@@ -69,8 +69,36 @@ export interface InvitationPublic {
   created_at: string;
 }
 
+/** Whether the invitation email actually reached a provider.
+ *  Only "sent" means one accepted the message -- the UI must never
+ *  report an invitation as emailed on any other value. */
+export type InvitationEmailDeliveryStatus = "sent" | "not_configured" | "failed";
+
+export interface InvitationEmailDelivery {
+  status: InvitationEmailDeliveryStatus;
+  detail: string | null;
+  provider: string | null;
+}
+
+/** What the accept page is told before anyone submits it.
+ *  `requires_existing_password` decides which password the form asks
+ *  for: a new one to create the account, or the existing account's
+ *  password, which the backend verifies before granting membership. */
+export interface InvitationPreview {
+  email: string;
+  company_name: string;
+  role: Role;
+  expires_at: string;
+  requires_existing_password: boolean;
+}
+
 export interface InvitationCreateResponse extends InvitationPublic {
   token: string;
+  /** Absolute accept link. Always usable, whether or not mail went out --
+   *  this is what an operator shares by hand while email delivery is
+   *  still pending configuration. */
+  invite_url: string;
+  email_delivery: InvitationEmailDelivery;
 }
 
 // --- Projects ---

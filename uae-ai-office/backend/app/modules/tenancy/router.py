@@ -9,18 +9,20 @@ from app.modules.auth import repository as auth_repository
 from app.modules.auth.dependencies import get_tenant_context, require_roles
 from app.modules.auth.service import TenantContext
 from app.modules.tenancy import repository, service
+from app.modules.tenancy.invitation_email import build_invitation_url
 from app.modules.tenancy.models import Company
 from app.modules.tenancy.schemas import (
     CompanyMemberPublic,
     CompanyPublic,
     CompanyUpdateRequest,
     CurrentCompanyResponse,
-    MemberRoleUpdateRequest,
     DailyBriefSchedulePublic,
     DailyBriefScheduleUpdateRequest,
     InvitationCreateRequest,
     InvitationCreateResponse,
+    InvitationEmailDeliveryPublic,
     InvitationPublic,
+    MemberRoleUpdateRequest,
 )
 
 router = APIRouter(prefix="/companies", tags=["tenancy"])
@@ -212,6 +214,19 @@ def _invitation_public(invitation) -> InvitationPublic:
     )
 
 
+def _invitation_create_response(
+    invitation, token: str, delivery: service.InvitationDelivery
+) -> InvitationCreateResponse:
+    return InvitationCreateResponse(
+        **_invitation_public(invitation).model_dump(),
+        token=token,
+        invite_url=build_invitation_url(token),
+        email_delivery=InvitationEmailDeliveryPublic(
+            status=delivery.status, detail=delivery.detail, provider=delivery.provider
+        ),
+    )
+
+
 @router.get("/current/invitations", response_model=list[InvitationPublic])
 def list_current_company_invitations(
     context: TenantContext = Depends(require_roles("owner", "admin")),
@@ -220,32 +235,48 @@ def list_current_company_invitations(
     return [_invitation_public(item) for item in service.list_company_invitations(db, context.company_id)]
 
 
+# Both endpoints below always return the invitation plus an absolute
+# `invite_url`, and report what happened to the email separately in
+# `email_delivery.status`. A 2xx therefore means "the invitation exists
+# and this link works", never "an email was delivered" -- the client
+# must read email_delivery.status ("sent" | "not_configured" |
+# "failed") before telling anyone the invitation was emailed. This is
+# what lets the feature ship ahead of email credentials: an operator
+# copies the link and shares it, and the same endpoint starts mailing
+# the moment EMAIL_PROVIDER is configured, with no client change.
 @router.post("/current/invitations", response_model=InvitationCreateResponse, status_code=201)
 def invite_company_user(
     body: InvitationCreateRequest,
+    request: Request,
     context: TenantContext = Depends(require_roles("owner", "admin")),
     db: Session = Depends(get_db),
 ) -> InvitationCreateResponse:
-    invitation, token = service.create_invitation(
+    invitation, token, delivery = service.create_invitation(
         db,
         company_id=context.company_id,
         actor_user_id=context.user.id,
         email=str(body.email),
         role=body.role,
+        ip_address=get_client_ip(request),
     )
-    return InvitationCreateResponse(**_invitation_public(invitation).model_dump(), token=token)
+    return _invitation_create_response(invitation, token, delivery)
 
 
 @router.post("/current/invitations/{invitation_id}/resend", response_model=InvitationCreateResponse)
 def resend_company_invitation(
     invitation_id: uuid.UUID,
+    request: Request,
     context: TenantContext = Depends(require_roles("owner", "admin")),
     db: Session = Depends(get_db),
 ) -> InvitationCreateResponse:
-    invitation, token = service.resend_invitation(
-        db, company_id=context.company_id, invitation_id=invitation_id
+    invitation, token, delivery = service.resend_invitation(
+        db,
+        company_id=context.company_id,
+        invitation_id=invitation_id,
+        actor_user_id=context.user.id,
+        ip_address=get_client_ip(request),
     )
-    return InvitationCreateResponse(**_invitation_public(invitation).model_dump(), token=token)
+    return _invitation_create_response(invitation, token, delivery)
 
 
 @router.delete("/current/invitations/{invitation_id}", status_code=204)

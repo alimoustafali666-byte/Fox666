@@ -41,6 +41,7 @@ import type {
   MeResponse,
   CompanyMembershipPublic,
   InvitationCreateResponse,
+  InvitationPreview,
   InvitationPublic,
   MessagePage,
   MessagePublic,
@@ -280,8 +281,11 @@ export const authApi = {
       body: { email: data.email, password: data.password },
     }),
 
-  acceptInvitation: (token: string, data: { password: string; full_name: string }) =>
-    request<AccessTokenResponse>(`/auth/invitations/${encodeURIComponent(token)}/accept`, { method: "POST", body: data }),
+  previewInvitation: (token: string) =>
+    request<InvitationPreview>(`/auth/invitations/${encodeURIComponent(token)}`, { skipAuthRetry: true }),
+
+  acceptInvitation: (token: string, data: { password: string; full_name?: string }) =>
+    request<AccessTokenResponse>(`/auth/invitations/${encodeURIComponent(token)}/accept`, { method: "POST", body: data, skipAuthRetry: true }),
 
   refresh: () => refreshAccessToken(),
 

@@ -84,3 +84,26 @@ class InvitationAlreadyExistsError(AppError):
     status_code = 409
     code = "invitation_already_exists"
 
+
+class InvitationExistingAccountError(AppError):
+    """The invited address already has a UAE AI Office account, and the
+    password supplied to accept the invitation was not that account's
+    password.
+
+    Accepting an invitation issues a full session for the invited
+    address. When no account exists yet, the invitation link is the only
+    thing proving control of that address and the caller sets the
+    password themselves. When an account *already* exists, the link
+    alone must not be enough: an owner/admin can invite any address they
+    like and reads the raw token straight out of the create-invitation
+    response, so an unchecked accept would hand them a logged-in session
+    for somebody else's existing account -- and, via
+    /auth/me/companies/switch, that person's other companies too.
+
+    So an existing account must prove itself with its own password
+    before the membership is granted. Deliberately 401 with the same
+    shape as a failed login: it is exactly a failed authentication.
+    """
+
+    status_code = 401
+    code = "invitation_existing_account"

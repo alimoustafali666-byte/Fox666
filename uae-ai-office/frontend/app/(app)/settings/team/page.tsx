@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/Workspace";
 import { AuditIcon, SettingsIcon, ShieldIcon, TeamIcon } from "@/components/layout/icons";
 import { ROLE_LABEL_KEYS, ROLE_TONE, ROLES } from "@/components/layout/roles";
-import type { CompanyMemberPublic, InvitationPublic, Role } from "@/lib/types";
+import type { CompanyMemberPublic, InvitationCreateResponse, InvitationPublic, Role } from "@/lib/types";
 import tableStyles from "@/components/ui/Table.module.css";
 import styles from "../Settings.module.css";
 
@@ -51,6 +51,14 @@ export default function TeamPage() {
   const [error, setError] = useState<string | null>(null);
   const [forbidden, setForbidden] = useState(false);
   const [busyUserId, setBusyUserId] = useState<string | null>(null);
+  // The most recent invite/resend result. Held in state because the
+  // one-time token only ever exists in that response -- listInvitations()
+  // deliberately never returns it -- so this panel is the operator's
+  // single chance to copy the link. That matters most while email
+  // delivery is unconfigured, when the link is the ONLY way the invite
+  // reaches anyone.
+  const [inviteResult, setInviteResult] = useState<InvitationCreateResponse | null>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   function load() {
     setLoading(true);
@@ -135,13 +143,28 @@ export default function TeamPage() {
     }
   }
 
+  async function copyInviteLink(url: string) {
+    // navigator.clipboard is unavailable on insecure origins and in some
+    // embedded browsers, so the manual-selection fallback below is not
+    // optional -- without it the link would be unreachable in exactly the
+    // deployments most likely to be running before email is configured.
+    try {
+      await navigator.clipboard.writeText(url);
+      setLinkCopied(true);
+    } catch {
+      setLinkCopied(false);
+    }
+  }
+
   async function handleInvite(event: FormEvent) {
     event.preventDefault();
     setError(null);
     setBusyUserId("invite");
     try {
-      await tenancyApi.createInvitation({ email: inviteEmail, role: inviteRole });
+      const created = await tenancyApi.createInvitation({ email: inviteEmail, role: inviteRole });
       setInviteEmail("");
+      setInviteResult(created);
+      setLinkCopied(false);
       setInvitations(await tenancyApi.listInvitations());
     } catch (err) {
       setError(errorMessage(err, t("settings.team.genericInviteError")));
@@ -154,7 +177,9 @@ export default function TeamPage() {
     setError(null);
     setBusyUserId(invitation.id);
     try {
-      await tenancyApi.resendInvitation(invitation.id);
+      const resent = await tenancyApi.resendInvitation(invitation.id);
+      setInviteResult(resent);
+      setLinkCopied(false);
       setInvitations(await tenancyApi.listInvitations());
     } catch (err) {
       setError(errorMessage(err, t("settings.team.genericInvitationActionError")));
@@ -404,6 +429,48 @@ export default function TeamPage() {
                   {t("settings.team.inviteButton")}
                 </Button>
               </form>
+            </WorkspacePanel>
+          ) : null}
+
+
+          {inviteResult ? (
+            <WorkspacePanel
+              accent={inviteResult.email_delivery.status === "sent" ? "green" : "amber"}
+              icon={<TeamIcon />}
+              title={t("settings.team.inviteLinkTitle")}
+              subtitle={t("settings.team.inviteLinkFor", { email: inviteResult.email })}
+            >
+              <p className={styles.helperText} style={{ marginTop: 0 }}>
+                {inviteResult.email_delivery.status === "sent"
+                  ? t("settings.team.inviteDeliverySent", { email: inviteResult.email })
+                  : inviteResult.email_delivery.status === "not_configured"
+                    ? t("settings.team.inviteDeliveryNotConfigured", { email: inviteResult.email })
+                    : t("settings.team.inviteDeliveryFailed", { email: inviteResult.email })}
+              </p>
+              <FieldWrapper label={t("settings.team.inviteLinkTitle")} htmlFor="invite-link">
+                <Input
+                  id="invite-link"
+                  readOnly
+                  value={inviteResult.invite_url}
+                  dir="ltr"
+                  onFocus={(event) => event.currentTarget.select()}
+                />
+              </FieldWrapper>
+              <p className={styles.helperText}>
+                {t("settings.team.inviteLinkHelp", {
+                  expires: formatDate(locale, inviteResult.expires_at),
+                  role: t(ROLE_LABEL_KEYS[inviteResult.role]),
+                })}
+              </p>
+              {linkCopied ? <p className={styles.statusText}>{t("settings.team.inviteLinkCopied")}</p> : null}
+              <div className={styles.actionRow}>
+                <Button size="sm" onClick={() => copyInviteLink(inviteResult.invite_url)}>
+                  {t("settings.team.inviteLinkCopy")}
+                </Button>
+                <Button size="sm" variant="secondary" onClick={() => setInviteResult(null)}>
+                  {t("settings.team.inviteLinkDismiss")}
+                </Button>
+              </div>
             </WorkspacePanel>
           ) : null}
 

@@ -1,6 +1,6 @@
 """OCR extraction for image documents and image-only PDF pages."""
 
-from typing import BinaryIO
+from typing import BinaryIO, ClassVar
 
 import pypdfium2 as pdfium
 import pytesseract
@@ -12,7 +12,7 @@ from app.modules.documents.processing.errors import InsufficientTextError, Parse
 
 
 class OcrParser(DocumentParser):
-    _IMAGE_TYPES = {"image/png", "image/jpeg"}
+    _IMAGE_TYPES: ClassVar[set[str]] = {"image/png", "image/jpeg"}
 
     def supports(self, file_type: str) -> bool:
         return file_type in self._IMAGE_TYPES
