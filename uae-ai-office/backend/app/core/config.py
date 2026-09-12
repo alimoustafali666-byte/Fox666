@@ -25,7 +25,28 @@ class Settings(BaseSettings):
     # value silently rejects the other one.
     frontend_origin: str = "http://localhost:3000,http://127.0.0.1:3000"
 
+    # Runtime DSN. On a managed provider that offers a connection pooler
+    # (Neon, Supabase, RDS Proxy), this should be the POOLED endpoint:
+    # every web request opens a short-lived connection, and the pooler is
+    # what keeps that from exhausting the server's backend slots.
     database_url: str = "postgresql+psycopg://uae_app:uae_app@localhost:5432/uae_ai_office"
+
+    # Optional DIRECT (unpooled) DSN, used for schema migrations only --
+    # never for request traffic. Two reasons it is separate:
+    #
+    # * A transaction-mode pooler multiplexes sessions across backends, so
+    #   session-scoped state is not guaranteed to persist between
+    #   statements. Migrations rely on exactly that (advisory locks, SET
+    #   LOCAL, long-running transactional DDL), which is why providers
+    #   document DDL as an unpooled operation.
+    # * Alembic holds one long transaction. Occupying a pooled slot for
+    #   the length of a migration is precisely what the pool exists to
+    #   prevent.
+    #
+    # Unset is a valid, supported configuration: migrations then reuse
+    # database_url, which is correct for a plain single-endpoint Postgres
+    # with no pooler in front of it. See alembic/env.py.
+    database_direct_url: str | None = None
 
     # No default: an accidentally-deployed default signing secret is a
     # real vulnerability, so startup must fail loudly if this isn't set
@@ -368,9 +389,16 @@ class Settings(BaseSettings):
         """
         return not _is_loopback_origin(self.public_frontend_url)
 
-    @field_validator("database_url")
+    @property
+    def migration_database_url(self) -> str:
+        """The DSN schema migrations run against: the direct/unpooled
+        endpoint when one is configured, else the runtime DSN.
+        """
+        return self.database_direct_url or self.database_url
+
+    @field_validator("database_url", "database_direct_url")
     @classmethod
-    def _normalize_database_driver(cls, value: str) -> str:
+    def _normalize_database_driver(cls, value: str | None) -> str | None:
         """Managed Postgres providers hand out plain `postgres://` /
         `postgresql://` DSNs. SQLAlchemy resolves those to psycopg2, which
         is not this project's declared driver (`psycopg[binary]`, i.e.
@@ -378,6 +406,8 @@ class Settings(BaseSettings):
         Neon's `channel_binding=require`. Pin the driver explicitly so the
         DSN a provider gives you works verbatim.
         """
+        if value is None:
+            return None
         for prefix in ("postgresql://", "postgres://"):
             if value.startswith(prefix):
                 return "postgresql+psycopg://" + value[len(prefix) :]

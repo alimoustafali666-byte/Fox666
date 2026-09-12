@@ -1,3 +1,5 @@
+import re
+import sys
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config, pool
@@ -18,7 +20,25 @@ from app.modules.tasks import models as tasks_models  # noqa: F401
 from app.modules.tenancy import models as tenancy_models  # noqa: F401
 
 config = context.config
-config.set_main_option("sqlalchemy.url", settings.database_url)
+# Migrations deliberately use settings.migration_database_url, not
+# settings.database_url: on a provider with a connection pooler in front
+# of the database (Neon, Supabase, RDS Proxy) the runtime DSN points at
+# the POOLED endpoint, and transaction-mode pooling does not guarantee
+# the session continuity that transactional DDL, advisory locks and
+# SET LOCAL depend on. With DATABASE_DIRECT_URL unset this resolves back
+# to database_url, which is correct for a single-endpoint Postgres.
+_migration_url = settings.migration_database_url
+config.set_main_option("sqlalchemy.url", _migration_url)
+
+# Announce the target before doing anything to it. A migration run that
+# silently picks the wrong database is the most expensive mistake this
+# file can make -- the tests that exercise Alembic scrub their
+# environment, and an omitted variable there falls through to whatever
+# backend/.env holds rather than being unset. Printing the resolved host
+# and database (never the credentials) makes a mistargeted run obvious in
+# the output instead of something you reconstruct afterwards from damage.
+_masked = re.sub(r"://[^@/]*@", "://***@", _migration_url)
+print(f"alembic: migrating {_masked}", file=sys.stderr)
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)

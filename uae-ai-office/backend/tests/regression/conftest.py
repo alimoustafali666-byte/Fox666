@@ -50,7 +50,20 @@ def _run_alembic(*args: str, database_url: str) -> subprocess.CompletedProcess:
     return subprocess.run(
         [sys.executable, "-m", "alembic", *args],
         cwd=BACKEND_DIR,
-        env={"PATH": "/usr/bin:/bin", "DATABASE_URL": database_url},
+        # DATABASE_DIRECT_URL is pinned to the SAME scratch database, not
+        # left out. alembic/env.py migrates settings.migration_database_url,
+        # which prefers DATABASE_DIRECT_URL -- and because this env is
+        # scrubbed, an omitted variable is not "unset", it falls through to
+        # whatever backend/.env holds. On a machine whose .env points at a
+        # managed database that silently retargets every migration in this
+        # test at production, where "upgrade head" is a no-op and the
+        # following "downgrade base" would drop every table. Both variables
+        # must name the scratch database for the target to be unambiguous.
+        env={
+            "PATH": "/usr/bin:/bin",
+            "DATABASE_URL": database_url,
+            "DATABASE_DIRECT_URL": database_url,
+        },
         capture_output=True,
         text=True,
         check=False,

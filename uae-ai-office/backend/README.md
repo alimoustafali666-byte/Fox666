@@ -55,6 +55,34 @@ automatically (`app/core/config.py`), so you do not have to hand-edit it to
 `sslmode=require&channel_binding=require` are then honoured (psycopg2, which
 SQLAlchemy would otherwise pick, rejects `channel_binding` outright).
 
+If the provider also offers a **connection pooler** (Neon's `-pooler`
+hostname, Supabase's pooler port, RDS Proxy), set two variables rather than
+one:
+
+| Variable | Endpoint | Used by |
+| --- | --- | --- |
+| `DATABASE_URL` | pooled | request traffic |
+| `DATABASE_DIRECT_URL` | direct / unpooled | `alembic` only |
+
+Request traffic wants the pooler: each request opens a short-lived
+connection, and the pooler is what stops that exhausting the server's
+backend slots. Migrations want the opposite. A transaction-mode pooler
+multiplexes sessions across backends, so session-scoped state is not
+guaranteed to survive between statements -- and migrations depend on
+exactly that (advisory locks, `SET LOCAL`, long transactional DDL). Alembic
+also holds one long transaction, which is precisely the thing a pool exists
+to keep off a shared slot.
+
+Leaving `DATABASE_DIRECT_URL` unset is supported and is the right
+configuration for a plain single-endpoint Postgres with no pooler in front
+of it: migrations then fall back to `DATABASE_URL`. See `alembic/env.py`,
+which prints the resolved host and database (never the credentials) at the
+start of every run so a mistargeted migration is obvious in the output.
+
+See `.env.example` for the full annotated form of both DSNs, including why
+`sslmode=verify-full` is worth the extra setup and why `sslrootcert=system`
+does *not* work under the libpq bundled in the `psycopg[binary]` wheel.
+
 Two differences from the local setup above:
 
 ```bash

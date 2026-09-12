@@ -25,3 +25,10 @@ node_modules/
 
 # Editor / OS
 .DS_Store
+
+# Database dumps. These contain real customer data, credentials hashes and
+# audit history in plaintext -- they must never enter git history, where
+# they would survive every later deletion. Keep them out of the repo
+# entirely for anything beyond a throwaway local snapshot.
+.backups/
+*.dump
